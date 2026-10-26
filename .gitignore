@@ -1,0 +1,6 @@
+.env
+node_modules/
+projects/*
+!projects/.gitkeep
+**/work/
+**/out/
