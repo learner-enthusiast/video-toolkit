@@ -27,6 +27,7 @@ This repo is instructions only. Build code per video inside `projects/<name>/wor
 - For each paragraph, keep my LAST complete, clean take. Captions follow my actual words, not the script.
 - Stop at the rough cut and wait for my OK before composing.
 - Logs go to `work/logs/`, never into the chat. Report a summary.
+- At the end of every turn on a project, append an entry to `projects/<name>/log.md`: date and time, my prompt verbatim, what changed, how long it took, and token usage (`pipeline/project-log.md`). Append only.
 - When a video teaches us something (a better setting, a gotcha), update the relevant toolkit `.md`, not just the project.
 
 ## Quality bar
@@ -38,3 +39,8 @@ This repo is instructions only. Build code per video inside `projects/<name>/wor
 - No screenshot stays static for more than 3 s. No dead air. Use J/L cuts where they smooth the flow.
 - Never cover my face. Never stretch me. No text cut off. Captions are always readable.
 - Deliver at -16 LUFS with A/V sync verified at the start, middle and end.
+
+## Deliverables
+- Every video ships with: the main video, two trailers (landscape 16:9 and portrait 9:16, see `pipeline/trailer.md`), an SRT for each, a thumbnail (`pipeline/thumbnail.md`), and `<name>_social.json` with ready-to-paste titles, posts and hashtags for LinkedIn, X, Instagram, Facebook, Threads and YouTube (`pipeline/social-copy.md`). Don't wait to be asked.
+- Keep X posts within 280 chars unless I say I have X Premium.
+- All final files go in `projects/<name>/out/`. Intermediates stay in `work/`.

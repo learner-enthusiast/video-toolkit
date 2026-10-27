@@ -17,8 +17,8 @@ Work in `projects/<name>/`. Read `CLAUDE.md` and `brand.md` first. Follow each s
 7. **Composition:** `pipeline/composition.md`. Choose the framing: crop if the source is ≥ 1440 px wide, otherwise `components/PresenterSplit.md`. Tell me which and why.
 8. **Render:** `pipeline/render.md`.
 9. **Subtitles:** `pipeline/subtitles.md`.
-10. **QA:** `pipeline/qa.md`. Fix what fails before reporting.
-11. **Thumbnail:** `pipeline/thumbnail.md`, if I asked for one.
-12. **Report:** durations, loudness, choices made, lines worth re-recording, and anything you couldn't do. Then fold any lessons back into the toolkit `.md` files.
-
-If a trailer or reel cut is also needed, build it from the same timeline and follow `/reel` for the 9:16 rules.
+10. **Trailers:** `pipeline/trailer.md`. Always make both: `out/<name>_trailer_16x9.mp4` and `out/<name>_trailer_9x16.mp4`.
+11. **QA:** `pipeline/qa.md`, on the main video and both trailers. Fix what fails before reporting.
+12. **Thumbnail:** `pipeline/thumbnail.md`. Always.
+13. **Social copy:** `pipeline/social-copy.md`. Always write `out/<name>_social.json`.
+14. **Report:** list every file in `out/`, plus durations, loudness, choices made, lines worth re-recording, and anything you couldn't do. Then fold any lessons back into the toolkit `.md` files.

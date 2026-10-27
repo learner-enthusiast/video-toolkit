@@ -12,7 +12,7 @@
 - Two-pass `loudnorm` to I=-16, TP=-1.5, LRA=11: measure, then apply with the measured values and `linear=true`, resampled to 48 kHz.
 - Video: `h264_nvenc -preset p6 -tune hq -rc vbr -cq 19 -b:v 0 -maxrate 20M -profile:v high`, with `yuv420p` at 30 fps. Without NVENC, use libx264 veryfast crf 20.
 - Audio: AAC 192k. Add `-movflags +faststart`.
-- Name outputs `out/<name>_16x9.mp4`, `out/<name>_trailer_9x16.mp4`, and so on.
+- Name outputs in `projects/<name>/out/`: `<name>_16x9.mp4` (or `<name>_9x16.mp4` for a reel), `<name>_trailer_16x9.mp4`, `<name>_trailer_9x16.mp4`.
 
 **Checks**
 - `ffprobe` the output: codec, size, fps, duration matching the composition, audio present.

@@ -15,6 +15,8 @@ Use the same pipeline steps as `/coding-video` (GPU, probe, clean audio, transcr
 - **Big captions.** See `components/Captions.md` (reel mode): 1–3 words at a time, ~80 px, centered at mid-frame between my face and the screen.
 - **Safe zones.** Keep text clear of the right ~15% (platform buttons) and the bottom ~20% (description overlay).
 - **Ending.** End on a payoff line or a loop back to the hook. A short `EndCard` (≤ 2 s) is optional.
-- **Deliver.** `out/<name>_9x16.mp4` plus an SRT, at -14 to -16 LUFS. Pull a cover frame with `pipeline/thumbnail.md` (9:16 variant).
+- **Deliver.** `out/<name>_9x16.mp4` plus an SRT, at -14 to -16 LUFS. Always make a thumbnail with `pipeline/thumbnail.md` (9:16 variant).
+- **Trailers.** Always make both 15–20 s trailers per `pipeline/trailer.md`: `out/<name>_trailer_16x9.mp4` and `out/<name>_trailer_9x16.mp4`.
+- **Social copy.** Always write `out/<name>_social.json` per `pipeline/social-copy.md`. YouTube chapters don't apply to a reel; use the `shorts_title` and a short description instead.
 
 Stop at the rough cut for my OK, as always.
