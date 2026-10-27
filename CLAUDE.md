@@ -13,6 +13,13 @@ This repo is instructions only. Build code per video inside `projects/<name>/wor
 - If `cursor-agent` is installed, give it exact component specs (props, geometry, timing) to write code from.
 - Judgment, vision (looking at frames and screenshots), take selection and QA stay with you.
 
+## Skill priority
+- `CLAUDE.md` and `brand.md` win over any skill's defaults: colors, fonts, caption style, pacing and motion. A skill decides how to do a step, never how the video looks or feels.
+- `/coding-video` and `/reel` use `/cut-video` as the cutting engine for take selection, and `/add-zooms` for punch-ins on emphasised words that also hide jump cuts.
+- Use `/clipify` to turn a long video into reels. Each clip then goes through `/reel`.
+- The Remotion skills drive how compositions are built. `frontend-design` sets taste only where `brand.md` leaves a choice open.
+- Sources, licenses and local changes are listed in `SKILLS.md`.
+
 ## OpenAI
 - Transcribe with local Whisper on the GPU. Never use the paid transcription API.
 - If an OpenAI model is truly needed, pick a smaller, cheaper model, never the flagship, and tell me which one and why.
@@ -41,6 +48,6 @@ This repo is instructions only. Build code per video inside `projects/<name>/wor
 - Deliver at -16 LUFS with A/V sync verified at the start, middle and end.
 
 ## Deliverables
-- Every video ships with: the main video, two trailers (landscape 16:9 and portrait 9:16, see `pipeline/trailer.md`), an SRT for each, a thumbnail (`pipeline/thumbnail.md`), and `<name>_social.json` with ready-to-paste titles, posts and hashtags for LinkedIn, X, Instagram, Facebook, Threads and YouTube (`pipeline/social-copy.md`). Don't wait to be asked.
+- Every video ships with: the main video, two trailers (landscape 16:9 and portrait 9:16, see `pipeline/trailer.md`), an SRT for each, thumbnails in `out/thumbnail/` along with a ChatGPT kit (up to 3 static assets plus a ready prompt and a template for my own) (`pipeline/thumbnail.md`), and `<name>_social.json` with ready-to-paste titles, posts and hashtags for LinkedIn, X, Instagram, Facebook, Threads and YouTube (`pipeline/social-copy.md`). Don't wait to be asked.
 - Keep X posts within 280 chars unless I say I have X Premium.
 - All final files go in `projects/<name>/out/`. Intermediates stay in `work/`.

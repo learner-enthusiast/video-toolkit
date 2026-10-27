@@ -4,3 +4,8 @@ projects/*
 !projects/.gitkeep
 **/work/
 **/out/
+
+# Remotion skills: installed per clone by /setup (no upstream license, not redistributed)
+.agents/
+.claude/skills/remotion-*
+skills-lock.json

@@ -8,6 +8,8 @@ argument-hint: <name>
 
 Use the same pipeline steps as `/coding-video` (GPU, probe, clean audio, transcribe, take selection, rough cut checkpoint, composition, render, QA). These rules change:
 
+- **Skills.** Cut with `/cut-video` (`aggressive` tone, but this file's pause lengths win), and punch in with `/add-zooms` (punches and ratchets only). If the source is a long video, use `/clipify` (dialogue mode) to pick 3–5 candidate moments. Show them to me, then build each chosen one as a reel with the rules below.
+
 - **Hook in the first 2 s.** Open on the boldest claim or result, never a greeting. A big text hook (2–5 words) is on screen from frame 0. If the strongest line is mid-recording, move it to the front.
 - **Length 30–60 s.** Cut to one idea. Tighten pauses harder: about 0.10 s between phrases and 0.15 s between sentences.
 - **Fast pace.** The visual changes every 1.5–3 s (punch-in, a screen, a graphic, a card). No beat holds still.

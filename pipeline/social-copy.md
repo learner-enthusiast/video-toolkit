@@ -25,7 +25,7 @@
     "main": "<name>_16x9.mp4",
     "trailer_landscape": "<name>_trailer_16x9.mp4",
     "trailer_portrait": "<name>_trailer_9x16.mp4",
-    "thumbnail": "thumb_a.png"
+    "thumbnail": "thumbnail/thumb_a.png"
   },
   "linkedin":  { "post": "", "hashtags": [] },
   "x":         { "post": "", "hashtags": [], "post_long": null },
