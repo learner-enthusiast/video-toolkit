@@ -16,3 +16,4 @@
 **Gotchas**
 - Leave no captions. No music spike: the music slot ducks out with the fade.
 - In 9:16, keep the stack in the center third (platform UI covers the bottom).
+- Tight length budget (e.g. a hard 2:59 cap): show the card as a white panel over my chest while I say the last lines (captions off), then fade to black ~1 s after the last word, instead of a full-screen card after it (`bloom-filter`).

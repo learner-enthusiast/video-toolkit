@@ -9,9 +9,22 @@ This repo is instructions only. Build code per video inside `projects/<name>/wor
 - Never fall back to the CPU silently. Fix the cause, or stop and tell me. See `pipeline/gpu.md`.
 
 ## Delegation
-- You orchestrate. Hand shell work (probing, ffmpeg, installs, renders) to a Haiku subagent with exact commands and expected output.
+- You orchestrate. Hand shell work (probing, ffmpeg, Whisper, Python, installs, renders) to a Haiku subagent as one batch of exact commands per step (`pipeline/delegation.md`). Don't run it from the main session.
+- Haiku only runs the commands you wrote. It never chooses takes, edits a command, or fixes an error. It saves full output to `work/logs/<step>.log` and returns exit codes, key numbers, and every error or warning verbatim.
+- If anything fails or looks off, read the log and debug it yourself; you may run commands while debugging.
 - If `cursor-agent` is installed, give it exact component specs (props, geometry, timing) to write code from.
-- Judgment, vision (looking at frames and screenshots), take selection and QA stay with you.
+- Judgment, vision, take selection, QA and every creative or quality decision stay with you.
+- Vision goes through contact sheets and video-inspect reports (`pipeline/video-inspect.md`). A subagent may pre-screen, but you do the final visual QA before deliverables by looking at the sheets yourself.
+
+## Inspecting a video
+Whenever a prompt asks to check, review, inspect, QA or "look at" a video, its frames, captions, cuts or edits:
+1. Run video-inspect first (`pipeline/video-inspect.md`, as a Haiku batch). Never dump frames as images.
+2. Read `report.json` (`summary` and `flags` first) and `contact_sheet.jpg`.
+3. Open with Read only the flagged frames plus one keyframe per scene, to judge framing, colour, pacing and visual quality.
+4. Use `--thorough` for the final check before publishing.
+5. Report issues with timestamps and a proposed fix for each.
+
+Flags and VLM captions are leads, not verdicts. Judge them against this file and `brand.md`, which win over any tool's or skill's defaults.
 
 ## Skill priority
 - `CLAUDE.md` and `brand.md` win over any skill's defaults: colors, fonts, caption style, pacing and motion. A skill decides how to do a step, never how the video looks or feels.
@@ -32,7 +45,8 @@ This repo is instructions only. Build code per video inside `projects/<name>/wor
 ## Workflow
 - Never modify `raw/` or `assets/`. Work on copies in `work/`.
 - For each paragraph, keep my LAST complete, clean take. Captions follow my actual words, not the script.
-- Stop at the rough cut and wait for my OK before composing.
+- Work in stages, one session each: Prep, Cut, Compose, Deliver (`pipeline/stages.md`). Start every stage by reading `log.md` and the project files. End it with a handoff in `log.md`: decisions and reasons, rejected options, open issues, files produced, next steps. Use `/compact` only as a fallback.
+- Stop at the rough cut (end of Cut) and wait for my OK before composing.
 - Logs go to `work/logs/`, never into the chat. Report a summary.
 - At the end of every turn on a project, append an entry to `projects/<name>/log.md`: date and time, my prompt verbatim, what changed, how long it took, and token usage (`pipeline/project-log.md`). Append only.
 - When a video teaches us something (a better setting, a gotcha), update the relevant toolkit `.md`, not just the project.

@@ -12,6 +12,7 @@
 - **Landscape** (1920x1080, 30 fps): the main video's framing and caption style.
 - **Portrait** (1080x1920, 30 fps): follow the `/reel` rules for framing, big captions and safe zones. If the source is landscape, use `components/FaceTrackedCrop.md` for talking-head beats and stack me on top of the screen for screen beats. Never stretch.
 - Build both as separate Remotion compositions sharing one beat list, so a change to the cut updates both.
+- Simplest build: replay the main composition per segment, `<Sequence from={offset} durationInFrames={b - a}><Sequence from={-a}><Main trailer /></Sequence></Sequence>`. Voice, SFX, captions and scenes stay in sync; hide anything that would jump between segments (a running countdown) with a `trailer` prop (`graphql-vs-rest`).
 
 **Deliver**
 - Render and encode per `render.md`: `out/<name>_trailer_16x9.mp4` and `out/<name>_trailer_9x16.mp4`, each with an SRT (`subtitles.md`).

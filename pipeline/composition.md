@@ -23,3 +23,8 @@
 
 **Checks**
 - `npx tsc --noEmit` passes. Render stills of 3–4 beats and look at them before any full render.
+
+**Gotchas**
+- Code in a 9:16 grid card (972 px wide) needs ≥ 28 px JetBrains Mono to read on a phone; 23–26 px looked fine in the editor and was unreadable at half scale. Wrap long lines and drop trailing comments instead of shrinking the font (`graphql-vs-rest` resolvers card).
+- A still `N` frames after a trigger word can land in the next scene; pick still frames inside the scene's own window (between its trigger and the next scene's).
+- Draw scenes once in a fixed logical card (972x900) and scale it into each aspect's card: one scene file serves 9:16 and 16:9.

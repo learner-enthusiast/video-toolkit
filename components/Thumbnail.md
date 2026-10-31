@@ -11,7 +11,10 @@
 - One accent visual (a big number, an icon cluster or a tilted screenshot card) on the free side.
 
 **Rules**
+- 9:16: the cutout's head must start below the headline and accent visual (about y ≥ 800 of 1920), or the face covers the text. Check at 180x320.
+- Cut out with rembg `birefnet-portrait`: much cleaner ears and shoulders than `u2net_human_seg` on busy phone backgrounds.
+- Place the cutout from its alpha bounding box (hair-top y × scale), not from another video's numbers: how far I sit from the phone changes it. On `bloom-filter` the copied placement put my head at y≈500 over the accent; hair top at y≈830 fixed it.
 - Show one idea; it must read at 320x180.
 - Keep text out of the bottom-right corner (the duration badge).
 - Give the face a clear expression and good light; lift exposure on the cutout if needed.
-- Use no emojis, no arrows and circles clip-art, and no more than 3 colors.
+- Use no emojis, no clip-art arrows or circles, and no more than 3 colors. Brand-style accents from the video's own animations (orange arrows, glows, highlight blocks) are fine (`pipeline/thumbnail.md`).

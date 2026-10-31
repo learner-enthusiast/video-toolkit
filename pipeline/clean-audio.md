@@ -17,3 +17,7 @@
 **Gotchas**
 - The working video and the clean WAV must share the same timeline (same start, CFR source), or every later cut drifts.
 - Don't normalize clips that have no voice; strip their audio instead.
+- Measure the floor on 10 ms windows (5th percentile), not 0.5 s ones. A slow, dense talker leaves almost no silent half-second, so 0.5 s windows read speech as "floor" (-18.7 dB vs the real -37 dB on `Elastic-search-interview`).
+- `afftdn` only accepts `nf` in [-80, -20]; clamp it, or ffmpeg aborts the whole chain.
+- Phone recordings with AGC come in already squashed (LRA ~2.7) with hot peaks. Two-pass `loudnorm` then can't stay linear (it needs more gain than the peaks allow) and silently goes `dynamic`. Use: chain without makeup gain → `volume=<target − measured I>dB` → `alimiter=limit=0.79:level=false` → `lowpass=f=16000` (AAC phone audio has nothing above 16 kHz; this removes limiter splatter). Check the result with `ebur128=peak=true`.
+- Shorts/reels: the brief may ask for -14 LUFS / TP ≤ -1 instead of -16. The project brief wins for that video.

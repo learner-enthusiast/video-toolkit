@@ -2,10 +2,21 @@
 
 **Goal:** a thumbnail that reads at phone size. See `components/Thumbnail.md` for the layout.
 
+**Source photo**
+1. **Check for my photo first:** `raw/thumbnail_raw.*` (jpg, jpeg, png or webp) in the project folder.
+2. **If it exists, it's the base image.** It's a deliberate still, so it's sharper and better posed than any video frame.
+   - Don't extract a frame from the talking-head video.
+   - Cut me out (background removal) only if the layout needs it, on a copy in `work/`; `raw/` stays untouched.
+   - Keep the face natural: no warping, reshaping or heavy filters.
+3. **If it doesn't, fall back to the video:** the sharpest frame with eyes open, mouth closed or mid-smile, and no motion blur (see Do).
+4. **Build the design around the video's content either way.** Pull the topic, key visuals and on-screen graphics (logos, charts, code, screenshots) from the video and `script.md`. Add motion-style accents (the video's orange arrows, glows, highlight blocks) so the still echoes its animations.
+5. **Follow `brand.md`** for fonts, colors and layout.
+6. **Export** the recommended variant to `out/thumbnail.png` at 1280x720, plus `out/thumbnail_9x16.png` at 1080x1920 for Shorts/Reels.
+
 **Do**
-- Pick 5–8 candidate frames of me from the final edit: eyes open, mouth closed or mid-smile, sharp, face fully lit. Look at each and keep the best 2–3.
+- No `thumbnail_raw`: pick 5–8 candidate frames of me from the final edit: eyes open, mouth closed or mid-smile, sharp, face fully lit. Look at each and keep the best 2–3.
 - Cut me out with `rembg` (person model) on a copy, to a PNG with alpha. Clean the hair edge if it is ragged.
-- Build the `Thumbnail` composition as a Remotion still (1280x720; 1080x1920 for reels).
+- Build the `Thumbnail` composition as a Remotion still, at both 1280x720 and 1080x1920.
 - Make 3 variants that differ in one thing each (headline wording, side, or accent visual). Render them to `out/thumbnail/thumb_a.png`, `thumb_b.png`, `thumb_c.png`.
 
 **DIY kit for ChatGPT**

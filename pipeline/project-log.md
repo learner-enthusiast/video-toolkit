@@ -25,6 +25,20 @@
 **Tokens:** input 1,204 · cache write 18,845 · cache read 412,330 · output 9,876 (main session; subagents: ~42,000)
 ```
 
+**Stage handoff** (`pipeline/stages.md`)
+- The last entry of every stage is a normal entry followed by a handoff block:
+
+```markdown
+### Handoff: 2 · Cut → 3 · Compose
+**Decisions:** take 3 of ¶4 (cleanest last take; take 4 stumbles at 02:11) · pauses 0.18/0.30 s · …
+**Rejected:** take 4 of ¶4 (restart mid-word); 0.25 s phrase gaps (dragged)
+**Open issues:** ¶7 "B-tree" slightly clipped at 03:40; consider re-recording
+**Files:** `work/cutlist.md`, `work/edl.json`, `out/roughcut_preview.mp4` (4:12, -16.1 LUFS)
+**Next:** waiting for OK on the rough cut; then `pipeline/composition.md`, framing = crop (source 3840 px)
+```
+
+- The next stage reads this first, so it must stand alone: exact files, timestamps and values, no "as discussed".
+
 - Times are local, with the timezone. "Took" is from the prompt's timestamp to the last reply.
 - Changes name files relative to the project and say what changed in each, not just "edited".
 - Never put API keys, `.env` values or full command logs in the log. Link to `work/logs/<file>` instead.

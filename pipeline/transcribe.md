@@ -19,3 +19,5 @@
 **Gotchas**
 - Whisper confidently "fixes" misspoken words to the script. When the aligner and the audio disagree with Whisper, trust the audio.
 - Keep logs in `work/logs/`; the console output is huge.
+- The VAD pass can drop a whole sentence (on `redis-interview` it dropped a 3 s interviewer question) and merge two takes across a part join. Re-transcribe those windows on their own; their word times are better than either full pass.
+- whisper-ctranslate2 can die with "CUDA failed with error out of memory" late in a file while still printing "Transcription results written" and leaving the output folder empty. Check the JSON exists and grep the log for "out of memory". On `bloom-filter` the prompt-conditioned pass A died at 2:52 twice on an otherwise idle 4 GB card (also at `int8`); `--condition_on_previous_text False` fixed it.

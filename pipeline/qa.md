@@ -3,9 +3,11 @@
 **Goal:** catch every visible or audible defect before telling me it's done.
 
 **Frames**
-- Extract one frame from the middle of every beat of every deliverable to `work/qa/final/`. Tile them into contact sheets of about 12 frames and look at each sheet.
+- Extract one frame from the middle of every beat of every deliverable to `work/qa/final/`. Tile them into contact sheets of about 12 frames, with a video-inspect report for each deliverable (`pipeline/video-inspect.md`). Extraction, tiling and measuring are a Haiku batch (`pipeline/delegation.md`).
+- Opus looks at every sheet itself. A subagent pre-screen can point at timestamps but never passes anything. Explain or fix every freeze, silence and black interval in the report.
 - Check: no overlay covers my face, no text is cut off or outside the 5% margin, captions are readable and not under the bubble, no stretched video, and the grade is consistent.
 - For screen beats, check that the zoom target is the thing being talked about.
+- Render one still per beat in a single bundle (`renderStill` in a loop, half scale) and tile them; it catches layout bugs before the full render. Also sample the delivered MP4 every 5 s: gaps between two scenes (an empty card during a pause) only show up there.
 
 **A/V sync**
 - Compare against the source at the start, middle and end: correlate picture motion and the audio envelope of the output vs. the source segment it came from. The offset must be 0 ±1 frame.
@@ -18,3 +20,5 @@
 **Report**
 - Final durations and loudness, choices made, lines worth re-recording, and anything not done exactly as specified (with the reason).
 - Fix failures and re-run the failing checks. Never report a pass that wasn't measured.
+- Re-transcribing the delivered (sped-up) video with Whisper to check script coverage: it hallucinates ("Bye. Bye. …" over the end card, "free" for "cheap to write", "REST" for "while the frontend waits" on `graphql-vs-rest`). Settle every missing line with `ctc_score.py` on the final audio before calling it missing.
+- Sped-up edits (`setpts=PTS/k` + `atempo=k`, output `-r 30`): ffmpeg's CFR output duplicated the first 2 frames, so the picture ran a constant ~60 ms behind the voice (`redis-interview`). Audio checks against the voice track don't catch it. Also compare plate frames against the source frames the EDL + speed map them to (`work/scripts/qa_sync.py` in that project): the best match must be offset 0. Fix: drop the extra leading frames (`trim=start_frame=N,setpts=PTS-STARTPTS`) so the frame count equals round(cut frames / k). Better: put an `fps=30` filter right after `setpts` (`setpts=PTS/k,fps=30`); it gives exactly round(cut frames / k) frames at offset 0 with no trim (`bloom-filter`, 1.10x: 5,830 → 5,300). Don't combine it with the trim, or the picture runs early.
