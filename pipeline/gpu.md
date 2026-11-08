@@ -26,10 +26,12 @@
 **Gotchas**
 - On a 4 GB card (GTX 1650), Whisper large-v3 does not fit in float16. Use `compute_type int8_float16`.
 - MediaPipe's Python face detector runs on the CPU only. That is expected; report it rather than hiding it.
-- Run one heavy GPU job at a time on small cards.
+- Run one heavy GPU job at a time on small cards. While one runs, small side jobs (stills, thumbnails, rembg, contact sheets) go on the CPU instead of waiting: Remotion without `gpu-run` and with `--gl=swangle`. Log that they ran on the CPU (CLAUDE.md exception).
 - If a check fails, find the cause (driver, PATH, missing libs). If it truly cannot be fixed, stop and tell me.
 - The card may be shared with another Claude session (another project transcribing at the same time). An OOM in Whisper usually means someone else holds VRAM: check `nvidia-smi --query-compute-apps=pid,used_memory` and `readlink /proc/<pid>/cwd`. Never kill another project's job; wait for it, or transcribe short windows (a few seconds each fit beside it).
 - Whisper large-v3 at `int8` peaked at ~3.3 GB on the GTX 1650 on one video, but see the next point: it is not always the safer choice.
 - `whisper-ctranslate2` exits 0 on "CUDA failed with error out of memory". Judge a pass by its output JSON existing, not the exit code. Wait for an empty `--query-compute-apps` before each pass (another project may run passes back to back) and retry a pass that left no JSON.
 - Whisper OOM at the same spot on every try, alone on a free card, is the temperature fallback: it samples `best_of` (default 5) candidates at once. On `graphql-vs-rest` both `int8` and `int8_float16` died ~1 min in; `--best_of 1` finished at 2.2 GB. Pass `--best_of 1` by default on a 4 GB card.
 - A wait loop like `while pgrep -f whisper-ctranslate2` matches its own shell's command line and never ends. Match the interpreter path instead (`pgrep -f '^/home/…/venv/bin/python3'`).
+- `int8_float16` can OOM even on a 40 s clip at ~2.6 GB with a free card (`jwt-explained`, GTX 1650, large-v3, beam 5): the error lands right after "Detected language". `--compute_type int8` (beam 5) and `int8_float16 --beam_size 2` both finished. Test a 40 s window first when a pass leaves no JSON.
+- Two sessions sharing the card take turns badly: another project's back-to-back Whisper passes OOM'd our final-voice Whisper and CTC three times (`docker-explained`). Wrap every GPU step in a wait-and-retry helper: block until `nvidia-smi --query-compute-apps=process_name` lists no `python`, run, and retry on "out of memory" (`docker-explained` `work/scripts/gpu_wait.sh`). A second session's Remotion render can also start beside yours; it only slows both, so leave it.

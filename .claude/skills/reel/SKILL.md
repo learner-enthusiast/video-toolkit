@@ -18,7 +18,8 @@ Use the same pipeline steps and the same four stages as `/coding-video` (GPU, pr
 - **Safe zones.** Keep text clear of the right ~15% (platform buttons) and the bottom ~20% (description overlay).
 - **Ending.** End on a payoff line or a loop back to the hook. A short `EndCard` (≤ 2 s) is optional.
 - **Deliver.** `out/<name>_9x16.mp4` plus an SRT, at -14 to -16 LUFS. Always make a thumbnail with `pipeline/thumbnail.md` (9:16 variant).
-- **Trailers.** Always make both 15–20 s trailers per `pipeline/trailer.md`: `out/<name>_trailer_16x9.mp4` and `out/<name>_trailer_9x16.mp4`.
+- **Trailer.** Always make exactly one short cut, rendered in both aspect ratios: `out/<name>_trailer_16x9.mp4` and `out/<name>_trailer_9x16.mp4` (`pipeline/trailer.md`). If the prompt defines a short cut, that is the trailer; otherwise the default 15–20 s trailer. Never both.
+- **Carousel twin.** After the final render's QA, run `/carousel <name>` (`pipeline/carousel.md`): 6–8 slides in `out/carousel/`, with its outline and slide-1 approval stops.
 - **Social copy.** Always write `out/<name>_social.json` per `pipeline/social-copy.md`. YouTube chapters don't apply to a reel; use the `shorts_title` and a short description instead.
 
 Stop at the rough cut for my OK, as always.

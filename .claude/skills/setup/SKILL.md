@@ -12,6 +12,7 @@ description: Check which video tools are installed, ask before installing the mi
    - A Python env with torch + CUDA, faster-whisper (or whisper-ctranslate2), mediapipe, opencv, and transformers (for forced alignment)
    - Cached models: faster-whisper large-v3, wav2vec2 alignment model
    - `cursor-agent` (optional), and `rembg` (optional, used for thumbnails)
+   - `img2pdf` on PATH (for `/carousel` PDFs; install with `pipx install img2pdf`)
    - `praatio` in the shared venv, and `~/bin/mfa` with the `english_mfa` acoustic model and dictionary (for `/cut-video`)
    - The Remotion skills: `.claude/skills/remotion-best-practices/SKILL.md` resolves (they're gitignored, so a fresh clone lacks them)
    - Video inspection (`pipeline/video-inspect.md`): `scenedetect version`; `~/bin/vt-ocr-python` and `gpu-run vt-ocr-python -c "import paddle, paddleocr; print(paddle.device.get_device())"` prints `gpu:0`; `~/.cache/mediapipe/face_landmarker.task`; `ollama list` shows `qwen2.5vl:3b` (default; the 7b on cards with ≥ 8 GB) and `moondream` (fallback); `systemctl cat ollama` shows the drop-in with the PRIME variables; `/usr/share/dict/american-english`

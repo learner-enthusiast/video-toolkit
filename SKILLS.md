@@ -12,6 +12,8 @@ Third-party skills used by this toolkit, at project level in `.claude/skills/`. 
 
 Upstream license files are kept inside each vendored skill folder.
 
+**Toolkit skills** (written here, not third-party): `/setup`, `/new-video`, `/coding-video`, `/reel`, and `/carousel` (turns a reel's `script.md` into a 6–8 slide 1080x1350 Instagram carousel with PDF, caption and alt text).
+
 ## What I changed
 
 **All three video skills (add-zooms, cut-video, clipify)** now start with a "Linux adaptation (video-toolkit)" section, and the commands below it were rewritten:

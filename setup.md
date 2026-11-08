@@ -4,6 +4,13 @@ The easy way: open Claude Code in this folder and run `/setup`. It checks what's
 
 Everything installs **once per machine, globally**: apt, one shared user venv (`~/video-toolkit/venv`) with launchers in `~/bin`, and models in `~/.cache`. Never a venv per project.
 
+## Carousel PDF
+
+`/carousel` joins the slide PNGs into one lossless PDF with `img2pdf`, installed once per machine:
+```bash
+pipx install img2pdf && img2pdf --version
+```
+
 ## Video inspection tools
 
 Used by `pipeline/video-inspect.md`: local tools scan every frame and write a text report, so Claude reads a few thousand tokens instead of thousands of images.

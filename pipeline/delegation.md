@@ -38,3 +38,7 @@ Report (nothing else):
 - Once the cause is fixed, the corrected batch goes back to Haiku.
 
 **Vision** is never delegated for a final judgment. See `pipeline/video-inspect.md`.
+- Wrap every long encode or render in a Haiku batch with `timeout <s>` and run it in the foreground. A batch Haiku pushed to the background sat on a hung ffmpeg for an hour before reporting.
+- `cursor-agent -p --force` can be refused by Claude Code's auto-mode permission classifier (it runs commands and sends code to an outside service). If it is, try Copilot CLI (`copilot -p "<spec>"`) next (CLAUDE.md order); if that is refused or fails too, write the components yourself from the same specs and tell me. Never work around a refusal (`kafka`, `redis-invalidation`).
+- Haiku sometimes sends two numbered commands in one message, so they run in parallel (`rag-pipeline`: the 33-segment plate encode ran beside the voice encode at 0.25x and hit its timeout). Write "run ONE command per message" in every batch with a long encode, and give a 30+ segment 1080x1920 plate encode ≥ 2400 s (it does ~1.7x alone).
+- A Haiku runner that polls a `nohup` job can stall between steps (it stopped after the first of three renders on `scion`), and stopping that agent also killed the encode it had just launched. For long render chains, write one chain script and run it detached; check the log for its EXIT markers.

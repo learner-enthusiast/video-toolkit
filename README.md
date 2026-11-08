@@ -7,7 +7,7 @@ Instructions only, with no code. These Markdown files tell Claude how to build c
 2. Run `/new-video <name>`, then drop footage into `projects/<name>/raw/` and screenshots/clips into `assets/`.
 3. Fill `projects/<name>/script.md` from a file in `templates/`.
 4. Run `/coding-video <name>` or `/reel <name>`. Claude stops at the rough cut for your OK.
-5. Collect everything from `projects/<name>/out/`: the main video, a landscape and a portrait trailer, SRTs, `thumbnail/` (rendered thumbnails plus a ChatGPT prompt and up to 3 assets to make your own), and `<name>_social.json` with copy-paste posts and hashtags for every platform.
+5. Collect everything from `projects/<name>/out/`: the main video, one trailer cut in landscape and portrait (a short cut you define in the prompt, else the default trailer; never both), SRTs, `thumbnail/` (rendered thumbnails plus a ChatGPT prompt and up to 3 assets to make your own), `<name>_social.json` with copy-paste posts and hashtags for every platform, and for reels `carousel/` (6–8 Instagram slides, a PDF, caption and alt text; `/carousel <name>` also works on older projects).
 
 `projects/<name>/log.md` keeps a dated history of every prompt, what Claude changed, how long it took, and the tokens used.
 

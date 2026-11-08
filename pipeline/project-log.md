@@ -39,6 +39,7 @@
 
 - The next stage reads this first, so it must stand alone: exact files, timestamps and values, no "as discussed".
 
+- A carousel run (`/carousel`) is a normal entry titled `· Carousel`: slide count, the outline/look approvals (or "self-judged" and why), files in `out/carousel/`, QA fixes.
 - Times are local, with the timezone. "Took" is from the prompt's timestamp to the last reply.
 - Changes name files relative to the project and say what changed in each, not just "edited".
 - Never put API keys, `.env` values or full command logs in the log. Link to `work/logs/<file>` instead.

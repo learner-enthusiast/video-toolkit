@@ -7,12 +7,14 @@ This repo is instructions only. Build code per video inside `projects/<name>/wor
 - Verify before any GPU work: `gpu-run nvidia-smi` shows the card, and torch reports `cuda.is_available() == True`.
 - Encode with `h264_nvenc` when `ffmpeg -encoders` lists it.
 - Never fall back to the CPU silently. Fix the cause, or stop and tell me. See `pipeline/gpu.md`.
+- Exception: when the GPU is busy with another heavy job (a render, Whisper), run small side jobs (stills, thumbnails, rembg, contact sheets) on the CPU instead of waiting (Remotion: no `gpu-run`, `--gl=swangle`). Say so in the log and report. Never move the main render, transcription or final encodes to the CPU.
 
 ## Delegation
 - You orchestrate. Hand shell work (probing, ffmpeg, Whisper, Python, installs, renders) to a Haiku subagent as one batch of exact commands per step (`pipeline/delegation.md`). Don't run it from the main session.
 - Haiku only runs the commands you wrote. It never chooses takes, edits a command, or fixes an error. It saves full output to `work/logs/<step>.log` and returns exit codes, key numbers, and every error or warning verbatim.
 - If anything fails or looks off, read the log and debug it yourself; you may run commands while debugging.
-- If `cursor-agent` is installed, give it exact component specs (props, geometry, timing) to write code from.
+- Code helpers, in this order: try `cursor-agent` first; if it is not installed, is refused, or fails, use GitHub Copilot CLI (`copilot -p "<spec>"`). Give either one exact component specs (props, geometry, timing) to write code from.
+- Hand a helper only work that can't lower video quality (boilerplate, data files, helper scripts from exact specs). Claude does the heavy lifting: visual components, timing, layout, and reviews every line a helper writes before it's used.
 - Judgment, vision, take selection, QA and every creative or quality decision stay with you.
 - Vision goes through contact sheets and video-inspect reports (`pipeline/video-inspect.md`). A subagent may pre-screen, but you do the final visual QA before deliverables by looking at the sheets yourself.
 
@@ -62,6 +64,7 @@ Flags and VLM captions are leads, not verdicts. Judge them against this file and
 - Deliver at -16 LUFS with A/V sync verified at the start, middle and end.
 
 ## Deliverables
-- Every video ships with: the main video, two trailers (landscape 16:9 and portrait 9:16, see `pipeline/trailer.md`), an SRT for each, thumbnails in `out/thumbnail/` along with a ChatGPT kit (up to 3 static assets plus a ready prompt and a template for my own) (`pipeline/thumbnail.md`), and `<name>_social.json` with ready-to-paste titles, posts and hashtags for LinkedIn, X, Instagram, Facebook, Threads and YouTube (`pipeline/social-copy.md`). Don't wait to be asked.
+- Every video ships with: the main video, exactly one trailer cut rendered in landscape 16:9 and portrait 9:16 (a short cut defined in the prompt IS the trailer; otherwise the default from `pipeline/trailer.md`; never both), an SRT for each, thumbnails in `out/thumbnail/` along with a ChatGPT kit (up to 3 static assets plus a ready prompt and a template for my own) (`pipeline/thumbnail.md`), and `<name>_social.json` with ready-to-paste titles, posts and hashtags for LinkedIn, X, Instagram, Facebook, Threads and YouTube (`pipeline/social-copy.md`). Don't wait to be asked.
+- Every 9:16 reel delivery also produces a carousel twin in `projects/<name>/out/carousel/`, built from that project's `script.md` (`pipeline/carousel.md`). `/carousel <project>` can also be run on its own for older projects.
 - Keep X posts within 280 chars unless I say I have X Premium.
 - All final files go in `projects/<name>/out/`. Intermediates stay in `work/`.

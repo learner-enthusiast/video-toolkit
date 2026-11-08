@@ -1,9 +1,10 @@
 # Trailer
 
-**Goal:** two trailers for every video, cut from the same approved timeline: one landscape, one portrait.
+**Goal:** exactly one short-form cut per video, rendered twice from the same approved timeline: one landscape (16:9), one portrait (9:16). Never two different short cuts.
 
 **Cut**
-- Length 30–60 s (15–20 s when the main video is itself a reel). One idea: the problem, the payoff, and a reason to watch the full video.
+- **Which cut:** if the prompt defines a short cut (e.g. a "60-second cut" with a beat list), that cut IS the trailer: use the prompt's length and beats. Otherwise use the default trailer below. Never ship both a prompt-defined cut and a default trailer.
+- Default trailer: length 30–60 s (15–20 s when the main video is itself a reel). One idea: the problem, the payoff, and a reason to watch the full video.
 - Open on the boldest line or result, never a greeting. A 2–5 word text hook is on screen from frame 0.
 - Reuse beats, graphics and word timestamps from the main edit. Don't re-pick takes.
 - End on a short `EndCard` (≤ 2 s) that points to the full video.
@@ -17,3 +18,4 @@
 **Deliver**
 - Render and encode per `render.md`: `out/<name>_trailer_16x9.mp4` and `out/<name>_trailer_9x16.mp4`, each with an SRT (`subtitles.md`).
 - Both go through `qa.md` like the main video.
+- End a replayed segment 2 frames after its last word when the main's next line starts right after it: the default 8-frame tail caught the next scene's fade and the first caption word (`rag-pipeline`). Start a segment exactly on its first word for the same reason.

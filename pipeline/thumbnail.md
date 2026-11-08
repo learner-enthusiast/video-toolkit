@@ -40,3 +40,6 @@ Also give me what I need to make my own thumbnail in ChatGPT (image generation),
 **Report**
 - Show me all three and recommend one with a one-line reason.
 - List the assets in the ChatGPT kit and where the prompt file is.
+- Measure the headline against the cutout's head box, not just the safe margin. On `redis-invalidation`, 4 of 6 variants ran their second line ("Cache didn't", "can kill your", "at midnight?") under my head, and only the short two-word headlines stayed clear. Keep each line ≤ ~12 characters at 96 px, or wrap it to three lines.
+- rembg `u2net_human_seg` kept a chunk of the chair back and a pink hair fringe on `docker-explained`'s `thumbnail_raw`; `birefnet-portrait` (CPU, ~1 min) gave a clean cut. Try it first. A portrait photo whose shirt reaches the frame edges leaves a hard vertical edge when placed inside a 16:9 frame: fade the cutout's left edge with a CSS mask (`linear-gradient(to right, transparent 0, black 22%)`) or scale it so the edge leaves the frame.
+- ImageMagick renders some official SVGs blank (Docker press-kit `docker-mark.svg` uses CSS-class fills: a 1.8 KB all-transparent PNG). Rasterise logos for the ChatGPT kit with `vt-python -c "import cairosvg; cairosvg.svg2png(url=…, write_to=…, output_width=1000)"` and check the alpha mean is > 0.
