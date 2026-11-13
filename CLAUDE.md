@@ -28,6 +28,18 @@ Whenever a prompt asks to check, review, inspect, QA or "look at" a video, its f
 
 Flags and VLM captions are leads, not verdicts. Judge them against this file and `brand.md`, which win over any tool's or skill's defaults.
 
+## Creative direction
+- The visual cues in my script describe **what the viewer must understand** at each moment. They are the baseline, not a limit. Bring your own take wherever it explains better or keeps viewers watching: a sharper metaphor animation, a better reveal order, a cleaner diagram, a stronger transition, sound design, pacing, a visual callback, a punchier end card.
+- **You may change:** how a cue is visualised, animation style, reveal order within a beat, the layout state of a beat (HEAD / FULL / SPLIT, `brand.md`) and its switch points (within a beat or two), extra graphics, emphasis, SFX and music beds, zooms.
+- **You may NOT change:** spoken lines (never cut or reword any line), the facts or code shown, `brand.md`, the ≤ 2:59 limit, or the intent of a cue (what the viewer must understand).
+- **Priority order:** `brand.md` → hard rules (length, never cut lines, never modify raw footage) → intent of my script cues → your creative take → skill defaults.
+- **Process:**
+  1. In the storyboard step, add a **"Creative take"** list: each idea, the beat it touches, and one line on why it helps the explanation or retention.
+  2. Small improvements (polish, timing, SFX, transitions): just do them and list them in the project log.
+  3. Bigger changes (a different visual concept for a whole beat, reordering beats, a new recurring motif): show them in the 3 approval stills and wait for my OK.
+  4. If my cue and your idea are close, use yours and mention mine as the fallback.
+- Don't ask permission for every small choice. Be opinionated, then show me.
+
 ## Skill priority
 - `CLAUDE.md` and `brand.md` win over any skill's defaults: colors, fonts, caption style, pacing and motion. A skill decides how to do a step, never how the video looks or feels.
 - `/coding-video` and `/reel` use `/cut-video` as the cutting engine for take selection, and `/add-zooms` for punch-ins on emphasised words that also hide jump cuts.
@@ -47,6 +59,7 @@ Flags and VLM captions are leads, not verdicts. Judge them against this file and
 ## Workflow
 - Never modify `raw/` or `assets/`. Work on copies in `work/`.
 - For each paragraph, keep my LAST complete, clean take. Captions follow my actual words, not the script.
+- Playlists: a video may belong to a series. Episodes live in `projects/<playlist>/<NN>-<topic>/` (same structure as any project) and obey the tracked rules file `series/<playlist>.md` on top of this file and `brand.md`. See `README.md` (Playlists).
 - Work in stages, one session each: Prep, Cut, Compose, Deliver (`pipeline/stages.md`). Start every stage by reading `log.md` and the project files. End it with a handoff in `log.md`: decisions and reasons, rejected options, open issues, files produced, next steps. Use `/compact` only as a fallback.
 - Stop at the rough cut (end of Cut) and wait for my OK before composing.
 - Logs go to `work/logs/`, never into the chat. Report a summary.

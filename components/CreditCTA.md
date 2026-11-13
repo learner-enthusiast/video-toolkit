@@ -5,7 +5,7 @@
 **Props:** `mode` ('hook' | 'cta'), `thumb` (file), `name` (credit tag), `at`, `out`, `arrowAt`, `handle`.
 
 **Look**
-- Thumbnail in a white frame (2 px border, brand radius, shadow), 16:9, ~720 px wide, on the wall above my head in FULL (y ≈ 90–500 in 9:16); credit pill under it ("Piyush Garg", near-black filled).
+- Thumbnail in a white frame (2 px border, brand radius, shadow), 16:9, ~720 px wide, on the wall above my head in HEAD (y ≈ 90–500 in 9:16); credit pill under it ("Piyush Garg", near-black filled).
 - Hook mode: an orange arrow draws from my head up to the thumbnail (stands in for a point-up gesture when the footage has none).
 - CTA mode: the thumbnail returns, an orange arrow points down with the text "Full video in comments" (Inter 900) and a follow handle pill.
 

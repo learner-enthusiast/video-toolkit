@@ -16,7 +16,9 @@
 **Build**
 - Read `brand.md` into one `theme.ts` (colors, fonts, radius, shadow, border, FPS).
 - Read the `script.md` cues. Build only the components they need, each from its `components/*.md` spec.
-- Use one geometry module for the layout modes (TALK, SCREEN + BUBBLE, GFX + BUBBLE) on the 5% grid. Components take rects; they don't invent positions.
+- **Storyboard first.** Write `work/storyboard.md`: one line per beat with its layout state (HEAD / FULL / SPLIT, from the script's `[mm:ss–mm:ss | STATE]` tags, moved if another state explains better) and the visual. Add a **Creative take** list: each idea, the beat it touches, one line on why it helps the explanation or retention (`CLAUDE.md`, Creative direction). Small improvements are just done and logged; bigger ones (a different visual concept for a whole beat, reordered beats, a new recurring motif) are shown in 3 approval stills, and I wait for my OK.
+- Use one geometry module for the three layout states (HEAD, FULL, SPLIT; `components/layout-states.md`) on the 5% grid; 16:9 TALK / SCREEN + BUBBLE map onto HEAD / SPLIT-style states the same way. Components take rects; they don't invent positions.
+- Be a co-director, not an executor: the script's cues are the baseline; bring a better visual take where it explains better, within the limits in `CLAUDE.md`.
 - Use one composition per deliverable (full, trailer 16:9, trailer 9:16) sharing the beats.
 - Add a `music` prop (path or null, default null) at about -24 dB, ducked under speech.
 - Synthesize SFX (pop, whoosh, key click, stamp, tick) with ffmpeg at low volume, or use clearly royalty-free sounds.
@@ -30,7 +32,7 @@
 - Draw scenes once in a fixed logical card (972x900) and scale it into each aspect's card: one scene file serves 9:16 and 16:9.
 - A dark question card with a kicker ("Today's interview question:") must start TYPING after the words the kicker already shows, but the kicker itself lands on the first spoken word. Typing from the first word duplicated the kicker; delaying both left the card empty for 1.4 s (`rate-limiter`: `kickerAt` prop on Question).
 - `at()` throws only at render time, so `tsc` passing proves nothing about phrases. Render one still per scene (a bundle-once still script, half scale) right after writing the scenes; it catches missing phrases and layout collisions in one pass.
-- "FULL, dark style" punch on a portrait talking head (`ag-ui`): keep me full frame, dimmed (`brightness(0.38) saturate(0.6)` via the layout blend), and put the punch graphic on the wall above my head (y ≈ 96–500). Hiding me (bloom-filter's DARK) loses the FULL beat the brief asked for.
+- "HEAD, dark style" punch on a portrait talking head (`ag-ui`): keep me full frame, dimmed (`brightness(0.38) saturate(0.6)` via the layout blend), and put the punch graphic on the wall above my head (y ≈ 96–500). Hiding me (bloom-filter's DARK) loses the HEAD beat the brief asked for.
 - Whisper on the cut voice parks short words ("a" before "spinner") in the preceding pause, up to 1 s early; video-inspect's `caption_desync` catches it. Pin it from the energy envelope in `build_words.py`, and recheck any trailer segment that starts there.
 - A wordmark logo inside a small UI element (a sign-in button, a 56 px lane header) shrinks to unreadable; use the company's official mark there (Google's four-colour "G", saved as `google-g.svg`) and keep the wordmark for logo walls (`oidc`).
 - An SVG whose `width`/`height` don't match its `viewBox` aspect (`oidc` `openid.svg`: 320×120 around a portrait viewBox) renders at its declared box. Size the tile to the declared aspect; editing the attributes clipped the wordmark to "Op".

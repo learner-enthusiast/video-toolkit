@@ -17,5 +17,5 @@
 
 **Gotchas**
 - Must read on frame 0 in a muted autoplay: no fade-in when it is the hook.
-- Never over the face: in FULL it sits on the wall above my head (y ≈ 96–620).
+- Never over the face: in HEAD it sits on the wall above my head (y ≈ 96–620).
 - The typed answer must finish no later than the last spoken word it shows.

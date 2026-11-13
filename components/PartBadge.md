@@ -10,8 +10,8 @@
 - In dark punches it stays white (it is already a white tile).
 
 **Motion**
-- Enters once at `at` (slide in from the left 24 px, `pop`), then holds; it does not move with the FULL ↔ SPLIT morph.
+- Enters once at `at` (slide in from the left 24 px, `pop`), then holds; it does not move with the HEAD ↔ SPLIT switch.
 - Hides at `hideFrom` with a fade.
 
 **Gotchas**
-- Never over the face: in FULL the face sits at y ≈ 600–1000, so the badge is clear.
+- Never over the face: in HEAD the face sits at y ≈ 600–1000, so the badge is clear.

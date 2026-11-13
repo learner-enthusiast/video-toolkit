@@ -10,7 +10,7 @@
 **P1** · "<one-line pitch: what it is, who it's for>" → whip-cut to SCREEN + BUBBLE `work/clips/<clip>.mp4`, UrlPill `<url>`
 
 ## What it does (one beat per feature)
-Format: **ID** [TRAILER] · spoken text → visual cue (trigger word in quotes)
+Format: **ID** [TRAILER] · `[mm:ss–mm:ss | HEAD, FULL or SPLIT]` · spoken text → visual cue (trigger word in quotes). The state tag is the layout plan (`brand.md` Layout); Claude may improve it (`CLAUDE.md`, Creative direction).
 
 **F1** · "<feature, user's view>" → SCREEN + BUBBLE `assets/<shot>.png`, Ken Burns to <region> on "<word>"
 **F2** · "<feature>" → SCREEN, Highlight <region> on "<word>"

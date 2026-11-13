@@ -13,8 +13,10 @@ Use the same pipeline steps and the same four stages as `/coding-video` (GPU, pr
 - **Hook in the first 2 s.** Open on the boldest claim or result, never a greeting. A big text hook (2–5 words) is on screen from frame 0. If the strongest line is mid-recording, move it to the front.
 - **Length 30–60 s.** Cut to one idea. Tighten pauses harder: about 0.10 s between phrases and 0.15 s between sentences.
 - **Fast pace.** The visual changes every 1.5–3 s (punch-in, a screen, a graphic, a card). No beat holds still.
-- **Framing.** Use the portrait recording natively, full frame. In screen beats, me in the top half and the screen or graphic in the bottom half. Keep the face out of the top ~12% and bottom ~20% UI zones.
-- **Big captions.** See `components/Captions.md` (reel mode): 1–3 words at a time, ~80 px, centered at mid-frame between my face and the screen.
+- **Layout.** There is no default layout. Every beat is HEAD (my face fills the frame), FULL (graphic fills the frame, my face hidden, voice continues) or SPLIT (graphic on top, me docked below), per `brand.md` Layout and `components/layout-states.md`. Read the script's `[mm:ss–mm:ss | HEAD|FULL|SPLIT]` tags as the plan, mix all three, and switch by hard cut or brand wipe only where a concept starts or ends. HEAD uses the portrait recording natively. Keep the face out of the top ~12% and bottom ~20% UI zones.
+- **Creative direction.** Script cues are the baseline, not a limit: bring a better visual take where it explains better, within the rules in `CLAUDE.md` (never change spoken lines, facts or code, `brand.md`, the length limit, or a cue's intent). List a "Creative take" in the storyboard; small changes just do and log, bigger ones go to 3 approval stills for my OK.
+- **Playlists.** If the project sits in a playlist (`projects/<playlist>/<NN>-<topic>/`), also follow `series/<playlist>.md`.
+- **Big captions.** See `components/Captions.md` (reel mode): 1–3 words at a time, ~80 px, placed per state (HEAD lower third clear of the face, SPLIT in the strip, FULL in a band clear of the graphic's key element).
 - **Safe zones.** Keep text clear of the right ~15% (platform buttons) and the bottom ~20% (description overlay).
 - **Ending.** End on a payoff line or a loop back to the hook. A short `EndCard` (≤ 2 s) is optional.
 - **Deliver.** `out/<name>_9x16.mp4` plus an SRT, at -14 to -16 LUFS. Always make a thumbnail with `pipeline/thumbnail.md` (9:16 variant).

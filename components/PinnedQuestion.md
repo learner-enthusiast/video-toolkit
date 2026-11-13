@@ -14,5 +14,5 @@
 - Open: spring scale + width morph on `openAt`; exit fade 8 frames.
 
 **Gotchas**
-- The corner must stay clear of the platform UI (top 10%, right edge) and of every scene's card content: use the top-left of the SPLIT card or above my head in FULL.
-- It is drawn above the layout (not inside the grid card) so FULL ↔ SPLIT morphs don't hide it; move it with the layout.
+- The corner must stay clear of the platform UI (top 10%, right edge) and of every scene's card content: use the top-left of the SPLIT card or above my head in HEAD.
+- It is drawn above the layout (not inside the grid card) so HEAD ↔ SPLIT switches don't hide it; move it with the layout.

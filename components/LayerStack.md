@@ -13,6 +13,6 @@
 - Chips pop, staggered 4–6 frames.
 
 **Gotchas**
-- Rows must fit the GRAPHIC card with ≥ 48 px text.
+- Rows must fit the FULL-state card with ≥ 48 px text.
 - Brand: no red/green; bad = dim grey #8A857C + orange warning mark, good = orange #E4572E (brand.md).
 - All timings trigger on spoken-word frames (`at(phrase)`), never fixed times; every element has an exit (`out`).

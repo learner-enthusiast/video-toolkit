@@ -12,7 +12,7 @@
 **I1** · "<what we'll build and why it matters>" → TALK, LowerThird on my name
 
 ## Steps
-Format: **ID** · spoken text → visual cue (trigger word in quotes)
+Format: **ID** · `[mm:ss–mm:ss | HEAD, FULL or SPLIT]` · spoken text → visual cue (trigger word in quotes). The state tag is the layout plan (`brand.md` Layout); Claude may improve it (`CLAUDE.md`, Creative direction).
 
 **S1** · "<explain step 1>" → SCREEN + BUBBLE `assets/<file>`, zoom to <region> on "<word>", Highlight <region>
 **S2** · "<explain step 2>" → GFX + BUBBLE: FlowDiagram `A → B → C`, nodes on their words

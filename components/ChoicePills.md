@@ -18,4 +18,4 @@
 
 **Gotchas**
 - Glitch randomness must be seeded and deterministic per frame.
-- Never put the pills over my face in FULL layout; use the grid card or dark style.
+- Never put the pills over my face in HEAD state; use the grid card or dark style.

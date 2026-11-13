@@ -6,8 +6,10 @@
 |---|---|---|
 | 1 · Prep | GPU, probe and trim, clean audio, transcribe (1–4) | handoff |
 | 2 · Cut | take selection, rough cut (5–6) | handoff + **CHECKPOINT: wait for my OK** |
-| 3 · Compose | composition, render (7–8) | handoff |
+| 3 · Compose | storyboard with Creative take, composition, render (7–8) | handoff |
 | 4 · Deliver | subtitles, trailers, QA, thumbnail, social copy, carousel (reels: `pipeline/carousel.md`, two approval stops), report (9–14) | handoff + final report |
+
+In Compose, be a creative co-director: script cues are the baseline, not a limit; improve them within the rules in `CLAUDE.md` (Creative direction), and list every creative change in `log.md`.
 
 `/reel` uses the same stages. `/clipify` candidate picking is part of stage 2.
 

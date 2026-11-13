@@ -8,7 +8,7 @@
 - A round stopwatch face (~420 px), white with a 2 px near-black border and a crown on top; 60 tick marks in warm grey, every 5th near-black. An orange sweep arc fills as time runs, an orange needle.
 - Readout in the centre: JetBrains Mono 700 ~96 px, tabular, `0.00 s` → `2.00 s`.
 - Step counter beside/below it: "9" in Inter 900 160 px orange with "steps" in Instrument Serif Italic 64 px.
-- In `dark` (FULL punch over the dimmed wall), the face stays white; the counter text turns white with the orange number.
+- In `dark` (HEAD punch over the dimmed wall), the face stays white; the counter text turns white with the orange number.
 
 **Motion**
 - `at`: the watch pops in (scale 0.8 → 1, `pop`), the crown presses down 6 px (button click SFX "tick").
@@ -17,4 +17,4 @@
 - Exit at `out`: scale 0.9 and fade, 9 frames.
 
 **Gotchas**
-- In FULL the stopwatch sits on the wall above the head (y ≈ 120–560), never on the face.
+- In HEAD the stopwatch sits on the wall above the head (y ≈ 120–560), never on the face.

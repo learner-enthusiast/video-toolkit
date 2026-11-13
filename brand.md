@@ -31,15 +31,18 @@ Editorial, clean, "notebook" feel. Applies to every video (16:9 and 9:16) unless
 **Captions**
 - One or two words at a time, Inter Black, near-black on the off-white background. White in dark style.
 - The current word may sit on the orange block for emphasis words only, not every word.
-- 9:16 SPLIT: on the off-white strip between the grid card and the docked talking head. 9:16 FULL: lower third, on an off-white block, never over the face.
+- Burned in, in every state. 9:16 HEAD: lower third on an off-white block, never over the face. 9:16 SPLIT: on the off-white strip between the grid card and the docked talking head. 9:16 FULL: a band just below the graphic or above the platform overlay, never over its key element.
 - 16:9: bottom center inside the safe margin, at most 2 lines.
 
-**Layout (9:16, 1080x1920)**
-- FULL: the landscape talking head centre-cropped (face-tracked) to portrait, when no graphic is on screen.
-- SPLIT: grid card on top (as tall as the space allows, see below), caption strip in the middle, the full landscape talking head scaled to 1080 wide (~608 px) docked at the bottom with the brand radius and border.
-- Portrait source (phone, 1080x1920): FULL uses it natively. In SPLIT, a 16:9 crop of a portrait frame cuts the forehead; show a head-and-shoulders square in the middle of the strip with a blurred, darkened copy filling the sides.
-- Keep the docked talking head clear of the platform caption overlay (bottom ~120 px): lift it. With the lift and a caption strip, the grid card is ~970 px tall (not more).
-- FULL ↔ SPLIT is a smooth scale + slide (~0.4 s spring). Never a hard cut.
+**Layout: HEAD / FULL / SPLIT**
+There is no fixed default layout. Every moment of a video is in exactly one of three states, chosen per beat from what the beat needs. Mix all three through the video. Full spec: `components/layout-states.md`.
+- **HEAD:** my face fills the frame, with captions and lower-thirds on top. Story beats, emotion, reactions, transitions, punchlines.
+- **FULL:** the graphic fills the whole frame and my face is hidden, while my voice keeps going. Whenever a concept needs the whole screen: flows, code, timelines, comparisons, data.
+- **SPLIT:** my face and a graphic together (graphic on top, face docked below: `components/ReelSplit.md`). When my reaction or delivery matters while a simple graphic is on screen: a single card, a short list, a number, a punchline that points at a visual. Never for dense code or detailed diagrams; those go FULL.
+- **Switching:** a hard cut or a fluid brand-style wipe (spring or ease-in-out, never linear), only on the beat where a concept starts or ends. Never mid-sentence unless the cut lands on an emphasised word.
+- **Script cues** are written `[mm:ss–mm:ss | HEAD]`, `[… | FULL]`, `[… | SPLIT]`. They are the layout plan; I may move a beat to another state if it explains better (`CLAUDE.md`, Creative direction).
+- **9:16 (1080x1920) framing:** HEAD uses a portrait source natively, or a landscape source face-tracked and centre-cropped to portrait. In SPLIT the docked head is a 16:9 window (landscape source) or a head-and-shoulders square on a blurred, darkened copy (portrait source). Keep the face out of the top ~12% and the bottom ~20% platform UI zones, and the docked head lifted clear of the platform caption overlay.
+- **Captions** stay on in every state and never sit over a graphic's key element (placement per state in the Captions section).
 
 **Motion**
 - Fluid and springy, never linear. Lines draw themselves, boxes pop in with a spring, orange packets travel along paths.
