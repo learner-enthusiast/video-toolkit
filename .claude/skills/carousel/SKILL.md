@@ -6,7 +6,7 @@ argument-hint: <project>
 
 # Carousel (4:5, 1080x1350, 6–8 slides)
 
-The reel's "carousel twin": the same points as the script, as swipeable slides people save. Runs inside Stage 4 · Deliver of every 9:16 reel (`pipeline/stages.md`), or on its own for an older project. Read `CLAUDE.md`, `brand.md`, `pipeline/carousel.md` and `components/Carousel.md` first; `brand.md` wins.
+The reel's "carousel twin": the same points as the script, as swipeable slides people save. Runs inside Stage 4 · Deliver of every 9:16 reel (`pipeline/stages.md`), or on its own for an older project. Read `CLAUDE.md`, `brand.md`, `pipeline/carousel.md` and `components/Carousel.md` first; `brand.md` wins. Choose any other components from `components/INDEX.md` first.
 
 **Input:** `projects/<project>/script.md` and `assets/logos/` (if present). If `<project>` is missing or has no `script.md`, stop and tell me.
 - Never invent a fact, number or claim the script doesn't say. Shorten its wording; don't add to it.

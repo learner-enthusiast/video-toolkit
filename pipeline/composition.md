@@ -15,7 +15,7 @@
 
 **Build**
 - Read `brand.md` into one `theme.ts` (colors, fonts, radius, shadow, border, FPS).
-- Read the `script.md` cues. Build only the components they need, each from its `components/*.md` spec.
+- Read the `script.md` cues. Choose components from `components/INDEX.md` first, never bulk-read `components/`. Build only the components the cues need, each from its `components/*.md` spec.
 - **Storyboard first.** Write `work/storyboard.md`: one line per beat with its layout state (HEAD / FULL / SPLIT, from the script's `[mm:ss–mm:ss | STATE]` tags, moved if another state explains better) and the visual. Add a **Creative take** list: each idea, the beat it touches, one line on why it helps the explanation or retention (`CLAUDE.md`, Creative direction). Small improvements are just done and logged; bigger ones (a different visual concept for a whole beat, reordered beats, a new recurring motif) are shown in 3 approval stills, and I wait for my OK.
 - Use one geometry module for the three layout states (HEAD, FULL, SPLIT; `components/layout-states.md`) on the 5% grid; 16:9 TALK / SCREEN + BUBBLE map onto HEAD / SPLIT-style states the same way. Components take rects; they don't invent positions.
 - Be a co-director, not an executor: the script's cues are the baseline; bring a better visual take where it explains better, within the limits in `CLAUDE.md`.
@@ -49,3 +49,8 @@
 - An element whose `style` sets a positioning `transform` (`translate(-50%,-50%)`, a flip) and then spreads `enter()`/`popIn()` loses the positioning: the entrance transform overwrites it, and the "Works offline" badge slid half off-frame (`scion`). Put the positioning transform on an outer div and the entrance on an inner one.
 - Check the contact sheets for scenes whose first visual waits for a later word: a SPLIT card sat nearly empty for 1–2 s at the start of 4 scenes (`scion`). Bring the scene's base layout in on the scene's first word; trigger only the details on later words.
 - A 10-frame overlap between card scenes (old one fading while the new one springs in) ghosts a busy card under the next one on the beat sheet (`jwt-is-dead`: PublicVerify under TypedKeyGate). Use a 2-frame overlap.
+- An end-card links panel "over my chest" at y 1250 covered my chin and the mic on `vectorless-rag` (I sat lower in frame than on `bloom-filter`). Place it from the face track: top edge ≥ face centre y + 0.75 × face width (y 1340 here), and check the last frame's still.
+- A sentence that starts a dark HEAD/FULL punch needs its first word's time verified against CTC before the first render (see `pipeline/transcribe.md`, sentence-first words): state switches trigger on those words more than on any others.
+- Stamps have an opaque panel: a 78 px BLOCKED stamp hid the whole sedan it was stamping. Size the stamp to ≤ 60% of the object's width and land it on the lower half so the object still reads.
+- Step badges (①②③) on a full-width code card: anchor them on a SHORT line of each step (`res.flushHeaders();`, `stream: true,`, the `for await` line) and light the long line with a highlight instead. A badge at the right edge of a 52+ char line at 28 px covered its last characters (`sdai-01-streaming` SSE card).
+- Something that "drops" from one panel into another (tokens falling from a server box onto a phone) must be rendered AFTER the target panel in the JSX: an opaque panel drawn later hid the falling chips completely (`sdai-01-streaming` two-lanes scene).

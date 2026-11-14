@@ -6,6 +6,8 @@ argument-hint: <name>
 
 # Reel (9:16, 1080x1920, 30 fps, 30–60 s)
 
+Choose components from `components/INDEX.md` first; open only the specs you will use.
+
 Use the same pipeline steps and the same four stages as `/coding-video` (GPU, probe, clean audio, transcribe, take selection, rough cut checkpoint, composition, render, QA), with the same delegation and vision rules (`pipeline/stages.md`, `pipeline/delegation.md`, `pipeline/video-inspect.md`). These rules change:
 
 - **Skills.** Cut with `/cut-video` (`aggressive` tone, but this file's pause lengths win), and punch in with `/add-zooms` (punches and ratchets only). If the source is a long video, use `/clipify` (dialogue mode) to pick 3–5 candidate moments. Show them to me, then build each chosen one as a reel with the rules below.

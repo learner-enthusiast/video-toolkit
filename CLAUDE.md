@@ -2,6 +2,11 @@
 
 This repo is instructions only. Build code per video inside `projects/<name>/work/`, never in the toolkit itself.
 
+## Components
+- Read order: `CLAUDE.md`, `brand.md`, `components/INDEX.md`, then only the component specs the scene table needs.
+- Never bulk-read `components/`. Read `INDEX.md`, then open only the specs used in this video's scene table.
+- Maintenance: whenever a new component spec is created (including by a video prompt's new-component section), add its row to `components/INDEX.md` and to the matching intent group in the same commit.
+
 ## GPU
 - If `nvidia-smi` exists, create `~/bin/gpu-run`: an executable wrapper that exports `__NV_PRIME_RENDER_OFFLOAD=1` and `__GLX_VENDOR_LIBRARY_NAME=nvidia`, prepends the system lib dir to `LD_LIBRARY_PATH`, then `exec "$@"`. Put `~/bin` on PATH.
 - Verify before any GPU work: `gpu-run nvidia-smi` shows the card, and torch reports `cuda.is_available() == True`.

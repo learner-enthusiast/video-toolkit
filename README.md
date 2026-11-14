@@ -17,4 +17,4 @@ Videos can belong to a series. Run `/new-video <topic>` and answer "Which playli
 
 `projects/<name>/log.md` keeps a dated history of every prompt, what Claude changed, how long it took, and the tokens used.
 
-`CLAUDE.md` holds the standing rules, `brand.md` the look, `components/` and `pipeline/` the building blocks.
+`CLAUDE.md` holds the standing rules, `brand.md` the look, `components/` and `pipeline/` the building blocks. Start at `components/INDEX.md` (one-page lookup by intent, with a table of every spec); open only the specs a video uses.

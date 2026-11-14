@@ -6,7 +6,7 @@ argument-hint: <name>
 
 # Coding video (16:9, 1920x1080, 30 fps)
 
-Work in `projects/<name>/` (or `projects/<playlist>/<NN>-<topic>/` for a playlist episode; then also follow `series/<playlist>.md`). Read `CLAUDE.md` and `brand.md` first. Follow each step's file in `pipeline/`.
+Work in `projects/<name>/` (or `projects/<playlist>/<NN>-<topic>/` for a playlist episode; then also follow `series/<playlist>.md`). Read `CLAUDE.md` and `brand.md` first. Choose components from `components/INDEX.md` first; open only the specs you will use. Follow each step's file in `pipeline/`.
 
 Run this as four stages, one session each (`pipeline/stages.md`). Start each stage by reading `log.md` and the project files, and end it with a handoff in `log.md`. Shell work goes to Haiku as exact-command batches (`pipeline/delegation.md`). Vision goes through contact sheets (`pipeline/video-inspect.md`).
 
