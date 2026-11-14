@@ -29,4 +29,4 @@ Merge script sections to fit the count; a 13-section script still makes ≤ 8 sl
 4. **QA:** `pipeline/carousel.md` → QA. Open every PNG yourself. Fix and re-render any slide that fails, then re-check it.
 5. **Log** the run in `log.md` (`pipeline/project-log.md`) and report the files plus anything not done as specified.
 
-Rendering and PDF building are shell work: a Haiku batch of exact commands (`pipeline/delegation.md`). The slide code, layout and every visual judgment stay with Opus.
+Rendering is a heavy exact-command job (Haiku batch); PDF assembly and file shuffling are low-stakes (delegation order in `pipeline/delegation.md`). The slide code, layout and every visual judgment stay with Opus.

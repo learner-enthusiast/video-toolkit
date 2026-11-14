@@ -5,7 +5,7 @@
 **Inputs:** a video path, optional `--start/--end` (seconds), optional `--thorough` (final pre-publish check).
 **Output:** `work/inspect/<deliverable>/` (`<deliverable>` = the file's stem): `report.json`, `contact_sheet.jpg`, `keyframes/` (one per scene, plus every flagged frame), and `sheet_NN.jpg` for beat QA.
 
-**Build it per project** in `work/scripts/video_inspect.py` (shared venv, `gpu-run vt-python`) plus `work/scripts/video_inspect_ocr.py` (`gpu-run vt-ocr-python`: PaddleOCR has its own venv, see `setup.md`). Haiku runs it from exact commands Opus writes (`pipeline/delegation.md`). Run the GPU stages one after another, never at the same time (4 GB card). All times are in source seconds (add `--start`), 2 decimals; boxes are normalised 0–1, 3 decimals.
+**Build it per project** in `work/scripts/video_inspect.py` (shared venv, `gpu-run vt-python`) plus `work/scripts/video_inspect_ocr.py` (`gpu-run vt-ocr-python`: PaddleOCR has its own venv, see `setup.md`). A Haiku batch runs it from exact commands Claude writes (`pipeline/delegation.md`, section 6). Run the GPU stages one after another, never at the same time (4 GB card). All times are in source seconds (add `--start`), 2 decimals; boxes are normalised 0–1, 3 decimals.
 
 | Stage | Tool and exact settings |
 |---|---|
@@ -41,7 +41,7 @@
 - For QA and the face/margin checks, the beat frames come from `pipeline/qa.md`; this file only defines how they're laid out.
 
 **Who looks**
-- A Haiku subagent may **pre-screen** sheets during a stage and list the timestamps worth a look. A pre-screen never passes anything.
+- A delegated helper (order in `pipeline/delegation.md`) may **pre-screen** sheets during a stage and list the timestamps worth a look. A pre-screen never passes anything.
 - **Final visual QA before deliverables is done by Opus, looking at every contact sheet itself** (and one keyframe per scene in `--thorough`), plus the report's flags and intervals. Every flag, freeze, silence or black interval is either explained (an intended hold, the end card) or fixed.
 - Look at sheets in the stage that needs them, then hand off; don't carry sheets from an earlier stage (`pipeline/stages.md`).
 

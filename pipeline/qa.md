@@ -3,7 +3,7 @@
 **Goal:** catch every visible or audible defect before telling me it's done.
 
 **Frames**
-- Extract one frame from the middle of every beat of every deliverable to `work/qa/final/`. Tile them into contact sheets of about 12 frames, with a video-inspect report for each deliverable (`pipeline/video-inspect.md`). Extraction, tiling and measuring are a Haiku batch (`pipeline/delegation.md`).
+- Extract one frame from the middle of every beat of every deliverable to `work/qa/final/`. Tile them into contact sheets of about 12 frames, with a video-inspect report for each deliverable (`pipeline/video-inspect.md`). Extraction and tiling are low-stakes (delegation order in `pipeline/delegation.md`); measuring and video-inspect runs are heavy exact-command jobs (Haiku batch).
 - Opus looks at every sheet itself. A subagent pre-screen can point at timestamps but never passes anything. Explain or fix every freeze, silence and black interval in the report.
 - Check: no overlay covers my face, no text is cut off or outside the 5% margin, captions are readable and not under the bubble, no stretched video, and the grade is consistent.
 - For screen beats, check that the zoom target is the thing being talked about.

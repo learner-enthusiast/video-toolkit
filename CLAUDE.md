@@ -15,17 +15,17 @@ This repo is instructions only. Build code per video inside `projects/<name>/wor
 - Exception: when the GPU is busy with another heavy job (a render, Whisper), run small side jobs (stills, thumbnails, rembg, contact sheets) on the CPU instead of waiting (Remotion: no `gpu-run`, `--gl=swangle`). Say so in the log and report. Never move the main render, transcription or final encodes to the CPU.
 
 ## Delegation
-- You orchestrate. Hand shell work (probing, ffmpeg, Whisper, Python, installs, renders) to a Haiku subagent as one batch of exact commands per step (`pipeline/delegation.md`). Don't run it from the main session.
-- Haiku only runs the commands you wrote. It never chooses takes, edits a command, or fixes an error. It saves full output to `work/logs/<step>.log` and returns exit codes, key numbers, and every error or warning verbatim.
-- If anything fails or looks off, read the log and debug it yourself; you may run commands while debugging.
-- Code helpers, in this order: try `cursor-agent` first; if it is not installed, is refused, or fails, use GitHub Copilot CLI (`copilot -p "<spec>"`). Give either one exact component specs (props, geometry, timing) to write code from.
-- Hand a helper only work that can't lower video quality (boilerplate, data files, helper scripts from exact specs). Claude does the heavy lifting: visual components, timing, layout, and reviews every line a helper writes before it's used.
-- Judgment, vision, take selection, QA and every creative or quality decision stay with you.
-- Vision goes through contact sheets and video-inspect reports (`pipeline/video-inspect.md`). A subagent may pre-screen, but you do the final visual QA before deliverables by looking at the sheets yourself.
+- You orchestrate. **Low-stakes work** (scaffolding, renames, ffprobe/proxies, logo downloads + `SOURCES.md`, SRT wrapping, social-copy JSON scaffolding, `log.md` updates, boilerplate for a final component spec) goes to outside CLIs, not Haiku. Low-stakes = a slightly-off result can't lower the final video because you check it afterwards.
+- **Never delegate:** script, cuts, storyboard, creative take, layout states, `brand.md`, final component visuals, render settings, QA, anything on screen that hasn't been reviewed.
+- Order: 1) GitHub Copilot CLI, 2) OpenAI Codex CLI, 3) `cursor-agent`, 4) Haiku subagent, only when all three are out of usage, not installed, or failing.
+- **Check each tool's usage before every delegation** (commands in `pipeline/delegation.md`). Low headroom or unreadable usage: skip it. Size chunks so one lost chunk costs little.
+- Run delegated CLIs non-interactively, in the background, with a hard timeout, logging to `projects/<name>/work/delegation/<NN>-<tool>-<task>.log`. Monitor the log; on a hang or a limit/auth error, kill it and re-run the chunk on the next tool. Verify every result yourself, and record task, tool, usage and fallback in `log.md`.
+- Heavy exact-command jobs (final renders, Whisper, final encodes, installs, video-inspect) are not low-stakes: you write the commands, a Haiku batch runs them verbatim (`pipeline/delegation.md`, section 6).
+- Vision goes through contact sheets and video-inspect reports (`pipeline/video-inspect.md`). You do the final visual QA yourself.
 
 ## Inspecting a video
 Whenever a prompt asks to check, review, inspect, QA or "look at" a video, its frames, captions, cuts or edits:
-1. Run video-inspect first (`pipeline/video-inspect.md`, as a Haiku batch). Never dump frames as images.
+1. Run video-inspect first (`pipeline/video-inspect.md`, as a Haiku batch per `pipeline/delegation.md`). Never dump frames as images.
 2. Read `report.json` (`summary` and `flags` first) and `contact_sheet.jpg`.
 3. Open with Read only the flagged frames plus one keyframe per scene, to judge framing, colour, pacing and visual quality.
 4. Use `--thorough` for the final check before publishing.

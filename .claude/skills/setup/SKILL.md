@@ -5,19 +5,20 @@ description: Check which video tools are installed, ask before installing the mi
 
 # Setup
 
-1. **Check.** Have a Haiku subagent report each item as present (with version) or missing, without installing anything:
+1. **Check.** Run these probes (a Haiku batch, per `pipeline/delegation.md`) to report each item as present (with version) or missing, without installing anything:
    - `ffmpeg`/`ffprobe`, and whether `-encoders` lists `h264_nvenc` and `-filters` lists `arnndn`/`afftdn`/`loudnorm`
    - `nvidia-smi`, `~/bin/gpu-run`, and `~/bin` on PATH
    - Node ≥ 20 and `npx`
    - A Python env with torch + CUDA, faster-whisper (or whisper-ctranslate2), mediapipe, opencv, and transformers (for forced alignment)
    - Cached models: faster-whisper large-v3, wav2vec2 alignment model
-   - `cursor-agent` (optional), and `rembg` (optional, used for thumbnails)
+   - Delegation CLIs (`pipeline/delegation.md`): `copilot --version` and `gh auth status`; `codex --version` and `codex login status`; `cursor-agent --version` and `cursor-agent status`. Each must be installed **and** logged in; also report the Copilot usage reading (`gh api /copilot_internal/user`)
+   - `rembg` (optional, used for thumbnails)
    - `img2pdf` on PATH (for `/carousel` PDFs; install with `pipx install img2pdf`)
    - `praatio` in the shared venv, and `~/bin/mfa` with the `english_mfa` acoustic model and dictionary (for `/cut-video`)
    - The Remotion skills: `.claude/skills/remotion-best-practices/SKILL.md` resolves (they're gitignored, so a fresh clone lacks them)
    - Video inspection (`pipeline/video-inspect.md`): `scenedetect version`; `~/bin/vt-ocr-python` and `gpu-run vt-ocr-python -c "import paddle, paddleocr; print(paddle.device.get_device())"` prints `gpu:0`; `~/.cache/mediapipe/face_landmarker.task`; `ollama list` shows `qwen2.5vl:3b` (default; the 7b on cards with ≥ 8 GB) and `moondream` (fallback); `systemctl cat ollama` shows the drop-in with the PRIME variables; `/usr/share/dict/american-english`
 2. **Ask me.** Show one table of what is missing and the proposed install method for each (see the Installs rule in `CLAUDE.md`). Wait for my answer.
-3. **Install** only what I approved. On Ubuntu 24.04, `pip install --user` is blocked (PEP 668): use one shared user-level venv with small launcher scripts in `~/bin`, not a venv per project.
+3. **Install** only what I approved. Delegation CLIs install **globally**, never per project: `npm i -g @github/copilot`, `npm i -g @openai/codex`, `curl https://cursor.com/install -fsS | bash`. Logins (`copilot login`, `codex login`, `cursor-agent login`) are interactive: print them for me to run with `!`. On Ubuntu 24.04, `pip install --user` is blocked (PEP 668): use one shared user-level venv with small launcher scripts in `~/bin`, not a venv per project.
    - **Remotion skills** (no license upstream, so not committed; install per clone, from the repo root): `npx skills add remotion-dev/skills`, then choose all skills and Claude Code. They land in `.agents/skills/`, symlinked from `.claude/skills/remotion-*`.
    - **praatio:** `vt-pip install praatio`
    - **MFA** (Montreal Forced Aligner; there's no apt package, conda-forge is the supported route). Install Miniforge in batch mode, which doesn't touch `~/.bashrc`:
