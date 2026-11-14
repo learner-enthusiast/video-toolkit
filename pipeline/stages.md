@@ -13,7 +13,7 @@ In Compose, be a creative co-director: script cues are the baseline, not a limit
 
 `/reel` uses the same stages. `/clipify` candidate picking is part of stage 2.
 
-**Delegation in every stage:** low-stakes work follows the order in `pipeline/delegation.md` (Copilot → Codex → cursor-agent → Haiku, usage-checked first); heavy exact-command jobs go to a Haiku batch; creative and QA work stays with Claude. Prep: probing and proxies are low-stakes, transcription is heavy. Cut: nothing is delegated except file moves. Compose: boilerplate only; renders are heavy. Deliver: SRT wrapping, social-copy scaffolding and `log.md` are low-stakes; QA is yours.
+**Delegation in every stage:** low-stakes tasks follow the chain in `pipeline/delegation.md` (Copilot → Codex → cursor-agent canary → Haiku); heavy jobs (renders, Whisper, final encodes, video-inspect, installs) go to the detached Haiku runner with `.status` files; creative and QA work stays with Claude. Prep: probing and proxies are low-stakes, transcription is heavy. Cut: only file moves are delegated. Compose: boilerplate is low-stakes, renders are heavy. Deliver: SRT wrapping, social-copy scaffolding and `log.md` are low-stakes; final encodes and video-inspect are heavy; QA is yours.
 
 **Starting a stage**
 - Before doing anything else, read `projects/<name>/log.md` (at least the latest handoff and every open issue), then the project files the stage depends on (`script.md`, `work/cutlist.md`, the EDL, `timeline.json`… as relevant), plus `CLAUDE.md`, `brand.md` and this stage's `pipeline/` files.

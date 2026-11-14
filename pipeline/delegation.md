@@ -13,9 +13,16 @@
 
 **Never delegated (Claude keeps these):** script, cut decisions, storyboard, creative take, layout states, `brand.md` decisions, final component visuals, render settings, QA, and anything visible on screen that hasn't been reviewed. Vision is never delegated for a final judgment (`pipeline/video-inspect.md`).
 
-**Heavy exact-command jobs** (final renders, Whisper, final encodes, installs, video-inspect runs) are not low-stakes and must not go to an outside CLI. Claude writes the exact commands and a **Haiku batch** runs them verbatim (section 6). *(Open decision: if you'd rather Claude run these itself, say so.)*
+## Two kinds of delegated work
 
-## 2. Order
+| Kind | Examples | Who runs it |
+|---|---|---|
+| Low-stakes tasks | scaffolding, renames, ffprobe reads, proxies, logo downloads + `SOURCES.md`, SRT wrapping, social JSON scaffold, `log.md`, boilerplate from a final spec | CLI chain: Copilot → Codex → cursor-agent (canary) → Haiku |
+| Heavy jobs | final renders, Whisper, final encodes, video-inspect runs, installs | Haiku runner (section 6); Claude only observes |
+
+Heavy jobs never go through the CLI chain: command timeouts, sandboxes and quota limits can kill a long GPU job midway.
+
+## 2. Low-stakes chain
 
 1. GitHub Copilot CLI (`copilot`)
 2. OpenAI Codex CLI (`codex`)
@@ -23,7 +30,7 @@
 4. Haiku subagent: only when all three are out of usage, not installed, not logged in, or failing
 
 ```
- task ──▶ low-stakes? ──no──▶ Claude does it (or Haiku batch if heavy exact commands)
+ task ──▶ low-stakes? ──no──▶ heavy: Haiku runner (§6) · else Claude does it
               │yes
               ▼
    Copilot usage ok? ──yes──▶ run (bg, timeout, log) ──▶ monitor ──▶ verify
@@ -32,7 +39,7 @@
    Codex usage ok?   ──yes──▶ same ...              kill → next tool
          │no
          ▼
-   cursor-agent ok?  ──yes──▶ same ...
+   cursor canary ok? ──yes──▶ ONE small chunk, short timeout, re-canary before the next
          │no
          ▼
        Haiku subagent
@@ -46,22 +53,22 @@
 | Login check | `gh auth status` and `copilot login` once | `codex login status` → `Logged in using ChatGPT` | `cursor-agent status` → `Logged in as …` |
 | Non-interactive run | `copilot -p "<task>" --allow-all-tools --no-ask-user --no-color --max-ai-credits <n> --usage-output-file <json>` | `codex exec --json -s workspace-write -C <dir> --skip-git-repo-check --ephemeral -o <last-msg-file> "<task>"` | `cursor-agent -p --force --sandbox disabled --workspace <dir> --output-format text "<task>"` |
 | Scope to the project | run with `cwd` = project dir; without `--allow-all-paths` it stays in cwd (add more with `--add-dir`) | `-C <dir>` + `-s workspace-write` (use `-s read-only` for pure reads) | `--workspace <dir>`. `--sandbox enabled` **fails here** (AppArmor), so scope is by prompt only: keep tasks tiny |
-| Usage check | `gh api /copilot_internal/user` → `.quota_snapshots.premium_interactions.percent_remaining` and `.quota_reset_date` | `codex login status`, then the `rate_limits` object in the newest `~/.codex/sessions/*/*/*/rollout-*.jsonl` (see below) | **none**: the CLI shows login and tier only (`cursor-agent about`); usage lives on cursor.com |
+| Usage check | `gh api /copilot_internal/user` → `.quota_snapshots.premium_interactions.percent_remaining` and `.quota_reset_date` | `codex login status`, then the `rate_limits` object in the newest `~/.codex/sessions/*/*/*/rollout-*.jsonl` (see below) | **none confirmed** (`cursor-agent about` shows login and tier only). Its check is the **canary**, below |
 | Hard spend cap | `--max-ai-credits <n>` (**minimum 30**; a probe-sized task used ~0.3) | none (use the timeout) | none (use the timeout) |
 | Limit/auth errors to grep | `quota`, `rate limit`, `429`, `premium`, `exceeded`, `not authenticated`, `login` | `rate_limit_reached_type` non-null, `usage limit`, `429`, `not logged in`, `"type":"error"` | `usage limit`, `rate limit`, `429`, `not logged in`, `Error:` |
 
 **Usage-check rules (mandatory before every delegation)**
 - **Copilot:** OK when `percent_remaining ≥ 15` and overage isn't needed. `gh api /copilot_internal/user` is an undocumented endpoint; it worked here. If it errors, treat Copilot as unreadable → skip.
 - **Codex:** `rate_limits` is only partly filled on this plan (`plan_type: go`, `primary`/`secondary` null, so no percentage). Run `codex login status`; read the last `rate_limits` line with `grep -o '"rate_limits":{.*' <newest rollout> | tail -1`. OK when logged in and `rate_limit_reached_type` is null and, if `primary`/`secondary` carry `used_percent`, both are < 85. Treat it as a **partial reading**: send one small chunk per call.
-- **cursor-agent:** no way to read remaining usage, so by the "unreadable → skip" rule it is **skipped** and the chain goes to Haiku. To allow it anyway, say so in the prompt (then it gets one tiny chunk per call, canary first: `cursor-agent -p --force --sandbox disabled --workspace <dir> "Reply with exactly: OK"`).
+- **cursor-agent (canary):** no usage-read command is confirmed, so a canary is its check. Before **each** use run `timeout 60 cursor-agent -p --force --sandbox disabled --workspace <dir> "Reply with exactly: OK"`. If it fails, times out, doesn't print `OK`, or shows a limit/auth error, skip to Haiku. If it passes, send exactly **one small chunk** with a short timeout (≤ 300 s), monitored; run the canary again before the next chunk. If a real usage/status command turns up, use it instead and update the table.
 - **Haiku:** no check.
-- A low-headroom or unreadable tool is skipped, not retried. Say which tool was skipped and why in `log.md`.
+- A low-headroom or unreadable tool (Copilot, Codex) is skipped, not retried. Say which tool was skipped and why in `log.md`.
 
 **Size the batch to the headroom.** Split big jobs into chunks that each finish on their own (one logo set, one folder, one SRT), so a limit hit loses one chunk, not the job.
 
 ## 4. How to run one
 
-Always non-interactive, in the background, with a hard timeout, output to `projects/<name>/work/delegation/<NN>-<tool>-<task>.log`:
+Always non-interactive (prompt as an argument, auto-approve scoped to the project folder), in the background, with a hard timeout, output to `projects/<name>/work/delegation/<NN>-<tool>-<task>.log`:
 
 ```bash
 D=projects/<name>/work/delegation; mkdir -p $D
@@ -85,28 +92,54 @@ Every task prompt contains: the exact files/paths, the exact expected output (fi
 
 Boilerplate for a component with a final spec goes through the same order. Give exact specs (props, geometry, timing). Claude writes the visual components and reviews every line a helper writes. If a tool is refused by Claude Code's auto-mode permission classifier (it sends code to an outside service), go to the next tool; if all are refused, do it yourself and tell me. Never work around a refusal.
 
-## 6. Haiku fallback and heavy-job batches
+## 6. Heavy jobs: Haiku runner, Claude observes
 
-Haiku runs the exact commands Claude wrote, in order, and reports back. It never chooses takes, edits or "fixes" a command, retries with different flags, or judges quality.
+```
+Claude ─ writes exact command batch (gpu-run, flags, paths, timeouts)
+   ▼
+Haiku runner ─ launches each job DETACHED (setsid/nohup) ─ watches logs
+   │  on error/stall: STOP, report. Never change settings or retry differently.
+   ▼
+work/jobs/<NN>-<job>.status  (done/failed, duration, output path, last 20 log lines)
+   ▼
+Claude ─ reads .status ─ verifies output (ffprobe streams/duration, size) ─ next step
+```
 
-**Batch the handoff:** one handoff per step, commands verbatim in a numbered list, **stop at the first non-zero exit** unless a command is marked `(continue on error)`.
+- Claude hands Haiku an **exact** batch: full commands, every GPU job wrapped in `gpu-run`, all flags, input/output paths and a timeout per job.
+- Haiku runs them exactly as written. It must not change flags, codecs, quality, resolution, paths or order, and must not retry with different settings.
+- Every job is launched **detached** (`setsid nohup … &`) and writes its own log to `work/jobs/<NN>-<job>.log` and its own `.status` file, so it keeps running even if the Haiku session ends.
+- On fail or stall Haiku stops the batch and reports. Any fix is Claude's decision.
+- Claude does not tail logs. It reads the `.status` files and verifies outputs (ffprobe streams/duration, size); only on a failure or an odd number does it read the log and debug.
+- Installs are always global (not per project); Haiku runs them from Claude's exact list.
+
+**Job wrapper.** Claude writes this once per project as `work/jobs/run.sh` (a project file, never in the toolkit) and every heavy job is launched through it, so `.status` is identical for all jobs:
+
+```bash
+#!/bin/bash
+# usage: run.sh <NN-job> <timeout-seconds> <output-path> -- <command...>
+N=$1; T=$2; OUT=$3; shift 4; D="$(cd "$(dirname "$0")" && pwd)"
+t0=$(date +%s); timeout "$T" "$@" > "$D/$N.log" 2>&1; rc=$?
+{ echo "state=$([ $rc = 0 ] && echo done || echo failed)"; echo "exit=$rc"
+  echo "seconds=$(( $(date +%s) - t0 ))"; echo "output=$OUT"; echo "log_tail<<"; tail -20 "$D/$N.log"
+} > "$D/$N.status.tmp" && mv "$D/$N.status.tmp" "$D/$N.status"
+```
+
+Launch (the runner does exactly this): `setsid nohup work/jobs/run.sh 01-render 1200 out/x.mp4 -- gpu-run ffmpeg … > /dev/null 2>&1 &`. The `.status` file appears only when the job ends (atomic `mv`); while it's absent the job is running (`pgrep -f <NN-job>`). Delete stale `.status` files before a re-run.
+
+**Handoff template (Haiku)**
 
 ```text
 Step: <step>   Project: projects/<name>   CWD: projects/<name>/work
-Run these commands exactly, in order. Do not change, add, or skip anything. Run ONE command per message.
-Save all stdout+stderr to work/logs/<step>.log (append each command with a "### <n> <command>" header).
-On the first non-zero exit, stop and report.
-1. <command>
-2. <command>
-Report (nothing else):
-- each command: exit code
-- key numbers: <list exactly which: duration, resolution, fps, LUFS / true peak, file sizes, frame counts…>
-- every line containing error / warning / failed / invalid / mismatch / non-monotonic / deprecated, copied VERBATIM with its command number
-- files produced, with sizes
+Run these jobs exactly as written, in order, ONE per message. Do not change, add, or skip anything.
+Launch each detached through `work/jobs/run.sh` as shown. Wait for its .status file (check every 15 s, hard limit = its timeout + 30 s).
+On a failed/stalled job: stop the batch and report. Never retry with different settings.
+1. <job command with wrapper>
+2. <job command with wrapper>
+Report (nothing else): for each job the .status path, state, exit, seconds; and every error/warning line verbatim.
 ```
 
-- Full output goes to the log, never into the reply. No opinions.
-- Any non-zero exit, unexpected warning, or number outside spec (duration off by > 1 frame, wrong fps/resolution, LUFS off target, suspiciously small file): Claude reads the log and debugs directly, then the corrected batch goes back.
-- Wrap every long encode in `timeout <s>`, in the foreground. A background batch once sat on a hung ffmpeg for an hour.
-- Haiku may send two numbered commands in one message and run them in parallel (a 33-segment 1080x1920 plate encode ran beside the voice encode at 0.25x and timed out). Always write "run ONE command per message"; give such an encode ≥ 2400 s.
-- A Haiku runner polling a `nohup` job can stall between steps, and stopping it kills the encode it launched. For long render chains write one chain script, run it detached, and check the log for its EXIT markers.
+**Gotchas**
+- Haiku may send two numbered commands in one message and run them in parallel (a 33-segment 1080x1920 plate encode ran beside the voice encode at 0.25x and timed out). Always write "ONE per message"; give such an encode ≥ 2400 s.
+- Stopping a polling runner kills jobs it launched unless they were started with `setsid`; that is why every job is detached.
+- Any non-zero exit, unexpected warning, or number outside spec (duration off by > 1 frame, wrong fps/resolution, LUFS off target, suspiciously small file): Claude reads the log, debugs, and sends a corrected batch.
+- **Haiku fallback for low-stakes tasks** (when the chain is exhausted) uses the same runner and report format, with output in `work/logs/<step>.log`.

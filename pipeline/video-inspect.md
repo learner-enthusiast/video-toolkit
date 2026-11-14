@@ -5,7 +5,7 @@
 **Inputs:** a video path, optional `--start/--end` (seconds), optional `--thorough` (final pre-publish check).
 **Output:** `work/inspect/<deliverable>/` (`<deliverable>` = the file's stem): `report.json`, `contact_sheet.jpg`, `keyframes/` (one per scene, plus every flagged frame), and `sheet_NN.jpg` for beat QA.
 
-**Build it per project** in `work/scripts/video_inspect.py` (shared venv, `gpu-run vt-python`) plus `work/scripts/video_inspect_ocr.py` (`gpu-run vt-ocr-python`: PaddleOCR has its own venv, see `setup.md`). A Haiku batch runs it from exact commands Claude writes (`pipeline/delegation.md`, section 6). Run the GPU stages one after another, never at the same time (4 GB card). All times are in source seconds (add `--start`), 2 decimals; boxes are normalised 0–1, 3 decimals.
+**Build it per project** in `work/scripts/video_inspect.py` (shared venv, `gpu-run vt-python`) plus `work/scripts/video_inspect_ocr.py` (`gpu-run vt-ocr-python`: PaddleOCR has its own venv, see `setup.md`). A detached Haiku runner launches it from exact commands Claude writes and reports through `work/jobs/*.status` (`pipeline/delegation.md`, section 6). Run the GPU stages one after another, never at the same time (4 GB card). All times are in source seconds (add `--start`), 2 decimals; boxes are normalised 0–1, 3 decimals.
 
 | Stage | Tool and exact settings |
 |---|---|

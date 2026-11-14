@@ -5,13 +5,13 @@ description: Check which video tools are installed, ask before installing the mi
 
 # Setup
 
-1. **Check.** Run these probes (a Haiku batch, per `pipeline/delegation.md`) to report each item as present (with version) or missing, without installing anything:
+1. **Check.** Run these probes (Haiku runner, per `pipeline/delegation.md`) to report each item as present (with version) or missing, without installing anything:
    - `ffmpeg`/`ffprobe`, and whether `-encoders` lists `h264_nvenc` and `-filters` lists `arnndn`/`afftdn`/`loudnorm`
    - `nvidia-smi`, `~/bin/gpu-run`, and `~/bin` on PATH
    - Node ≥ 20 and `npx`
    - A Python env with torch + CUDA, faster-whisper (or whisper-ctranslate2), mediapipe, opencv, and transformers (for forced alignment)
    - Cached models: faster-whisper large-v3, wav2vec2 alignment model
-   - Delegation CLIs (`pipeline/delegation.md`): `copilot --version` and `gh auth status`; `codex --version` and `codex login status`; `cursor-agent --version` and `cursor-agent status`. Each must be installed **and** logged in; also report the Copilot usage reading (`gh api /copilot_internal/user`)
+   - Delegation CLIs (`pipeline/delegation.md`): `copilot --version` and `gh auth status`; `codex --version` and `codex login status`; `cursor-agent --version` and `cursor-agent status`. Each must be installed **and** logged in; also report the Copilot usage reading (`gh api /copilot_internal/user`) and the cursor-agent canary result. Missing ones: ask, then install globally
    - `rembg` (optional, used for thumbnails)
    - `img2pdf` on PATH (for `/carousel` PDFs; install with `pipx install img2pdf`)
    - `praatio` in the shared venv, and `~/bin/mfa` with the `english_mfa` acoustic model and dictionary (for `/cut-video`)

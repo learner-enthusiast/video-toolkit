@@ -15,17 +15,15 @@ This repo is instructions only. Build code per video inside `projects/<name>/wor
 - Exception: when the GPU is busy with another heavy job (a render, Whisper), run small side jobs (stills, thumbnails, rembg, contact sheets) on the CPU instead of waiting (Remotion: no `gpu-run`, `--gl=swangle`). Say so in the log and report. Never move the main render, transcription or final encodes to the CPU.
 
 ## Delegation
-- You orchestrate. **Low-stakes work** (scaffolding, renames, ffprobe/proxies, logo downloads + `SOURCES.md`, SRT wrapping, social-copy JSON scaffolding, `log.md` updates, boilerplate for a final component spec) goes to outside CLIs, not Haiku. Low-stakes = a slightly-off result can't lower the final video because you check it afterwards.
+- You orchestrate. Two kinds of delegated work (`pipeline/delegation.md`): **low-stakes tasks** (scaffolding, renames, ffprobe reads, proxies, logo downloads + `SOURCES.md`, SRT wrapping, social JSON scaffold, `log.md`, boilerplate from a final spec) and **heavy jobs** (final renders, Whisper, final encodes, video-inspect runs, installs).
 - **Never delegate:** script, cuts, storyboard, creative take, layout states, `brand.md`, final component visuals, render settings, QA, anything on screen that hasn't been reviewed.
-- Order: 1) GitHub Copilot CLI, 2) OpenAI Codex CLI, 3) `cursor-agent`, 4) Haiku subagent, only when all three are out of usage, not installed, or failing.
-- **Check each tool's usage before every delegation** (commands in `pipeline/delegation.md`). Low headroom or unreadable usage: skip it. Size chunks so one lost chunk costs little.
-- Run delegated CLIs non-interactively, in the background, with a hard timeout, logging to `projects/<name>/work/delegation/<NN>-<tool>-<task>.log`. Monitor the log; on a hang or a limit/auth error, kill it and re-run the chunk on the next tool. Verify every result yourself, and record task, tool, usage and fallback in `log.md`.
-- Heavy exact-command jobs (final renders, Whisper, final encodes, installs, video-inspect) are not low-stakes: you write the commands, a Haiku batch runs them verbatim (`pipeline/delegation.md`, section 6).
+- Low-stakes chain: Copilot → Codex → cursor-agent → Haiku. Check Copilot and Codex usage before each delegation (skip if low or unreadable). cursor-agent has no usage command: run a tiny **canary** before each use; on pass send exactly one small chunk, canary again before the next. CLIs run non-interactively, in the background, with a timeout, logging to `work/delegation/<NN>-<tool>-<task>.log`; on a limit/auth error or a hang, kill and re-run the chunk on the next tool. Verify every result yourself and record tool, usage and fallback in `log.md`.
+- Heavy jobs never use the chain. You write the exact batch (`gpu-run`, flags, paths, timeouts); a Haiku runner launches each job detached, writes `work/jobs/<NN>-<job>.status`, stops and reports on any error. It never changes settings. You read the `.status` files and verify outputs; you don't tail logs.
 - Vision goes through contact sheets and video-inspect reports (`pipeline/video-inspect.md`). You do the final visual QA yourself.
 
 ## Inspecting a video
 Whenever a prompt asks to check, review, inspect, QA or "look at" a video, its frames, captions, cuts or edits:
-1. Run video-inspect first (`pipeline/video-inspect.md`, as a Haiku batch per `pipeline/delegation.md`). Never dump frames as images.
+1. Run video-inspect first (`pipeline/video-inspect.md`, as a heavy job via the Haiku runner, `pipeline/delegation.md`). Never dump frames as images.
 2. Read `report.json` (`summary` and `flags` first) and `contact_sheet.jpg`.
 3. Open with Read only the flagged frames plus one keyframe per scene, to judge framing, colour, pacing and visual quality.
 4. Use `--thorough` for the final check before publishing.
