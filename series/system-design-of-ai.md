@@ -14,7 +14,8 @@ Tracked rules for every episode in `projects/system-design-of-ai/<NN>-<topic>/` 
 - Characters appear **only as simple, generic illustrated avatars with name labels** in the brand style. No show stills, clips, logos or actor likeness, ever.
 
 **Length and hook**
-- Hook in the first 3 seconds (boldest claim, result or problem; no greeting).
+- Open with "Namoshkar!" (~1.5 s with the pause), then the hook line (boldest claim, result or problem), landing within the first 3 seconds. A 2–5 word text hook is on screen from frame 0.
+- Close with a one-line recap (the payoff of the hook), then "Bye bye, sayonara!" with a wave, before the end card.
 - 9:16 short; final length ≤ 2:59.
 
 **Visuals**

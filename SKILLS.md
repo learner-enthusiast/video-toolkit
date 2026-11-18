@@ -8,6 +8,7 @@ Third-party skills used by this toolkit, at project level in `.claude/skills/`. 
 | `add-zooms` | [louisedesadeleer/add-zooms](https://github.com/louisedesadeleer/add-zooms) @ `34db910` | MIT (`LICENSE`) | 2026-10-27 | Yes (vendored) |
 | `cut-video` | [louisedesadeleer/cut-video](https://github.com/louisedesadeleer/cut-video) @ `a5a87a6` | MIT (`LICENSE`) | 2026-10-27 | Yes (vendored) |
 | `clipify` | [louisedesadeleer/clipify](https://github.com/louisedesadeleer/clipify) @ `5f6b75e` | MIT (`LICENSE`) | 2026-10-27 | Yes (vendored) |
+| `scriptwriting` | [salomonMuriel/media-production-skills](https://github.com/salomonMuriel/media-production-skills) `skills/scriptwriting` @ `6ba4284` | MIT (`LICENSE`) | 2026-11-18 | Yes (vendored) |
 | `remotion-*` (12 skills) | [remotion-dev/skills](https://github.com/remotion-dev/skills) | None stated (no LICENSE file, no `license` in `package.json`) | 2026-10-27 | No. Install per clone with `npx skills add remotion-dev/skills` (see `/setup`); gitignored |
 
 Upstream license files are kept inside each vendored skill folder.
@@ -43,12 +44,39 @@ Upstream license files are kept inside each vendored skill folder.
 **frontend-design**
 - Added a note: use it for web-style visuals in compositions, and defer to `brand.md` (one grid, radius, shadow and border).
 
+**scriptwriting**
+- Copied only `skills/scriptwriting/` (`SKILL.md` and `references/`) plus the repo's root `LICENSE`. No other skill from that repo.
+- Frontmatter `description` narrowed to writing, rewriting, tightening or critiquing a video `script.md`, a hook or on-screen text for this toolkit. The ads/podcast/launch-film list and the `video-director` sentence are gone.
+- In the body (`SKILL.md` and `references/craft.md`), the `video-director` and `voice-direction` mentions now read: `/coding-video` and `/reel` turn the script into a video; I record it myself on camera.
+- New "Toolkit adaptation (video-toolkit)" section right after the frontmatter, which wins over the rest of the skill:
+  - Priority: `CLAUDE.md`, `brand.md`, `series/<playlist>.md` and the `templates/script-*.md` format win.
+  - Reads `SKILL.md`, `hooks.md` and `craft.md` always; `structures.md` only to choose a structure, `formats.md` only for a beat sheet (replaces upstream's "read every file" rule).
+  - Fixed opener: "Namoshkar!" (~1 s hold, half-second pause), then the hook; the greetings anti-hook rule applies to the line after it. Text hook (≤ 6 words) from frame 0; spoken hook by ~1.5 s, landing within 3 s.
+  - Fixed closer: a one-line recap, then "Bye bye, sayonara!" with a wave (replaces the CTA and loopable-ending rules).
+  - Pace ~140 wpm (~2.3 words/s) with word caps per length (30 s ~60 … 3 min ~390, hard cap ~420); cut points, never speed up.
+  - Short-form path for every video (≤ 3 min), but research and the facts file (`work/facts.md`) are never skipped.
+  - Story with depth; AI System Design episodes map the series format onto ABT (normal flow / where it breaks with LLMs / the fix).
+  - Toolkit template format with `[mm:ss–mm:ss | HEAD|FULL|SPLIT]` cues instead of the A/V two-column format; `**Message:**` line at the top of `script.md`.
+  - Ignores the TTS spoken layer, voice casting, localisation and the Spanish sections.
+  - Keeps the three-track hook, recognition ladder, re-hooks every 5–8 s, AI-tells bans (no em dashes), swap test and fact audit as-is.
+
 ## What each one runs on this machine
 
 - **frontend-design:** nothing. It's instructions only.
+- **scriptwriting:** nothing. It's instructions only.
 - **add-zooms:** `ffprobe`/`ffmpeg` (zoompan), faster-whisper, and its own `scripts/zoom_lib.py` (stdlib only).
 - **cut-video:** `ffmpeg`, faster-whisper, MFA (`~/bin/mfa`, CPU), optional `praatio`, and `make_review.py` (writes a local HTML editor, no server).
 - **clipify:** `ffmpeg`, faster-whisper, and small numpy scripts (`analyze.py`, `build_pan.py`, `build_ass.py`, `audio_align.py`, `detect_transients.py`).
 - **remotion-\*:** instructions only. Remotion itself is installed per project inside `work/`.
 
 None of the vendored scripts make network calls. I checked their imports and subprocess calls before adding them.
+
+## Ideas borrowed (not vendored)
+
+Rewritten for this toolkit, no source text copied.
+
+| Source @ commit | What was taken | Where it went |
+|---|---|---|
+| [imtamiliniyan/claude-video-skills](https://github.com/imtamiliniyan/claude-video-skills) @ `69b8f5f` (MIT) | SFX synthesis recipes and the event-to-sound pattern | `pipeline/sound.md` |
+| [haidrrrry/claude-remotion-skill](https://github.com/haidrrrry/claude-remotion-skill) @ `1dcbe5e` (MIT) | SFX timing rules | `pipeline/sound.md` |
+| [salomonMuriel/media-production-skills](https://github.com/salomonMuriel/media-production-skills) @ `6ba4284` (MIT) | Music licence rules and voice ducking; the restate test | `pipeline/sound.md`; `pipeline/qa.md` |

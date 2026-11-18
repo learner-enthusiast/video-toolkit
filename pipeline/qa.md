@@ -16,6 +16,14 @@
 **Audio**
 - Integrated loudness is -16 ±0.5 LUFS and true peak ≤ -1.5 dBTP.
 - Listen at every cut point in the rough sheet for clicks or clipped words.
+- Run the sound checks in `pipeline/sound.md` (SFX onsets 1–3 frames early, music ≥ 15 dB under the voice in speech, mix spectrogram in `work/qa/`).
+
+**Restate test (fresh eyes)**
+- Run once per video, on the main video, after its 5 s beat sheet exists.
+- Spawn one fresh sub-agent with no project context: it must not read `script.md`, `log.md`, `CLAUDE.md` or anything else. Give it only the beat sheet images. Use the cheapest model with vision.
+- Ask it: "In three lines: what does this video teach, who is it for, and what is the one takeaway?"
+- Compare its answer with the `**Message:**` line in `script.md`. If they don't match, name the beats whose visuals don't carry the point and propose a fix for each.
+- Its answer is a lead, never a pass (same rule as every sub-agent pre-screen). Log the result.
 
 **Report**
 - Final durations and loudness, choices made, lines worth re-recording, and anything not done exactly as specified (with the reason).

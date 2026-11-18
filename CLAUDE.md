@@ -16,7 +16,7 @@ This repo is instructions only. Build code per video inside `projects/<name>/wor
 
 ## Delegation
 - You orchestrate. Two kinds of delegated work (`pipeline/delegation.md`): **low-stakes tasks** (scaffolding, renames, ffprobe reads, proxies, logo downloads + `SOURCES.md`, SRT wrapping, social JSON scaffold, `log.md`, boilerplate from a final spec) and **heavy jobs** (final renders, Whisper, final encodes, video-inspect runs, installs).
-- **Never delegate:** script, cuts, storyboard, creative take, layout states, `brand.md`, final component visuals, render settings, QA, anything on screen that hasn't been reviewed.
+- **Never delegate:** script, cuts, storyboard, creative take, layout states, sound map, `brand.md`, final component visuals, render settings, QA, anything on screen that hasn't been reviewed.
 - Low-stakes chain: Copilot → Codex → cursor-agent → Haiku. Check Copilot and Codex usage before each delegation (skip if low or unreadable). cursor-agent has no usage command: run a tiny **canary** before each use; on pass send exactly one small chunk, canary again before the next. CLIs run non-interactively, in the background, with a timeout, logging to `work/delegation/<NN>-<tool>-<task>.log`; on a limit/auth error or a hang, kill and re-run the chunk on the next tool. Verify every result yourself and record tool, usage and fallback in `log.md`.
 - Heavy jobs never use the chain. You write the exact batch (`gpu-run`, flags, paths, timeouts); a Haiku runner launches each job detached, writes `work/jobs/<NN>-<job>.status`, stops and reports on any error. It never changes settings. You read the `.status` files and verify outputs; you don't tail logs.
 - Vision goes through contact sheets and video-inspect reports (`pipeline/video-inspect.md`). You do the final visual QA yourself.
@@ -48,6 +48,7 @@ Flags and VLM captions are leads, not verdicts. Judge them against this file and
 - `/coding-video` and `/reel` use `/cut-video` as the cutting engine for take selection, and `/add-zooms` for punch-ins on emphasised words that also hide jump cuts.
 - Use `/clipify` to turn a long video into reels. Each clip then goes through `/reel`.
 - The Remotion skills drive how compositions are built. `frontend-design` sets taste only where `brand.md` leaves a choice open.
+- `/scriptwriting` writes and tightens `script.md` (hooks, AI-phrase scan, timing). The template format and series rules win over it.
 - Sources, licenses and local changes are listed in `SKILLS.md`.
 
 ## OpenAI
@@ -77,6 +78,7 @@ Flags and VLM captions are leads, not verdicts. Judge them against this file and
 - Visuals trigger on the word timestamps of what I say, never on fixed times.
 - No screenshot stays static for more than 3 s. No dead air. Use J/L cuts where they smooth the flow.
 - Never cover my face. Never stretch me. No text cut off. Captions are always readable.
+- Every visible hit that should sound gets one SFX from the kit (`pipeline/sound.md`); music, if any, ducks under my voice.
 - Deliver at -16 LUFS with A/V sync verified at the start, middle and end.
 
 ## Deliverables

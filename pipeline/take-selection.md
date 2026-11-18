@@ -5,6 +5,7 @@
 **Do**
 - Match the transcript to `script.md` paragraph by paragraph.
 - For each paragraph keep the **LAST complete, clean take**. Earlier takes are rehearsals.
+- "Namoshkar!" and "Bye bye, sayonara!" are script lines. Never cut them as greetings or filler.
 - Remove false starts ("a story, ranked set…" → "ranked set…"), fillers, coughs, restarts and dead pauses.
 - Compress pauses over 0.4 s to about 0.22 s between sentences and 0.15 s within one. Leave about 0.25 s between beats.
 - Snap every cut to a 30 fps frame boundary. Cut in the silence just before a word's onset, never mid-word.

@@ -6,14 +6,14 @@
 |---|---|---|
 | 1 · Prep | GPU, probe and trim, clean audio, transcribe (1–4) | handoff |
 | 2 · Cut | take selection, rough cut (5–6) | handoff + **CHECKPOINT: wait for my OK** |
-| 3 · Compose | storyboard with Creative take, composition, render (7–8) | handoff |
+| 3 · Compose | storyboard with Creative take, composition, sound (`pipeline/sound.md`: sound map, cues, offline mix), render (7–8) | handoff |
 | 4 · Deliver | subtitles, trailers, QA, thumbnail, social copy, carousel (reels: `pipeline/carousel.md`, two approval stops), report (9–14) | handoff + final report |
 
 In Compose, be a creative co-director: script cues are the baseline, not a limit; improve them within the rules in `CLAUDE.md` (Creative direction), and list every creative change in `log.md`.
 
 `/reel` uses the same stages. `/clipify` candidate picking is part of stage 2.
 
-**Delegation in every stage:** low-stakes tasks follow the chain in `pipeline/delegation.md` (Copilot → Codex → cursor-agent canary → Haiku); heavy jobs (renders, Whisper, final encodes, video-inspect, installs) go to the detached Haiku runner with `.status` files; creative and QA work stays with Claude. Prep: probing and proxies are low-stakes, transcription is heavy. Cut: only file moves are delegated. Compose: boilerplate is low-stakes, renders are heavy. Deliver: SRT wrapping, social-copy scaffolding and `log.md` are low-stakes; final encodes and video-inspect are heavy; QA is yours.
+**Delegation in every stage:** low-stakes tasks follow the chain in `pipeline/delegation.md` (Copilot → Codex → cursor-agent canary → Haiku); heavy jobs (renders, Whisper, final encodes, video-inspect, installs) go to the detached Haiku runner with `.status` files; creative and QA work stays with Claude. Prep: probing and proxies are low-stakes, transcription is heavy. Cut: only file moves are delegated. Compose: boilerplate, the SFX kit copy and the cue export are low-stakes, renders and the final mix are heavy, the sound map is yours. Deliver: SRT wrapping, social-copy scaffolding and `log.md` are low-stakes; final encodes and video-inspect are heavy; QA is yours.
 
 **Starting a stage**
 - Before doing anything else, read `projects/<name>/log.md` (at least the latest handoff and every open issue), then the project files the stage depends on (`script.md`, `work/cutlist.md`, the EDL, `timeline.json`… as relevant), plus `CLAUDE.md`, `brand.md` and this stage's `pipeline/` files.

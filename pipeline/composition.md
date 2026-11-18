@@ -20,8 +20,7 @@
 - Use one geometry module for the three layout states (HEAD, FULL, SPLIT; `components/layout-states.md`) on the 5% grid; 16:9 TALK / SCREEN + BUBBLE map onto HEAD / SPLIT-style states the same way. Components take rects; they don't invent positions.
 - Be a co-director, not an executor: the script's cues are the baseline; bring a better visual take where it explains better, within the limits in `CLAUDE.md`.
 - Use one composition per deliverable (full, trailer 16:9, trailer 9:16) sharing the beats.
-- Add a `music` prop (path or null, default null) at about -24 dB, ducked under speech.
-- Synthesize SFX (pop, whoosh, key click, stamp, tick) with ffmpeg at low volume, or use clearly royalty-free sounds.
+- Sound: follow `pipeline/sound.md`.
 
 **Checks**
 - `npx tsc --noEmit` passes. Render stills of 3–4 beats and look at them before any full render.
