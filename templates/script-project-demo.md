@@ -25,7 +25,7 @@ Format: **ID** [TRAILER] · `[mm:ss–mm:ss | HEAD, FULL or SPLIT]` · spoken te
 ## Close
 **C1** · "<one-line recap: the payoff of the hook>" → TALK, full frame
 **C2** · "Bye bye, sayonara!" with a wave → HEAD
-**End card** (≤ 2 s) → EndCard
+**End card** (5 s) → EndCard
 
 ## Trailer order (if any)
 `O1 → P1 → F? → H2 → C1 → C2 → end card`

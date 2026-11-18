@@ -27,4 +27,4 @@ Format: **ID** · `[mm:ss–mm:ss | HEAD, FULL or SPLIT]` · spoken text → vis
 ## Close
 **C1** · "<one-line recap: the payoff of the hook>" → TALK, warm, captions only
 **C2** · "Bye bye, sayonara!" with a wave → HEAD
-**End card** (≤ 2 s) → EndCard with links from `brand.md`
+**End card** (5 s) → EndCard with links from `brand.md`
