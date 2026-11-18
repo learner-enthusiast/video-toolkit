@@ -34,3 +34,6 @@ Tracked rules for every episode in `projects/system-design-of-ai/<NN>-<topic>/` 
 | # | Folder | Topic |
 |---|---|---|
 | 01 | `projects/system-design-of-ai/01-streaming/` | Streaming |
+| 02 | `projects/system-design-of-ai/02-token-rate-limiting/` | Token rate limiting. Exception: no Taarak Mehta characters and no avatars; told in plain second person ("you're building an e-commerce app"). |
+| 03 | `projects/system-design-of-ai/03-semantic-caching/` | Semantic caching |
+| 04 | `projects/system-design-of-ai/04-cost-metering/` | Cost metering. Exception: no Taarak Mehta characters; told with real companies (OpenAI, Replit, Cursor) and "you". Real people only as name + role text on quote cards. |

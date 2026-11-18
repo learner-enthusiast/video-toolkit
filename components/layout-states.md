@@ -34,3 +34,7 @@
 - Compute every rect for the three states in one geometry module; components get rects, never invent positions.
 - A graphic that lives in both FULL and SPLIT is drawn once in card-local coordinates and scaled, never redrawn.
 - Hiding my face in FULL does not change the audio: the voice WAV keeps playing on the output timeline.
+- FULL card chrome (`vectorless-rag`, `work/remotion/src/lib/layout.tsx`): 9:16 FULL card = 972x1320 = 150 px header (small-caps kicker + serif orange title per beat) + the 972x970 scene space + a 200 px footer. The footer pins the story's question as a chat bubble beside the character's avatar, so every diagram reads as an answer to it; it also fills the "sparse FULL scene" gap without scaling the scene. 16:9 keeps the plain 972x970 card (no chrome) with me in the right panel.
+- HEAD ↔ FULL as a wipe: an off-white full-frame sheet with an orange bottom edge slides down over the head on the layout spring while the card rides in with it; once settled, the talking head is simply not rendered until the next HEAD/SPLIT (5,355 frames with 12 FULL beats rendered in 5 m 50 s at concurrency 3).
+- A dark punch shorter than ~1 s right before a HEAD beat (hook "Wrong." → credit): keep the current state and only flip it to dark (SPLIT dark) instead of cutting to FULL dark and back; two layout jumps in under a second read as a glitch.
+- Model the layout as keys `{at, mode, dark?, cut?}`; a key with the same mode and `dark` + `cut` gives the hard "it's wrong" stop inside a FULL beat.

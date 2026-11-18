@@ -5,20 +5,20 @@ One-page lookup for every spec in `components/`. **Read this first; open a spec 
 ## Find by intent
 
 - **Compare A vs B:** [CompareSplit](CompareSplit.md) · [BarCompare](BarCompare.md) · [StackCompare](StackCompare.md) · [PersistenceCompare](PersistenceCompare.md) · [CommitVsChangeset](CommitVsChangeset.md) · [VolumeDemo](VolumeDemo.md) · [ChoicePills](ChoicePills.md) · [KeyPicker](KeyPicker.md) · [LayerStack](LayerStack.md) · [HostingOptions](HostingOptions.md) · [StorageDrawers](StorageDrawers.md) · [VersionTable](VersionTable.md) · [VerdictBoard](VerdictBoard.md) · [ToolShelf](ToolShelf.md) · [TradeScale](TradeScale.md) · [LockDrawer](LockDrawer.md) · [RankedList](RankedList.md)
-- **Process / data flow / architecture:** [FlowDiagram](FlowDiagram.md) · [DiagramBlock](DiagramBlock.md) · [FlowArrow](FlowArrow.md) · [FlowCard](FlowCard.md) · [SequenceFlow](SequenceFlow.md) · [DockerPipeline](DockerPipeline.md) · [PipelineCanvas](PipelineCanvas.md) · [ContainerStack](ContainerStack.md) · [ComposeServices](ComposeServices.md) · [LayerCache](LayerCache.md) · [RuntimeBundle](RuntimeBundle.md) · [HubSpoke](HubSpoke.md) · [BrokerCluster](BrokerCluster.md) · [EventStream](EventStream.md) · [ServerFanout](ServerFanout.md) · [RerankFunnel](RerankFunnel.md) · [ListMerge](ListMerge.md) · [ChunkSlicer](ChunkSlicer.md) · [PromptStack](PromptStack.md) · [TocTreeWalk](TocTreeWalk.md) · [ProtocolStack](ProtocolStack.md) · [RegistryCalls](RegistryCalls.md) · [DiagnosisArrow](DiagnosisArrow.md) · [FeedbackLoop](FeedbackLoop.md) · [KeyGridScan](KeyGridScan.md) · [VerifyChecklist](VerifyChecklist.md) · [SharedIpFunnel](SharedIpFunnel.md)
-- **Numbers & stats:** [Counter](Counter.md) · [StatCard](StatCard.md) · [StatBar](StatBar.md) · [Gauge](Gauge.md) · [LoadMeter](LoadMeter.md) · [DualMeter](DualMeter.md) · [MathStrip](MathStrip.md) · [LineChart](LineChart.md) · [PriceTag](PriceTag.md) · [HoldSettle](HoldSettle.md) · [RationBags](RationBags.md) · [SlidingCounter](SlidingCounter.md) · [AdoptionHonest](AdoptionHonest.md) · [AccountQuotaBar](AccountQuotaBar.md)
-- **Code & terminal:** [HttpReply](HttpReply.md) · [TokenAnatomy](TokenAnatomy.md) · [TerminalCrack](TerminalCrack.md) · [TypingIntro](TypingIntro.md) · [ComposeServices](ComposeServices.md) · [FlowCard](FlowCard.md)
+- **Process / data flow / architecture:** [FlowDiagram](FlowDiagram.md) · [DiagramBlock](DiagramBlock.md) · [FlowArrow](FlowArrow.md) · [FlowCard](FlowCard.md) · [SequenceFlow](SequenceFlow.md) · [DockerPipeline](DockerPipeline.md) · [PipelineCanvas](PipelineCanvas.md) · [ContainerStack](ContainerStack.md) · [ComposeServices](ComposeServices.md) · [LayerCache](LayerCache.md) · [RuntimeBundle](RuntimeBundle.md) · [HubSpoke](HubSpoke.md) · [BrokerCluster](BrokerCluster.md) · [EventStream](EventStream.md) · [ServerFanout](ServerFanout.md) · [RerankFunnel](RerankFunnel.md) · [ListMerge](ListMerge.md) · [ChunkSlicer](ChunkSlicer.md) · [PromptStack](PromptStack.md) · [TocTreeWalk](TocTreeWalk.md) · [ProtocolStack](ProtocolStack.md) · [RegistryCalls](RegistryCalls.md) · [DiagnosisArrow](DiagnosisArrow.md) · [FeedbackLoop](FeedbackLoop.md) · [KeyGridScan](KeyGridScan.md) · [VerifyChecklist](VerifyChecklist.md) · [SharedIpFunnel](SharedIpFunnel.md) · [TaskBudget](TaskBudget.md)
+- **Numbers & stats:** [Counter](Counter.md) · [StatCard](StatCard.md) · [StatBar](StatBar.md) · [Gauge](Gauge.md) · [LoadMeter](LoadMeter.md) · [DualMeter](DualMeter.md) · [MathStrip](MathStrip.md) · [LineChart](LineChart.md) · [PriceTag](PriceTag.md) · [HoldSettle](HoldSettle.md) · [RationBags](RationBags.md) · [SlidingCounter](SlidingCounter.md) · [AdoptionHonest](AdoptionHonest.md) · [AccountQuotaBar](AccountQuotaBar.md) · [CheckpointTicket](CheckpointTicket.md) · [CostMeter](CostMeter.md) · [PrepaidMeter](PrepaidMeter.md) · [CohortCounter](CohortCounter.md)
+- **Code & terminal:** [HttpReply](HttpReply.md) · [TokenAnatomy](TokenAnatomy.md) · [TerminalCrack](TerminalCrack.md) · [TypingIntro](TypingIntro.md) · [CodeCard](CodeCard.md) · [ComposeServices](ComposeServices.md) · [FlowCard](FlowCard.md)
 - **Security & auth:** [AlgAttack](AlgAttack.md) · [CookieToss](CookieToss.md) · [DecoderReveal](DecoderReveal.md) · [FooterSeal](FooterSeal.md) · [ImplicitAssertion](ImplicitAssertion.md) · [JwksRotation](JwksRotation.md) · [LocalSeal](LocalSeal.md) · [PhonePush](PhonePush.md) · [PublicVerify](PublicVerify.md) · [StackBurst](StackBurst.md) · [TamperCrack](TamperCrack.md) · [TokenLifetime](TokenLifetime.md) · [TypedKeyGate](TypedKeyGate.md) · [XffSpoof](XffSpoof.md) · [KeyCard](KeyCard.md) · [WristbandGate](WristbandGate.md) · [HashMachine](HashMachine.md) · [PhilosophyDials](PhilosophyDials.md)
-- **Rate limits, caching & races:** [TokenBucket](TokenBucket.md) · [LeakyBucket](LeakyBucket.md) · [WindowTimeline](WindowTimeline.md) · [SlidingLog](SlidingLog.md) · [TwinPhones](TwinPhones.md) · [TwoServerRace](TwoServerRace.md) · [UpdateRace](UpdateRace.md) · [RaceTimeline](RaceTimeline.md) · [LeaseToken](LeaseToken.md) · [RequestFlood](RequestFlood.md) · [CommandPipe](CommandPipe.md) · [OtpSpam](OtpSpam.md) · [CacheTiers](CacheTiers.md) · [CountdownKey](CountdownKey.md)
-- **Data & storage:** [TableBuild](TableBuild.md) · [TableJoin](TableJoin.md) · [TableScan](TableScan.md) · [TransactionBox](TransactionBox.md) · [KafkaLog](KafkaLog.md) · [SessionMapScale](SessionMapScale.md) · [Server3D](Server3D.md) · [BitRow](BitRow.md) · [DualIndex](DualIndex.md) · [ImageManifest](ImageManifest.md) · [InvertedIndexBuild](InvertedIndexBuild.md) · [RowSplit](RowSplit.md) · [VectorSpaceMiss](VectorSpaceMiss.md) · [ContextOverflow](ContextOverflow.md)
-- **Metaphors & analogies:** [Buildings](Buildings.md) · [DataPlanPhone](DataPlanPhone.md) · [DeliveryTracker](DeliveryTracker.md) · [DeskCabinet](DeskCabinet.md) · [FridgeMilk](FridgeMilk.md) · [KitchenChefs](KitchenChefs.md) · [LibraryAnalogy](LibraryAnalogy.md) · [ShippingContainer](ShippingContainer.md) · [SedanProp](SedanProp.md) · [IconMorph](IconMorph.md)
-- **Text & emphasis:** [Headline](Headline.md) · [Highlight](Highlight.md) · [Stamp](Stamp.md) · [Badge](Badge.md) · [Tag](Tag.md) · [TagDrop](TagDrop.md) · [StickyNote](StickyNote.md) · [SourceChip](SourceChip.md) · [ZoomCard](ZoomCard.md) · [Checklist](Checklist.md) · [AnswerGrid](AnswerGrid.md) · [UrlAnatomy](UrlAnatomy.md) · [PinnedQuestion](PinnedQuestion.md) · [Captions](Captions.md)
-- **People, avatars & chat:** [FaceAvatar](FaceAvatar.md) · [ChatBubble](ChatBubble.md) · [InterviewBubble](InterviewBubble.md) · [Bubble](Bubble.md) · [LowerThird](LowerThird.md) · [PresenterSplit](PresenterSplit.md) · [ReelSplit](ReelSplit.md) · [FaceTrackedCrop](FaceTrackedCrop.md)
+- **Rate limits, caching & races:** [TokenBucket](TokenBucket.md) · [LeakyBucket](LeakyBucket.md) · [WindowTimeline](WindowTimeline.md) · [SlidingLog](SlidingLog.md) · [TwinPhones](TwinPhones.md) · [TwoServerRace](TwoServerRace.md) · [UpdateRace](UpdateRace.md) · [RaceTimeline](RaceTimeline.md) · [LeaseToken](LeaseToken.md) · [RequestFlood](RequestFlood.md) · [CommandPipe](CommandPipe.md) · [OtpSpam](OtpSpam.md) · [CacheTiers](CacheTiers.md) · [CountdownKey](CountdownKey.md) · [TaskBudget](TaskBudget.md)
+- **Data & storage:** [TableBuild](TableBuild.md) · [TableJoin](TableJoin.md) · [TableScan](TableScan.md) · [TransactionBox](TransactionBox.md) · [KafkaLog](KafkaLog.md) · [SessionMapScale](SessionMapScale.md) · [Server3D](Server3D.md) · [BitRow](BitRow.md) · [DualIndex](DualIndex.md) · [ImageManifest](ImageManifest.md) · [InvertedIndexBuild](InvertedIndexBuild.md) · [RowSplit](RowSplit.md) · [VectorSpaceMiss](VectorSpaceMiss.md) · [ContextOverflow](ContextOverflow.md) · [EmbeddingMap](EmbeddingMap.md) · [ThresholdRing](ThresholdRing.md) · [KeyLocker](KeyLocker.md)
+- **Metaphors & analogies:** [Buildings](Buildings.md) · [DataPlanPhone](DataPlanPhone.md) · [DeliveryTracker](DeliveryTracker.md) · [DeskCabinet](DeskCabinet.md) · [FridgeMilk](FridgeMilk.md) · [KitchenChefs](KitchenChefs.md) · [LibraryAnalogy](LibraryAnalogy.md) · [ShippingContainer](ShippingContainer.md) · [SedanProp](SedanProp.md) · [IconMorph](IconMorph.md) · [HiddenThinking](HiddenThinking.md) · [PrepaidMeter](PrepaidMeter.md)
+- **Text & emphasis:** [Headline](Headline.md) · [Highlight](Highlight.md) · [Stamp](Stamp.md) · [Badge](Badge.md) · [Tag](Tag.md) · [TagDrop](TagDrop.md) · [StickyNote](StickyNote.md) · [SourceChip](SourceChip.md) · [ZoomCard](ZoomCard.md) · [Checklist](Checklist.md) · [AnswerGrid](AnswerGrid.md) · [UrlAnatomy](UrlAnatomy.md) · [PinnedQuestion](PinnedQuestion.md) · [Captions](Captions.md) · [QuoteCard](QuoteCard.md) · [CheckCard](CheckCard.md) · [TextMorph](TextMorph.md)
+- **People, avatars & chat:** [FaceAvatar](FaceAvatar.md) · [Avatar](Avatar.md) · [ChatBubble](ChatBubble.md) · [InterviewBubble](InterviewBubble.md) · [Bubble](Bubble.md) · [LowerThird](LowerThird.md) · [PresenterSplit](PresenterSplit.md) · [ReelSplit](ReelSplit.md) · [FaceTrackedCrop](FaceTrackedCrop.md) · [AvatarRow](AvatarRow.md)
 - **Timing & progress:** [Timeline](Timeline.md) · [Timer](Timer.md) · [WindowTimeline](WindowTimeline.md) · [RaceTimeline](RaceTimeline.md) · [TableScan](TableScan.md) · [DeliveryTracker](DeliveryTracker.md) · [CountdownKey](CountdownKey.md)
 - **Branding, logos & credits:** [IconRail](IconRail.md) · [IconMorph](IconMorph.md) · [Thumbnail](Thumbnail.md) · [PartBadge](PartBadge.md) · [UrlPill](UrlPill.md) · [CreditCTA](CreditCTA.md)
 - **Openers / hooks:** [TypingIntro](TypingIntro.md) · [OtpSpam](OtpSpam.md) · [Headline](Headline.md) · [PinnedQuestion](PinnedQuestion.md)
 - **Endings & CTAs:** [EndCard](EndCard.md) · [CreditCTA](CreditCTA.md) · [CanvasZoomOut](CanvasZoomOut.md) · [AnswerGrid](AnswerGrid.md) · [VerdictBoard](VerdictBoard.md) · [Checklist](Checklist.md)
-- **Frames, screenshots & transitions:** [Card](Card.md) · [ScreenshotKenBurns](ScreenshotKenBurns.md) · [Highlight](Highlight.md) · [PhoneMockup](PhoneMockup.md) · [ProductCard](ProductCard.md) · [ShatterTransition](ShatterTransition.md) · [Bubble](Bubble.md)
+- **Frames, screenshots & transitions:** [Card](Card.md) · [ScreenshotKenBurns](ScreenshotKenBurns.md) · [Highlight](Highlight.md) · [PhoneMockup](PhoneMockup.md) · [ProductCard](ProductCard.md) · [ShatterTransition](ShatterTransition.md) · [Bubble](Bubble.md) · [PolaroidDrop](PolaroidDrop.md) · [ReceiptStack](ReceiptStack.md)
 - **Carousel:** [Carousel](Carousel.md)
 
 ## Full table
@@ -29,6 +29,8 @@ One-page lookup for every spec in `components/`. **Read this first; open a spec 
 | AdoptionHonest | Honest adoption picture: one vendor library, few ports, no standard | any | Numbers/Stats | [md](AdoptionHonest.md) |
 | AlgAttack | JWT flaw: the token header tells the server how to verify | any | Security | [md](AlgAttack.md) |
 | AnswerGrid | Recap pairing "limit by what" with "how to count" per case | FULL | Text/Emphasis | [md](AnswerGrid.md) |
+| Avatar | Story character as a generic illustrated face with a name label (no likeness) | any | People/Chat | [md](Avatar.md) |
+| AvatarRow | Photo avatars with name labels pop in as each name is spoken; one person gets an "aka" tag | FULL, SPLIT | People/Chat | [md](AvatarRow.md) |
 | Badge | Stamped label pinning one key property | any | Text/Emphasis | [md](Badge.md) |
 | BarCompare | Before/after bars on one honest shared scale | any | Numbers/Stats | [md](BarCompare.md) |
 | BitRow | Row of bits filling as each is named, persisting across scenes | any | Data/Storage | [md](BitRow.md) |
@@ -41,9 +43,13 @@ One-page lookup for every spec in `components/`. **Read this first; open a spec 
 | Card | Base panel container other graphics sit in | any | Layout/Frame | [md](Card.md) |
 | Carousel | One still per slide for the reel's Instagram carousel twin | n/a (stills) | Carousel | [md](Carousel.md) |
 | ChatBubble | Typed customer question, then the assistant's answer | any | People/Chat | [md](ChatBubble.md) |
+| CheckCard | Résumé card ticks rows off fast, then a big "?" lands | SPLIT, FULL | Text/Emphasis | [md](CheckCard.md) |
 | Checklist | Recap list ticking off one line per spoken point | any | Text/Emphasis | [md](Checklist.md) |
+| CheckpointTicket | Flat price per unit of work as a ticket that repeats, then morphs into a range | any | Numbers/Stats | [md](CheckpointTicket.md) |
 | ChoicePills | Either/or question as two pills, optional wrong-answer glitch | any (not over face) | Compare | [md](ChoicePills.md) |
 | ChunkSlicer | A document cut along headings into chunk cards | any | Process/Flow | [md](ChunkSlicer.md) |
+| CodeCard | Short code listing whose lines light up as each step is spoken | any | Code/Terminal | [md](CodeCard.md) |
+| CohortCounter | Running ×N tally of purchases, ticking up (sad droop on the last) | any | Numbers/Stats | [md](CohortCounter.md) |
 | CommandPipe | One slow command blocks a single-threaded queue of fast ones | any | Process/Flow | [md](CommandPipe.md) |
 | CommitVsChangeset | Commit holds a full tree; changeset lists only changed files | any | Compare | [md](CommitVsChangeset.md) |
 | CompareSplit | Two methods side by side, good matches versus a weak case | any | Compare | [md](CompareSplit.md) |
@@ -51,6 +57,7 @@ One-page lookup for every spec in `components/`. **Read this first; open a spec 
 | ContainerStack | Container architecture built layer by layer, fixed across scenes | SPLIT | Process/Flow | [md](ContainerStack.md) |
 | ContextOverflow | Every index crammed into the prompt stops fitting the window | any | Metaphor/Scene | [md](ContextOverflow.md) |
 | CookieToss | Sibling subdomain plants a parent-domain cookie; suffix list blocks it | any | Security | [md](CookieToss.md) |
+| CostMeter | Recurring meter: plain counter that reveals a hidden needle as real cost runs away | any | Numbers/Stats | [md](CostMeter.md) |
 | CountdownKey | A key's timer runs out, yet it lingers in memory | any | Data/Storage | [md](CountdownKey.md) |
 | Counter | Animated number landing on a result to remember | any | Numbers/Stats | [md](Counter.md) |
 | CreditCTA | Credit the original creator, send viewers to the full video | HEAD | Ending/CTA | [md](CreditCTA.md) |
@@ -63,6 +70,7 @@ One-page lookup for every spec in `components/`. **Read this first; open a spec 
 | DockerPipeline | Docker path: Dockerfile to build, push, run on servers | any | Process/Flow | [md](DockerPipeline.md) |
 | DualIndex | One chunk split into vector and keyword indexes side by side | any | Data/Storage | [md](DualIndex.md) |
 | DualMeter | Requests versus tokens: counter and cost meter rise, then split | any | Numbers/Stats | [md](DualMeter.md) |
+| EmbeddingMap | Sentences become number rows, then dots; same meaning lands close together | FULL | Data/Storage | [md](EmbeddingMap.md) |
 | EndCard | Closing card with links after the last word, fading to black | any | Ending/CTA | [md](EndCard.md) |
 | EventStream | Agent sends typed events to a frontend, one log entry each | SPLIT | Process/Flow | [md](EventStream.md) |
 | FaceAvatar | Character face reacts (worried, relieved) to mark story emotion | any | People/Chat | [md](FaceAvatar.md) |
@@ -76,6 +84,7 @@ One-page lookup for every spec in `components/`. **Read this first; open a spec 
 | Gauge | Semicircle gauge filling to a score | any | Numbers/Stats | [md](Gauge.md) |
 | HashMachine | Hash as a machine: same input, same output | any | Metaphor/Scene | [md](HashMachine.md) |
 | Headline | Big editorial title framing a section or the video's question | any | Text/Emphasis | [md](Headline.md) |
+| HiddenThinking | Short visible reply vs a tall stack of billed, hidden reasoning pages | FULL | Metaphor/Scene | [md](HiddenThinking.md) |
 | Highlight | Points at one region of a screenshot | any | Media/Image | [md](Highlight.md) |
 | HoldSettle | Reserved amount locked up front, then split into used and released | any | Numbers/Stats | [md](HoldSettle.md) |
 | HostingOptions | Three ways to host user code and what the browser isolates | any | Compare | [md](HostingOptions.md) |
@@ -91,6 +100,7 @@ One-page lookup for every spec in `components/`. **Read this first; open a spec 
 | KafkaLog | Append-only log; each consumer keeps its own read position | any | Data/Storage | [md](KafkaLog.md) |
 | KeyCard | Access token as hotel key card: opens a door, doesn't say who | any | Metaphor/Scene | [md](KeyCard.md) |
 | KeyGridScan | Two ways to clear stale items: on read, and random sweep | any | Process/Flow | [md](KeyGridScan.md) |
+| KeyLocker | Exact-key cache as a locker: same key hits, same question in other words misses | any | Data/Storage | [md](KeyLocker.md) |
 | KeyPicker | Four ways a client can be identified, one lit as focus | any | Compare | [md](KeyPicker.md) |
 | KitchenChefs | Many workers sharing one tool versus one fast worker | any | Metaphor/Scene | [md](KitchenChefs.md) |
 | LayerCache | Build steps become layers; unchanged lower layers reused | any | Process/Flow | [md](LayerCache.md) |
@@ -113,15 +123,19 @@ One-page lookup for every spec in `components/`. **Read this first; open a spec 
 | PhonePush | One approval on the owner's phone unlocks one agent action | any | Security | [md](PhonePush.md) |
 | PinnedQuestion | Open question kept visible across scenes, opening into the answer | HEAD, SPLIT | Text/Emphasis | [md](PinnedQuestion.md) |
 | PipelineCanvas | Camera travels one running pipeline; closing shot shows all built | any | Process/Flow | [md](PipelineCanvas.md) |
+| PolaroidDrop | Small polaroid photos drop onto a card one by one | FULL | Media/Image | [md](PolaroidDrop.md) |
+| PrepaidMeter | Per-user prepaid balance drained by calls; warn at 80%, stop or downgrade at 0 | any | Numbers/Stats | [md](PrepaidMeter.md) |
 | PresenterSplit | Widescreen talking head in a side card with room for graphics | HEAD | Layout/Frame | [md](PresenterSplit.md) |
 | PriceTag | Price chip flipping between correct and stale values | any | Numbers/Stats | [md](PriceTag.md) |
 | ProductCard | Recurring product card tying a shopping scenario's scenes together | any | Metaphor/Scene | [md](ProductCard.md) |
 | PromptStack | Prompt assembled piece by piece as spoken | any | Process/Flow | [md](PromptStack.md) |
 | ProtocolStack | Several protocols around one agent, each linked to a target | any | Process/Flow | [md](ProtocolStack.md) |
 | PublicVerify | One service signs tokens; others can only verify | any | Security | [md](PublicVerify.md) |
+| QuoteCard | Real public quote as text: quote, name, role, source, company logo (no likeness) | any | Text/Emphasis | [md](QuoteCard.md) |
 | RaceTimeline | Two requests race on a clock; a lease rejects the stale write | any | Timing/Progress | [md](RaceTimeline.md) |
 | RankedList | Results re-sort: relevant item rises, weak match drops | any | Compare | [md](RankedList.md) |
 | RationBags | Identical units on a counter: sameness makes counting enough | any | Numbers/Stats | [md](RationBags.md) |
+| ReceiptStack | Receipts slam down with an ENROLLED stamp each, counter ticking | FULL | Media/Image | [md](ReceiptStack.md) |
 | ReelSplit | Presenter docked under a graphic card for simple visuals | SPLIT, FULL | Layout/Frame | [md](ReelSplit.md) |
 | RegistryCalls | Same two HTTP requests reach three registries, all answer | any | Process/Flow | [md](RegistryCalls.md) |
 | RequestFlood | Requests overwhelm a cache, fall to the database; gate lets one through | any | Process/Flow | [md](RequestFlood.md) |
@@ -153,7 +167,10 @@ One-page lookup for every spec in `components/`. **Read this first; open a spec 
 | Tag | Small keyword pill for topics, verbs, icon-less tech names | any | Text/Emphasis | [md](Tag.md) |
 | TagDrop | Reason tags dropped onto a subject, one per spoken reason | any | Text/Emphasis | [md](TagDrop.md) |
 | TamperCrack | Editing a signed token breaks it; encryption is the fix | any | Security | [md](TamperCrack.md) |
+| TaskBudget | Budget the whole agent task: run boxed, snaps shut at the limit, cost preview | any | Process/Flow | [md](TaskBudget.md) |
 | TerminalCrack | Weak secret cracked offline; fix is a long random key | any | Code/Terminal | [md](TerminalCrack.md) |
+| TextMorph | A phrase strikes through or reshuffles into another (dark punch) | FULL, HEAD | Text/Emphasis | [md](TextMorph.md) |
+| ThresholdRing | Similarity threshold as a ring: strict hits right, loose swallows the opposite | any | Data/Storage | [md](ThresholdRing.md) |
 | Thumbnail | Cover still: face, one headline, one accent visual | any | Branding | [md](Thumbnail.md) |
 | Timeline | Past start date drawing forward to today ("around since") | any | Timing/Progress | [md](Timeline.md) |
 | Timer | Two-second stopwatch plus step counter: how fast one click works | HEAD | Timing/Progress | [md](Timer.md) |
