@@ -4,6 +4,27 @@ The easy way: open Claude Code in this folder and run `/setup`. It checks what's
 
 Everything installs **once per machine, globally**: apt, one shared user venv (`~/video-toolkit/venv`) with launchers in `~/bin`, and models in `~/.cache`. Never a venv per project.
 
+## Voice cleaner: globally installed DeepFilterNet 3
+
+The voice cleaner keeps WPE and FFmpeg DSP in the shared toolkit venv. DeepFilterNet is installed once, outside the repository and outside that venv, in `~/.local/share/deepfilternet/venv`. Its launcher is `~/bin/deep-filter`; its pretrained model is cached under `~/.cache/DeepFilterNet/DeepFilterNet3`.
+
+On this Ubuntu/NVIDIA setup the isolated environment uses Python 3.12 and a matched CUDA 12.6 PyTorch pair. The driver can run this CUDA runtime; no system Python packages are modified:
+
+```bash
+python3 -m venv ~/.local/share/deepfilternet/venv
+~/.local/share/deepfilternet/venv/bin/pip install \
+  --index-url https://download.pytorch.org/whl/cu126 \
+  --extra-index-url https://pypi.org/simple \
+  'torch==2.6.0+cu126' 'torchaudio==2.6.0+cu126'
+~/.local/share/deepfilternet/venv/bin/pip install deepfilternet soundfile
+printf '#!/bin/sh\nexec "$HOME/.local/share/deepfilternet/venv/bin/deepFilter" "$@"\n' > ~/bin/deep-filter
+chmod +x ~/bin/deep-filter
+```
+
+The Torch/Torchaudio pair is pinned together because DeepFilterNet 0.5.6 uses Torchaudio APIs removed in newer releases. The model is loaded with `--model-base-dir DeepFilterNet3`; weights are downloaded once and reused from the user cache. Verify the CLI with `gpu-run deep-filter --version` and a real WAV before use. If CUDA is unavailable, PyTorch selects CPU automatically; `CUDA_VISIBLE_DEVICES='' deep-filter ...` forces a CPU check.
+
+The cleaner detects `deep-filter`, `deepFilter`, or the default global interpreter. Override discovery with `DEEPFILTERNET_EXECUTABLE`, `DEEPFILTERNET_PYTHON`, `--deepfilter-executable`, or `--deepfilter-python`. `--no-neural` / `--mode balanced` skips DeepFilterNet; WPE remains its independent room-tail stage.
+
 ## Carousel PDF
 
 `/carousel` joins the slide PNGs into one lossless PDF with `img2pdf`, installed once per machine:

@@ -9,7 +9,7 @@ description: Check which video tools are installed, ask before installing the mi
    - `ffmpeg`/`ffprobe`, and whether `-encoders` lists `h264_nvenc` and `-filters` lists `arnndn`/`afftdn`/`loudnorm`
    - `nvidia-smi`, `~/bin/gpu-run`, and `~/bin` on PATH
    - Node ≥ 20 and `npx`
-   - A Python env with torch + CUDA, faster-whisper (or whisper-ctranslate2), mediapipe, opencv, and transformers (for forced alignment)
+   - A Python env with torch + CUDA, faster-whisper (or whisper-ctranslate2), mediapipe, opencv, and transformers (for forced alignment); `vt-python -c "import numpy, scipy, soundfile"` for voice-cleaner WPE; report whether optional `df.enhance` is installed
    - Cached models: faster-whisper large-v3, wav2vec2 alignment model
    - Delegation CLIs (`pipeline/delegation.md`): `copilot --version` and `gh auth status`; `codex --version` and `codex login status`; `cursor-agent --version` and `cursor-agent status`. Each must be installed **and** logged in; also report the Copilot usage reading (`gh api /copilot_internal/user`) and the cursor-agent canary result. Missing ones: ask, then install globally
    - `rembg` (optional, used for thumbnails)

@@ -14,7 +14,7 @@ Run this as four stages, one session each (`pipeline/stages.md`). Start each sta
 
 1. **GPU:** `pipeline/gpu.md`. Do not continue until the checks pass.
 2. **Probe and trim:** `pipeline/probe-and-trim.md`. Report every file's resolution, rotation, fps and duration.
-3. **Clean audio:** `pipeline/clean-audio.md`.
+3. **Clean audio:** `pipeline/clean-audio.md`; run `vt-python tools/clean_audio.py <source-audio> work/audio/clean.wav --preset studio --report work/audio/clean-report.json`. Check the report and A/B listen for dereverb artifacts before continuing.
 4. **Transcribe:** `pipeline/transcribe.md`.
 **Stage 2 · Cut** (steps 5–6)
 
