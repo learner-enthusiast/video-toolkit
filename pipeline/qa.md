@@ -1,5 +1,7 @@
 # QA
 
+Any Whisper pass here is post-production verification only and must consume a deliverable whose audio derives from the Prep-verified cleaned recording. It does not replace or bypass the Stage 1 voice-cleaning gate; do not use QA transcription on raw or unverified footage to bootstrap production.
+
 **Goal:** catch every visible or audible defect before telling me it's done.
 
 **Frames**

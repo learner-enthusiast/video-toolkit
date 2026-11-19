@@ -104,6 +104,11 @@ def clean(source, output, preset="studio", config_path=None, report_path=None, n
         neural = False
         settings["dereverb_enabled"] = False
     elif mode != "quality": raise ValueError(f"Unknown processing mode: {mode}")
+    if mode == "quality":
+        if not neural or settings.get("speech_enhancement_enabled") is False:
+            raise ValueError("Quality mode requires DeepFilterNet3; use another mode only with user approval.")
+        if settings.get("dereverb_enabled") is False:
+            raise ValueError("Quality mode requires WPE dereverberation; use another mode only with user approval.")
     strength = max(0., min(1., float(settings.get("dereverb_strength", .55))))
     noise = max(0., min(1., float(settings.get("noise_strength", .35))))
     info = probe(source); output.parent.mkdir(parents=True, exist_ok=True)
@@ -121,8 +126,10 @@ def clean(source, output, preset="studio", config_path=None, report_path=None, n
                     run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(wpe_output), "-ar", "48000", "-ac", "1", "-c:a", "pcm_f32le", str(wpe_back)])
                     current = wpe_back
             except ImportError as e:
-                print(f"WPE dereverberation unavailable (install scipy and soundfile): {e}", file=sys.stderr)
-                dereverb_report = {"applied": False, "reason": "scipy or soundfile missing"}
+                raise RuntimeError(
+                    "WPE dereverberation is required for quality cleanup, but scipy or "
+                    f"soundfile is unavailable: {e}"
+                ) from e
         engine = "ffmpeg-dsp"
         enhancement_report = {"enabled": False, "model": "DeepFilterNet3", "status": "disabled"}
         if neural and settings.get("speech_enhancement_enabled", True):
@@ -141,8 +148,11 @@ def clean(source, output, preset="studio", config_path=None, report_path=None, n
                 current, engine = blend, "DeepFilterNet3"
                 enhancement_report = {"enabled": True, "model": "DeepFilterNet3", "backend": backend, "strength": enhancement_strength, "status": "processed", "device": device_match.group(1) if device_match else "see CLI log", "inference_seconds": float(time_match.group(1)) if time_match else None, "real_time_factor": float(time_match.group(2)) if time_match else None}
             except (ImportError, RuntimeError, OSError, subprocess.CalledProcessError) as e:
-                print(f"DeepFilterNet3 stage unavailable; WPE and FFmpeg stages continue: {e}", file=sys.stderr)
-                enhancement_report = {"enabled": True, "model": "DeepFilterNet3", "status": "unavailable", "error": str(e)}
+                raise RuntimeError(
+                    "DeepFilterNet3 was requested for quality cleanup but could not run. "
+                    "No substitute pipeline was applied; resolve the issue or explicitly "
+                    f"approve a different mode. Details: {e}"
+                ) from e
         # Remaining FFmpeg stages handle noise cleanup and mastering.
         filters = ["highpass=f=78"]
         if settings.get("noise_enabled", True) and noise > .01: filters.append(f"afftdn=nr={2+6*noise:.1f}:nf=-45:tn=1")
@@ -159,9 +169,9 @@ def clean(source, output, preset="studio", config_path=None, report_path=None, n
 
 def main():
     p = argparse.ArgumentParser(description=__doc__); p.add_argument("input", type=Path); p.add_argument("output", type=Path)
-    p.add_argument("--preset", choices=PRESETS, default="studio"); p.add_argument("--mode", choices=("quality", "balanced", "performance"), default="quality"); p.add_argument("--config", type=Path); p.add_argument("--report", type=Path); p.add_argument("--no-neural", action="store_true"); p.add_argument("--deepfilter-python", help="Override DEEPFILTERNET_PYTHON"); p.add_argument("--deepfilter-executable", help="Override DEEPFILTERNET_EXECUTABLE")
+    p.add_argument("--preset", choices=PRESETS, default="studio"); p.add_argument("--mode", choices=("quality", "balanced", "performance"), default="quality"); p.add_argument("--config", type=Path); p.add_argument("--report", type=Path); p.add_argument("--deepfilter-python", help="Override DEEPFILTERNET_PYTHON"); p.add_argument("--deepfilter-executable", help="Override DEEPFILTERNET_EXECUTABLE")
     a = p.parse_args()
-    try: print(json.dumps(clean(a.input, a.output, a.preset, a.config, a.report, not a.no_neural, a.mode, a.deepfilter_python, a.deepfilter_executable), indent=2)); return 0
+    try: print(json.dumps(clean(a.input, a.output, a.preset, a.config, a.report, True, a.mode, a.deepfilter_python, a.deepfilter_executable), indent=2)); return 0
     except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as e: print(f"audio cleaning failed: {e}", file=sys.stderr); return 1
 
 if __name__ == "__main__": raise SystemExit(main())

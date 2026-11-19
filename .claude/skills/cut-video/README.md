@@ -13,6 +13,8 @@ Point it at any video file and it will:
 5. **Ground-truth every keep boundary** — re-transcribes each kept region in an isolated window before rendering. On retake-heavy footage Whisper collapses repeated lines and MFA's global alignment drifts by *seconds*; isolated windows catch that, plus dropped words and flubs hiding inside stretched words. Pauses >0.2s *inside* kept takes get trimmed to ~0.1s here too.
 6. **Render & verify** — ffmpeg `trim+concat` (not `select`, which misaligns audio), then re-transcribes the output and scans for surviving stutters or clipped words before shipping.
 
+In this repository, every talking-head source must first pass `pipeline/stages.md` and `pipeline/voice-cleaning.md`: inspect the unique per-recording report, confirm WPE and DeepFilterNet 3, and listen to the original/cleaned pair before any Whisper pass. All ASR windows and final cut audio must derive from the verified cleaned WAV. On failure or unavailable listening, stop and request explicit approval; do not fall back to source audio.
+
 There's also an optional **browser timeline editor** (`make_review.py`) — a self-contained HTML page with a canvas waveform, pinch-to-zoom, drag-across-to-delete, auto-suggested silence bands, per-segment transcript cards, and a live "preview final cut" mode. It exports an edited keep list you paste back into the chat for a seconds-fast re-render.
 
 Runs entirely on your machine. No cloud APIs. Built for Apple Silicon — fast.

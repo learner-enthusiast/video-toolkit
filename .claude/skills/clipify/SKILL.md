@@ -54,11 +54,15 @@ Working dir: `projects/<name>/work/clipify/` (mkdir at start, leave artifacts fo
 
 ## Workflow
 
+### Step 0 — Gate dialogue/hybrid transcription on voice cleaning
+
+Before Step 1A (or the dialogue portion of Hybrid), inspect/probe the original footage, identify each talking-head source recording, and read `pipeline/voice-cleaning.md`. Run `vt-python tools/clean_audio.py` separately per recording in `studio`/`quality` mode. Write unique outputs/reports under `projects/<name>/work/clipify/audio/cleaned/<recording-id>.wav` and `projects/<name>/work/clipify/audio/reports/<recording-id>-clean-report.json`. Inspect every report and require WPE `applied: true` and DeepFilterNet3 `status: processed`; listen to each original/clean pair for quality and sync. If either stage fails, stop and report; never switch modes or transcribe original audio without explicit approval. If listening is unavailable, disclose it and request approval before Whisper. Use only the verified cleaned WAV for all ASR, including the full-source candidate scan and clip-level caption timestamps. Keep each recording's files separate. Action mode's transient detector does not invoke Whisper; if Hybrid contains talking-head dialogue, gate that portion before its Whisper pass.
+
 ### Step 1A — Find dialogue moments (dialogue mode)
 
 ```bash
 mkdir -p projects/<name>/work/clipify
-ffmpeg -y -hwaccel cuda -i "$VIDEO" -vn -ac 1 -ar 16000 projects/<name>/work/clipify/audio.wav
+ffmpeg -y -i projects/<name>/work/clipify/audio/cleaned/<recording-id>.wav -ac 1 -ar 16000 projects/<name>/work/clipify/audio.wav
 gpu-run whisper-ctranslate2 --device cuda --compute_type float16 projects/<name>/work/clipify/audio.wav --model tiny.en --word_timestamps True --output_format json --output_dir projects/<name>/work/clipify --language en
 ```
 
@@ -114,7 +118,7 @@ For ~30 candidates this is one fast `ffmpeg` call each plus a single batch image
 ### Step 2 — Trim each chosen clip
 
 ```bash
-ffmpeg -y -ss "$START" -t "$DURATION" -i "$VIDEO" -c copy projects/<name>/work/clipify/clip_$N.mp4
+ffmpeg -y -ss "$START" -t "$DURATION" -i "$VIDEO" -an -c:v copy projects/<name>/work/clipify/clip_$N.mp4
 ```
 
 (Use `-c copy` for instant trim. Re-encode only if cuts must be frame-accurate.)
@@ -167,8 +171,8 @@ Skip the question if there's only one face (single-talker clip). For single-talk
    EXPR=$(vt-python <skill-dir>/scripts/build_pan.py projects/<name>/work/clipify/segments.json $LEFT_X $RIGHT_X)
    ffmpeg -y -hwaccel cuda -i clip.mp4 -filter_complex \
      "[0:v]crop=608:1080:x='$EXPR':y=0,scale=1080:1920:flags=lanczos[v]" \
-     -map "[v]" -map 0:a -c:v h264_nvenc -preset p5 -rc vbr -cq 20 -b:v 0 -pix_fmt yuv420p \
-     -c:a aac -b:a 192k projects/<name>/work/clipify/clip_panned.mp4
+     -map "[v]" -an -c:v h264_nvenc -preset p5 -rc vbr -cq 20 -b:v 0 -pix_fmt yuv420p \
+     projects/<name>/work/clipify/clip_panned.mp4
    ```
 
    Source 1920×1080 assumed; for 4K source either downscale first or double all coordinates.
@@ -188,17 +192,19 @@ Two stacked tiles, 1080×960 each. The active speaker's tile is on top — overl
 
 Build `<RIGHT_SPEAKER_ENABLE>` from `segments.json` as `between(t,a,b)+between(t,a,b)+...` over the right-speaker segments. Tile crops should target ~720×640 around each face (1.125:1 to match 1080×960).
 
+Render this layout video-only (`-an`), then mux the matching clip segment from the verified cleaned WAV. Never carry audio from `clip.mp4` or `$VIDEO` into the edited output.
+
 ### Step 4c — Time-warping reveals (optional)
 
 When the user wants a slow scenic / pan / reveal shot tightened ("cut this in half") without losing the arc, speed-ramp instead of trimming. Trimming forces you to drop part of the arc; speed-ramping preserves all the beats at higher tempo.
 
 ```bash
-# 2x speed: 12s arc → 6s output, audio pitch preserved via atempo
+# 2x speed: render video only. If speech is present, time-warp a segment from the verified cleaned WAV with atempo=2.0 and mux it; never retain source-video audio.
 ffmpeg -y -ss "$START" -i "$CLIP" -t "$ORIG_DUR" \
   -vf "setpts=PTS/2,scale=1080:1920:flags=lanczos,fps=30" \
-  -af "atempo=2.0" \
+  -an \
   -c:v h264_nvenc -preset p5 -rc vbr -cq 21 -b:v 0 -pix_fmt yuv420p \
-  -c:a aac -b:a 128k projects/<name>/work/clipify/clip_2x.mp4
+  projects/<name>/work/clipify/clip_2x.mp4
 ```
 
 Rules of thumb:
@@ -223,16 +229,18 @@ If they paste a reference image/example: match the font, size, weight, color, po
 Else use the preset:
 
 ```bash
-# Re-run whisper on the trimmed clip for accurate timestamps relative to clip start
-gpu-run whisper-ctranslate2 --device cuda --compute_type float16 projects/<name>/work/clipify/clip_panned.mp4 --model tiny.en --word_timestamps True --output_format json --output_dir projects/<name>/work/clipify --language en
+# Trim the verified cleaned source audio to the selected source interval, then transcribe that cleaned clip.
+ffmpeg -y -ss "$START" -i projects/<name>/work/clipify/audio/cleaned/<recording-id>.wav -t "$DURATION" -ac 1 -ar 16000 projects/<name>/work/clipify/clip_audio.wav
+gpu-run whisper-ctranslate2 --device cuda --compute_type float16 projects/<name>/work/clipify/clip_audio.wav --model tiny.en --word_timestamps True --output_format json --output_dir projects/<name>/work/clipify --language en
 vt-python <skill-dir>/scripts/build_ass.py projects/<name>/work/clipify/clip_panned.json projects/<name>/work/clipify/captions.ass opus
 ```
 
 Burn captions:
 
 ```bash
-ffmpeg -y -i projects/<name>/work/clipify/clip_panned.mp4 -vf "subtitles=projects/<name>/work/clipify/captions.ass" \
-  -c:v h264_nvenc -preset p5 -rc vbr -cq 20 -b:v 0 -c:a copy "$OUTPUT.mp4"
+ffmpeg -y -i projects/<name>/work/clipify/clip_panned.mp4 -i projects/<name>/work/clipify/clip_audio.wav \
+  -vf "subtitles=projects/<name>/work/clipify/captions.ass" -map 0:v -map 1:a \
+  -c:v h264_nvenc -preset p5 -rc vbr -cq 20 -b:v 0 -c:a aac -b:a 192k "$OUTPUT.mp4"
 ```
 
 ### Step 6 — Deliver

@@ -3,8 +3,9 @@
 **Goal:** word-level timestamps you can trust, in `work/transcript.json` and `work/transcript.srt`.
 
 **Do**
+- Before any Whisper pass on talking-head source audio, complete every step in `pipeline/stages.md`'s Stage 1 gate and `pipeline/voice-cleaning.md` for every relevant recording. No ASR starts until reports confirm WPE and DeepFilterNet 3 and the source/cleaned pairs have been listened to and approved. If either model fails or listening is unavailable, stop and report/request approval; never silently switch modes or transcribe source audio.
 - Use local faster-whisper (or the whisper-ctranslate2 CLI) with `large-v3`, language set explicitly, word timestamps on, through `gpu-run`. Never use the paid API.
-- Run it on `work/audio/clean.wav`.
+- Run it on the verified cleaned WAV mapped to that recording in the Prep handoff. `work/audio/clean.wav` is valid only when it is a working copy of a specific verified cleaned WAV. For multiple recordings, maintain distinct cleaned WAVs and reports, and write transcript outputs under `work/transcripts/<recording-id>/` (for example, `transcript.json` and `.srt`); do not reuse one generic input or overwrite prior outputs. Combine transcripts only after preserving each recording's identity and timestamps.
 - Run 2–3 passes and compare them:
   - a plain pass
   - a VAD-chunked pass (catches words dropped across long pauses)

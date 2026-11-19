@@ -58,12 +58,16 @@ This is the file-based sibling of `/tella-edit` and `/tella-cut` (which zoom *in
 
 ## Workflow
 
-### Step 0 — Probe
+### Step 0 — Confirm cleaned-audio provenance before ASR
+
+Probe the input and identify its source recording first. Before transcribing, confirm the talking-head audio has a verified source-to-cleaned-WAV mapping from Prep (`pipeline/stages.md`, `pipeline/voice-cleaning.md`). If it does not, run the cleaner on the original recording with a unique report, verify WPE and DeepFilterNet 3, and listen to the original/cleaned pair. If either stage fails, stop; if listening is unavailable, disclose it and request explicit approval before Whisper. Never use an unverified extraction or the original video's audio for ASR. Use the verified cleaned WAV (or a segment derived from it) for word timestamps; retain the video only as the visual/render source.
+
+### Step 0.1 — Probe
 `ffprobe` the file for w/h/fps/duration. Confirm it's a talking-head (zooms on b-roll/drone footage need a different focal point — ask).
 
 ### Step 1 — Transcribe with word timestamps
 ```
-ffmpeg -y -i INPUT -ac 1 -ar 16000 work/audio.wav
+ffmpeg -y -i VERIFIED_CLEANED.wav -ac 1 -ar 16000 work/audio.wav
 gpu-run whisper-ctranslate2 --device cuda --compute_type float16 work/audio.wav --model small.en --language en --word_timestamps True \
   --output_format json --output_dir work
 ```

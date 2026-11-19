@@ -5,6 +5,8 @@
 **Inputs:** a video path, optional `--start/--end` (seconds), optional `--thorough` (final pre-publish check).
 **Output:** `work/inspect/<deliverable>/` (`<deliverable>` = the file's stem): `report.json`, `contact_sheet.jpg`, `keyframes/` (one per scene, plus every flagged frame), and `sheet_NN.jpg` for beat QA.
 
+**Transcript provenance gate:** this Whisper pass is a QA transcript only. For talking-head production footage, it may run only on a deliverable whose audio comes from the Prep-verified cleaned recording (`pipeline/stages.md`, `pipeline/voice-cleaning.md`); it must never be used to bootstrap Prep or to transcribe raw/unverified source audio. If provenance is unknown, omit the transcript stage and report why.
+
 **Build it per project** in `work/scripts/video_inspect.py` (shared venv, `gpu-run vt-python`) plus `work/scripts/video_inspect_ocr.py` (`gpu-run vt-ocr-python`: PaddleOCR has its own venv, see `setup.md`). A detached Haiku runner launches it from exact commands Claude writes and reports through `work/jobs/*.status` (`pipeline/delegation.md`, section 6). Run the GPU stages one after another, never at the same time (4 GB card). All times are in source seconds (add `--start`), 2 decimals; boxes are normalised 0–1, 3 decimals.
 
 | Stage | Tool and exact settings |

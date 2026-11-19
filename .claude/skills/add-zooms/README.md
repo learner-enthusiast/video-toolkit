@@ -30,9 +30,11 @@ Everything is a hard cut **except** Ken Burns. A hard-cut zoom reads as intentio
 
 ## Quick start
 
+For talking-head inputs, first pass the source through the toolkit's mandatory voice-cleaning gate (`pipeline/stages.md`, `pipeline/voice-cleaning.md`), inspect the report and listen to the original/cleaned pair. Transcribe a WAV derived from that verified cleaned audio, never audio extracted directly from the original video. If a required stage fails or listening is unavailable, stop and get explicit user approval before transcription.
+
 ```bash
 # 1. word-level transcript
-ffmpeg -y -i input.mp4 -ac 1 -ar 16000 audio.wav
+ffmpeg -y -i VERIFIED_CLEANED.wav -ac 1 -ar 16000 audio.wav
 whisper audio.wav --model small.en --language en --word_timestamps True \
   --output_format json --output_dir .
 

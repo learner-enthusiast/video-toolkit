@@ -8,7 +8,25 @@ argument-hint: <name>
 
 Choose components from `components/index.md` first; open only the specs you will use. If a component has saved code (`Code? ✓`), import it from `shared/` and set props. Logos come from `icons/` (`icons/icons.md`).
 
-Use the same pipeline steps and the same four stages as `/coding-video` (GPU, probe, clean audio, transcribe, take selection, rough cut checkpoint, composition, render, QA), with the same delegation and vision rules (`pipeline/stages.md`, `pipeline/delegation.md`, `pipeline/video-inspect.md`). These rules change:
+Use the same four stages and delegation/vision rules as `/coding-video` (`pipeline/stages.md`, `pipeline/delegation.md`, `pipeline/video-inspect.md`). **Stage 1 · Prep runs in this exact order:**
+
+1. Inspect and probe original footage (`pipeline/probe-and-trim.md`).
+2. Inventory every talking-head recording and assign a unique ID.
+3. Read `pipeline/voice-cleaning.md`.
+4. Run the cleaner once per recording, with unique output and report paths:
+   ```bash
+   vt-python tools/clean_audio.py "projects/<name>/raw/<recording>" \
+     "projects/<name>/work/audio/cleaned/<recording-id>.wav" \
+     --preset studio --mode quality \
+     --report "projects/<name>/work/audio/reports/<recording-id>-clean-report.json"
+   ```
+5. Inspect every report and match it to its source/output.
+6. Require WPE `applied: true` and DeepFilterNet3 `status: processed` for every recording.
+7. Listen to each original/cleaned pair and verify quality and sync.
+8. Only after all recordings pass, run Whisper on the corresponding verified cleaned WAVs.
+9. Continue remaining Prep and log each source/output/report mapping.
+
+If cleaning fails, stop and report it; do not switch modes or transcribe original audio without explicit approval. If listening is unavailable, disclose that limitation and request explicit approval before Whisper. Keep reports separate; no reel candidate search or editing may use a transcription that bypassed this gate.
 
 - **Skills.** Cut with `/cut-video` (`aggressive` tone, but this file's pause lengths win), and punch in with `/add-zooms` (punches and ratchets only). If the source is a long video, use `/clipify` (dialogue mode) to pick 3–5 candidate moments. Show them to me, then build each chosen one as a reel with the rules below.
 

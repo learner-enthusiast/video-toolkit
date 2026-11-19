@@ -42,9 +42,13 @@ Tighten a long-form recording **aggressively**: remove silences, fillers, hedges
 
 ---
 
-## Step 0 — Make a proxy (the single biggest speed move)
+## Step 0 — Inspect source and pass the voice-cleaning gate
 
-If the source is HEVC, >500MB, or 4K+, transcode to a 1080p H.264 working copy FIRST. Every subsequent step runs against the proxy, not the source.
+Probe the original video and audio, identify every relevant talking-head recording, and read `pipeline/voice-cleaning.md`. Run `vt-python tools/clean_audio.py "$SRC" "projects/<name>/work/cut-video/audio/cleaned/<recording-id>.wav" --preset studio --mode quality --report "projects/<name>/work/cut-video/audio/reports/<recording-id>-clean-report.json"` once per recording. Inspect every report; require WPE `applied: true` and DeepFilterNet3 `status: processed`; then listen to each original/clean pair for audio quality and sync. If either model stage fails, stop and report it. If listening is unavailable, disclose it and request explicit approval before Whisper. Never switch modes, transcribe source audio, or overwrite earlier outputs/reports without explicit approval. Continue only after every relevant recording passes.
+
+## Step 0.5 — Make a video-only proxy (the single biggest speed move)
+
+If the source is HEVC, >500MB, or 4K+, transcode to a 1080p H.264 video-only working copy. Video-frame steps may use the proxy; audio analysis and rendering use the verified cleaned WAV.
 
 **Check orientation first** (`ffprobe … width,height`) — DJI/phone footage is often vertical 9:16, and a hard-coded `scale=1920:1080` would squash it. Use `scale=1920:1080` only for landscape; use `scale=1080:1920` for portrait (or the orientation-proof `scale=-2:1080` / `scale=1080:-2`).
 
@@ -52,7 +56,7 @@ If the source is HEVC, >500MB, or 4K+, transcode to a 1080p H.264 working copy F
 ffmpeg -y -hwaccel cuda -i "$SRC" \
   -vf scale=1920:1080 \        # portrait sources: scale=1080:1920
   -c:v h264_nvenc -preset p5 -rc vbr -cq 20 -b:v 0 -pix_fmt yuv420p \
-  -c:a aac -b:a 192k \
+  -an \
   projects/<name>/work/cut-video/proxy.mp4
 ```
 
@@ -60,13 +64,20 @@ ffmpeg -y -hwaccel cuda -i "$SRC" \
 - `-hwaccel cuda` on the INPUT — NVDEC hardware-decodes HEVC on the NVIDIA GPU. Skip this and you'll wait minutes instead of seconds.
 - `h264_nvenc` encodes on the GPU (CLAUDE.md: never fall back to the CPU silently). For a faster throwaway proxy use `-preset p1`.
 
+## Step 0.75 — Prepare ASR audio from the verified cleaned recording
+
+Use only the WAV that passed Step 0's report and listening checks. Do not use proxy audio, source video audio, or an unverified extraction for Whisper or MFA.
+
+```bash
+ffmpeg -y -i projects/<name>/work/cut-video/audio/cleaned/<recording-id>.wav \
+  -ac 1 -ar 16000 projects/<name>/work/cut-video/audio.wav
+```
+
 ## Step 1 — Get the transcript TEXT (whisper, as input for MFA)
 
 MFA is a **forced aligner, not a transcriber** — it needs a transcript to align. Whisper's only job here is to produce that text; **whisper word timestamps are NOT used for cutting** (they're ±100–300ms off and turbo embeds pauses inside word durations). MFA (Step 1.5) supplies all timing.
 
 ```bash
-ffmpeg -y -hwaccel cuda -i projects/<name>/work/cut-video/proxy.mp4 \
-  -vn -ac 1 -ar 16000 projects/<name>/work/cut-video/audio.wav
 gpu-run whisper-ctranslate2 --device cuda --compute_type float16 projects/<name>/work/cut-video/audio.wav \
   --model tiny.en --word_timestamps True --output_format json \
   --output_dir projects/<name>/work/cut-video --language en
@@ -120,7 +131,7 @@ With MFA (Step 1.5), true silences are the TextGrid's empty-label intervals — 
 #     F ≈ 10th-percentile window RMS  (room tone),  S ≈ 90th-percentile  (speech))
 # 2. Set the silence threshold RELATIVE to the floor, not absolute:
 THRESH=$(vt-python -c "print(f'{F + 6:.0f}')")        # 6 dB above the measured floor
-ffmpeg -i proxy.mp4 -af silencedetect=noise=${THRESH}dB:d=0.14 -f null - 2>&1 | grep silence_
+ffmpeg -i audio.wav -af silencedetect=noise=${THRESH}dB:d=0.14 -f null - 2>&1 | grep silence_
 ```
 
 **⚠️ Low-dynamic-range guard (the real lesson, 2026-06-16):** if `S − F < ~8dB` (noisy mic — outdoor/DJI/lav with AC hum, where the per-second RMS reads the SAME during speech and silence), NO energy threshold can separate speech from silence. Do **not** trust silencedetect/volumedetect at all in that case — drive every cut from MFA word boundaries, or in the no-MFA fallback from **`small.en` word ONSETS + stretched-word pause detection** (a whisper word whose duration ≫ a normal word IS a hidden pause: keep ~`0.10 + 0.105·len(word)`s of onset, then cut to the next word's start). Say which path you used in the plan summary.
@@ -280,9 +291,9 @@ Build a filtergraph with one trim+atrim pair per keep interval, then concat them
 
 ```
 [0:v]trim=A1:B1,setpts=PTS-STARTPTS[v0];
-[0:a]atrim=A1:B1,asetpts=PTS-STARTPTS[a0];
+[1:a]atrim=A1:B1,asetpts=PTS-STARTPTS[a0];
 [0:v]trim=A2:B2,setpts=PTS-STARTPTS[v1];
-[0:a]atrim=A2:B2,asetpts=PTS-STARTPTS[a1];
+[1:a]atrim=A2:B2,asetpts=PTS-STARTPTS[a1];
 ...
 [v0][a0][v1][a1]...concat=n=N:v=1:a=1[outv][outa]
 ```
@@ -291,6 +302,7 @@ Write the filtergraph to a file (it'll get long — aggressive cuts mean 200–4
 
 ```bash
 ffmpeg -y -hwaccel cuda -i projects/<name>/work/cut-video/proxy.mp4 \
+  -i projects/<name>/work/cut-video/audio/cleaned/<recording-id>.wav \
   -filter_complex_script projects/<name>/work/cut-video/filter.txt \
   -map "[outv]" -map "[outa]" \
   -c:v h264_nvenc -preset p5 -rc vbr -cq 20 -b:v 0 -pix_fmt yuv420p \
@@ -299,9 +311,9 @@ ffmpeg -y -hwaccel cuda -i projects/<name>/work/cut-video/proxy.mp4 \
 ```
 
 **Faster alternative for many cuts:** if filtergraph exceeds ~500 trims, switch to per-segment extract + lossless concat:
-1. Extract each keep interval as a separate stream-copied chunk
-2. Build a concat demuxer file
-3. `ffmpeg -f concat -safe 0 -i concat.txt -c copy cleaned.mp4`
+1. Extract video-only keep intervals from `proxy.mp4` and audio keep intervals from the verified cleaned 48 kHz WAV; never copy proxy/source audio.
+2. Build separate concat demuxer files and concatenate video and cleaned audio independently.
+3. Mux the concatenated streams and verify start/middle/end sync.
 
 This avoids re-encoding entirely on the trim pass.
 
@@ -322,7 +334,7 @@ This avoids re-encoding entirely on the trim pass.
 - **Don't encode on the CPU.** Use `h264_nvenc`; if it fails, fix it or stop and tell me (CLAUDE.md).
 - **Don't wait for approval before rendering the rough cut** (changed 2026-07-09 — the gate wasted more time than it saved), but do stop at the rough cut checkpoint afterwards. Print the plan, render immediately. The old worry (a "silent" gap holding a laugh, a "filler" that's intentional emphasis) is handled by the amplitude check below + preserved-pauses list in the summary — and a bad cut just means a quick re-render.
 - **Don't trim a long "silence" without checking amplitude** — that's usually laughter, a thinking pause, or a setup-payoff beat.
-- **Don't `whisper` the entire raw source if a proxy exists.** Run whisper against `audio.wav` extracted from the proxy.
+- **Never transcribe source/proxy audio.** `audio.wav` is derived only from the Prep-verified cleaned WAV in Step 0.5; all later ASR windows come from that cleaned track. Final cut audio is trimmed from the verified cleaned 48 kHz WAV, not the proxy.
 - **Don't re-encode audio twice.** If you only changed video, use `-c:a copy` to skip an unnecessary AAC pass.
 - **Don't be timid.** Default to `aggressive`. The reference cut style is fast — if the output feels "safe", it's not matching Louise's CapCut pacing.
 - **Don't render from MFA times alone on retake-heavy or noisy footage.** Measured 1–6s drift on the 2026-07-02 DJI run. Ground-truth every keep boundary with isolated windows (Step 2.5) first.

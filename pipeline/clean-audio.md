@@ -2,9 +2,11 @@
 
 **Goal:** produce a natural, intelligible 48 kHz mono voice track on the exact source timeline. Room reverb is treated as a separate problem from stationary noise.
 
+**Execution authority:** for production order, per-recording paths, report checks, listening approval, and fail-stop behavior, follow [`pipeline/voice-cleaning.md`](voice-cleaning.md). This file describes implementation details only.
+
 ## Entry point
 
-Use `vt-python tools/clean_audio.py INPUT OUTPUT --preset studio --mode quality --report work/audio/clean-report.json`. The existing video flow still reads `work/audio/clean.wav`; render from a copy into that path. `--no-neural` skips the independent DeepFilterNet 3 speech-enhancement stage. The cleaner detects the global `deep-filter` executable or user venv and accepts `--deepfilter-executable` / `--deepfilter-python` (also `DEEPFILTERNET_EXECUTABLE` / `DEEPFILTERNET_PYTHON`). `--mode quality` uses it when installed, `balanced` uses WPE + FFmpeg DSP, and `performance` skips neural and WPE for a fast cleanup-only pass. Temporary WAVs are isolated and removed automatically; source files are never modified.
+Use `vt-python tools/clean_audio.py INPUT OUTPUT --preset studio --mode quality --report work/audio/clean-report.json`. Every talking-head source must be cleaned and the report reviewed before Whisper or editing. Preserve the source recording; write the processed audio to a separate path. The existing video flow still reads `work/audio/clean.wav`; render from a copy into that path. Quality mode requires WPE and DeepFilterNet 3 and fails with an actionable error if either stage cannot run. Do not retry with `--no-neural`, `balanced`, or `performance` without first asking the user to approve that substitute. The cleaner detects the global `deep-filter` executable or user venv and accepts `--deepfilter-executable` / `--deepfilter-python` (also `DEEPFILTERNET_EXECUTABLE` / `DEEPFILTERNET_PYTHON`). Temporary WAVs are isolated and removed automatically; source files are never modified.
 
 The CLI probes input stream rate/channels/duration, measures loudness and true peak before and after, and reports duration delta. It converts the processing copy to mono/48 kHz and does not trim silence. Keep the original video timeline and use the resulting WAV as the replacement audio track.
 
@@ -12,9 +14,9 @@ The CLI probes input stream rate/channels/duration, measures loudness and true p
 
 1. **Input analysis:** FFprobe checks audio presence, channel count, sample rate and duration. FFmpeg EBU R128 reports integrated loudness, LRA and true peak. Clipping and room-reverb severity are not yet robustly auto-classified; listen and inspect the report.
 2. **Dereverberation (separate stage):** offline single-channel WPE predicts late reverberation using delayed STFT frames. It is CPU-friendly, uses the shared venv's NumPy/SciPy/soundfile, and is blended with the dry signal at the preset strength. WPE chiefly targets the late tail; it does not erase strong early reflections or a discrete slapback echo, and can sound phasey when overused. It is not an inverse-room model.
-3. **Optional neural speech enhancement:** invoke the globally installed DeepFilterNet3 CLI in its own cached Python environment, independent from WPE; conservatively blend the result using `enhancement_strength`. DeepFilterNet3 is a general speech-enhancement model trained with reverberant examples, not a dedicated dereverberator. It can help residual noise and roominess but is not guaranteed to remove a long room tail. Missing/incompatible optional modules produce a clear warning and WPE + FFmpeg processing continues.
+3. **Neural speech enhancement:** invoke the globally installed DeepFilterNet3 CLI in its own cached Python environment, independent from WPE; conservatively blend the result using `enhancement_strength`. DeepFilterNet3 is a general speech-enhancement model trained with reverberant examples, not a dedicated dereverberator. It can help residual noise and roominess but is not guaranteed to remove a long room tail. Missing/incompatible dependencies stop quality processing; fix the installation or ask before using a substitute.
 4. **Residual noise:** modest `afftdn` only; do not treat it as dereverberation. If the recording has a steady hum, inspect it and use a separately targeted notch rather than increasing broadband suppression.
-5. **Vocal tone and dynamics:** high-pass at 78 Hz; subtle 260 Hz cut and 3.2 kHz presence lift; gentle compression (2.2:1); mild FFmpeg de-esser. Disable or adjust any stage through JSON overrides if the source does not need it.
+5. **Vocal tone and dynamics:** high-pass at 78 Hz; subtle 260 Hz cut and 3.2 kHz presence lift; gentle compression (2.2:1); mild FFmpeg de-esser. Optional tone/dynamics settings may be adjusted when needed, but do not disable WPE or DeepFilterNet 3 in quality mode without explicit user approval.
 6. **Loudness:** single-pass `loudnorm` targets −16 LUFS and −1.5 dBTP. The report measures the output; do not infer compliance from the requested target alone. Shorts/reels may specify another target in their brief.
 
 The cleaner does not time-stretch or trim, so synchronization and pauses remain. WPE uses centered STFT processing and may change edge samples by a few milliseconds; report the duration delta and verify start/middle/end sync before delivery.
@@ -42,7 +44,7 @@ Example overrides (`work/audio/clean-config.json`):
 }
 ```
 
-Strength values are bounded to 0–1. A stage can be disabled independently. No auto-strength classifier is enabled: a reliable room-severity estimate needs real representative recordings and listening calibration. Start at Studio; compare source and processed audio before choosing Strong Room.
+Strength values are bounded to 0–1. Tone and dynamics settings may be adjusted, but production quality mode must retain WPE and DeepFilterNet 3. No auto-strength classifier is enabled: a reliable room-severity estimate needs real representative recordings and listening calibration. Start at Studio; compare source and processed audio before choosing Strong Room.
 
 ## Model evaluation and limitations
 
@@ -59,6 +61,6 @@ Treat these as evidence-based engineering choices, not claims of studio sound. W
 
 Synthetic measurements and the limits of the current evaluation are recorded in `pipeline/audio-cleaner-evaluation.md`.
 
-For each new room/mic setup, preserve a raw sample and compare it with the processed file at matched loudness. Listen to a consonant-rich sentence, a sustained vowel, and a pause at the beginning, middle and end. Check consonants, breaths, reverb tail, room noise, artifacts, and natural pauses. Record before/after loudness, true peak and duration delta in `work/audio/clean-report.json`. Automated metrics do not replace subjective listening.
+Before transcription, inspect `work/audio/clean-report.json` for successful WPE and DeepFilterNet3 stages, before/after LUFS and true peak, clipping indication, and duration delta. Listen to source and processed audio for room echo, hiss, speech clarity, natural voice identity, clipping/distortion and artifacts. For each new room/mic setup or significant recording change, preserve a raw sample and make a matched-loudness comparison. Listen to a consonant-rich sentence, a sustained vowel, and a pause at the beginning, middle and end. Do not transcribe or edit until this review is complete. Automated metrics do not replace subjective listening.
 
 Do not claim room-reflection removal when only `afftdn` ran. If WPE or the model harms the voice, reduce its blend or disable it. A close microphone (10–15 cm, slightly off-axis), soft furnishings behind/around the speaker, and recording away from bare walls are more reliable than increasingly aggressive restoration.
