@@ -143,3 +143,4 @@ Report (nothing else): for each job the .status path, state, exit, seconds; and 
 - Stopping a polling runner kills jobs it launched unless they were started with `setsid`; that is why every job is detached.
 - Any non-zero exit, unexpected warning, or number outside spec (duration off by > 1 frame, wrong fps/resolution, LUFS off target, suspiciously small file): Claude reads the log, debugs, and sends a corrected batch.
 - **Haiku fallback for low-stakes tasks** (when the chain is exhausted) uses the same runner and report format, with output in `work/logs/<step>.log`.
+- Never stop jobs with `pkill -f <pattern>`: the pattern also matches the shell running the pkill (exit 144, the rest of the command never runs), and another session's identical script (`qa_inspect.sh` from `Graphify`) ran beside ours on `system-design-of-ai/06-cancellation`. List with `pgrep -f`, check `readlink /proc/<pid>/cwd`, and `kill` only this project's PIDs.

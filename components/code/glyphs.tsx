@@ -61,3 +61,23 @@ export const ChipGlyph: React.FC<{size?: number; color?: string; big?: boolean}>
     {[17, 24, 31].map((p) => <path key={p} d={`M${p} 4v7M${p} 37v7M4 ${p}h7M37 ${p}h7`} />)}
   </svg>
 );
+
+/** server rack (two units, orange status dots) */
+export const ServerGlyph: React.FC<{size?: number; color?: string}> = ({size = 64, color = C.ink}) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" stroke={color} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0}}>
+    <rect x="8" y="6" width="32" height="14" rx="3" /><rect x="8" y="26" width="32" height="14" rx="3" />
+    <circle cx="15" cy="13" r="1.8" fill={C.orange} stroke="none" /><circle cx="15" cy="33" r="1.8" fill={C.orange} stroke="none" /><path d="M22 13h12M22 33h12" />
+  </svg>
+);
+
+/** generic user (head and shoulders) */
+export const UserGlyph: React.FC<{size?: number; color?: string}> = ({size = 60, color = C.ink}) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" stroke={color} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0}}><circle cx="24" cy="17" r="8" /><path d="M9 42c2-9 8-13 15-13s13 4 15 13" /></svg>
+);
+
+/** phone handset (a call); `color` fills it: orange = live, grey = dead */
+export const HandsetGlyph: React.FC<{size?: number; color?: string}> = ({size = 48, color = C.orange}) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" style={{overflow: 'visible'}}>
+    <path d="M13 6c-3 0-6 3-6 6 1 17 13 29 30 30 3 0 6-3 6-6v-6l-9-4-5 5c-5-2-9-6-11-11l5-5-4-9z" fill={color} stroke={C.border} strokeWidth={2.4} strokeLinejoin="round" />
+  </svg>
+);

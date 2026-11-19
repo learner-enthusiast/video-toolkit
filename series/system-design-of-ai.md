@@ -39,3 +39,4 @@ Tracked rules for every episode in `projects/system-design-of-ai/<NN>-<topic>/` 
 | 03 | `projects/system-design-of-ai/03-semantic-caching/` | Semantic caching |
 | 04 | `projects/system-design-of-ai/04-cost-metering/` | Cost metering. Exception: no Taarak Mehta characters; told with real companies (OpenAI, Replit, Cursor) and "you". Real people only as name + role text on quote cards. |
 | 05 | `projects/system-design-of-ai/05-model-routing/` | Model routing. Exception: no Taarak Mehta characters; told in second person ('you're a junior dev at a startup that sells an AI code reviewer'); real companies (Kilo Code, Tessl) only as name + logo + source cards. |
+| 06 | `projects/system-design-of-ai/06-cancellation/` | Cancellation (abort the LLM stream when the client leaves). Exception: no characters; plain explanation. |

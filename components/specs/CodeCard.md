@@ -1,9 +1,9 @@
 ---
 code: components/code/CodeCard/CodeCard.tsx
 preview: components/code/CodeCard/preview.png
-props: "lines, at, width, size, cps, hl [{line,at,off?,from?,to?}], logo, tags"
-variants: "with/without logo, line vs range highlight, tags"
-last_used: system-design-of-ai/05-model-routing
+props: "lines, at, width, size, cps, hl [{line,at,off?,from?,to?}], logo, logos, tags, adds [{line,at}], drops [{line,at}]"
+variants: "with/without logo(s), line vs range highlight, tags, diff (adds/drops)"
+last_used: system-design-of-ai/06-cancellation
 ---
 # CodeCard
 
@@ -29,5 +29,7 @@ last_used: system-design-of-ai/05-model-routing
 
 Saved: `components/code/CodeCard/CodeCard.tsx` (preview: `preview.png`). Import it, set props; extend with a new prop rather than copying. Brand values come from `components/code/theme.ts`.
 
-- Code props: lines, at, width, size, cps, hl [{line,at,off?,from?,to?}], logo, tags.
+- Code props: lines, at, width, size, cps, hl [{line,at,off?,from?,to?}], logo, logos, tags, adds, drops.
+- Diff in place (`adds` / `drops`, added on SDAI #6): pass the final listing as `lines`; `adds` lines stay hidden until their frame, then spring open, type fast, render orange and bold with an orange gutter bar; `drops` lines collapse away (e.g. the old `});` replaced by `}, { signal });`). Use it when a fix should be seen landing in the same card the viewer already knows.
+- `logos`: several official logos in the header (e.g. Express + OpenAI). Ligatures are off (`fontVariantLigatures: none`) so `=>` and `??` show exactly as typed.
 - Header pills come in as `tags` (first gets an orange dot); there is no default text.

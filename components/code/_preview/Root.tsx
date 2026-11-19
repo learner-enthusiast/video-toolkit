@@ -19,6 +19,11 @@ import {TicketCard} from '../TicketCard/TicketCard';
 import {CalendarFlip} from '../CalendarFlip/CalendarFlip';
 import {SyntaxTree} from '../SyntaxTree/SyntaxTree';
 import {CounterPair} from '../CounterPair/CounterPair';
+import {PhoneStrip} from '../PhoneStrip/PhoneStrip';
+import {CallTimeline} from '../CallTimeline/CallTimeline';
+import {IncidentCard} from '../IncidentCard/IncidentCard';
+import {TerminalCard} from '../TerminalCard/TerminalCard';
+import {DefinitionChip} from '../DefinitionChip/DefinitionChip';
 
 /** the 972x970 grid card every scene is drawn in */
 const Stage: React.FC<{children: React.ReactNode}> = ({children}) => (
@@ -29,6 +34,11 @@ const Stage: React.FC<{children: React.ReactNode}> = ({children}) => (
 const At: React.FC<{x: number; y: number; children: React.ReactNode}> = ({x, y, children}) => <div style={{position: 'absolute', left: x, top: y}}>{children}</div>;
 
 const previews: Record<string, React.FC> = {
+  PhoneStrip: () => <Stage><At x={0} y={300}><PhoneStrip at={-100} calls={[{label: 'call 1', at: -100, hangAt: -60}, {label: 'call 2', at: -100}]} slot={{at: -100, label: 'kill switch', fillAt: -50, fillLabel: 'ac.abort()'}} /></At></Stage>,
+  CallTimeline: () => <Stage><At x={36} y={240}><CallTimeline at={-200} seconds={40} leaveAt={2} tokRate={50} stopAt={40} run={{start: -190, leave: -170, end: -60}} money={{perTok: 0.0047, prefix: '₹'}} tag="example" foot="example · prices vary by model" verdict={{at: -50, text: 'read: 100 · paid: 2,000', tone: 'dim'}} /></At></Stage>,
+  IncidentCard: () => <Stage><At x={40} y={120}><IncidentCard at={-100} tag="real incident · one report" rows={[{text: '5 requests', at: -90}, {text: 'kept generating', at: -80}]} stat={{value: '12,000+', unit: 'tokens each', at: -70}} source={{text: 'sample source line', at: -60}}><div style={{marginTop: 18}}><DefinitionChip term="token" def="a piece of text you pay for" at={-50} /></div></IncidentCard></At></Stage>,
+  TerminalCard: () => <Stage><At x={40} y={120}><TerminalCard at={-100} cmd={{text: 'curl -N localhost:3000/chat …', at: -90}} keys={{text: '^C', at: -40, note: 'after 2 s'}} log={[{text: 'done: 2,000 tokens', at: -30, tone: 'dim', mark: 'warn', label: 'before'}, {text: 'stopped at 104 tokens', at: -20, tone: 'orange', label: 'after'}]} /></At></Stage>,
+  DefinitionChip: () => <Stage><At x={120} y={460}><DefinitionChip term="token" def="a piece of text you pay for" at={-50} size={36} /></At></Stage>,
   Tag: () => (
     <Stage>
       <At x={60} y={80}><div style={{display: 'flex', gap: 16, flexWrap: 'wrap', width: 840}}><Tag label="Summarize" tone="orange" /><Tag label="Draft reply" /><Tag label="redis.get()" monoFont tone="ink" /><Tag label="legacy" tone="dim" /></div></At>

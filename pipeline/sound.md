@@ -141,3 +141,4 @@ Any other component: map it from `components/index.md` by what the viewer sees (
 - An SFX that lands late reads as a sync bug, even when the picture is perfect. Lead the visual by 2–3 frames.
 - A sine or decay that stops mid-cycle clicks: the first stamp-thud draft ended on a click at its last sample (a vertical line on the kit's spectrogram sheet). End every recipe with a fade.
 - `amix` scales every input by 1/N unless `normalize=0`, so a 40-cue SFX track plays each sound 32 dB too quiet and the cue gains mean nothing. Always pass `normalize=0`.
+- SFX sum on top of voice peaks: a −16 LUFS mix peaked at −0.4 dBFS on `system-design-of-ai/06-cancellation`, so a linear two-pass loudnorm to a reel's −14 LUFS / TP −1 couldn't stay linear. Put `alimiter=limit=0.69:level=false` (≈ −3.2 dBFS) before loudnorm in both the measure and apply passes (that project's `render_chain.sh`): −14.0 LUFS, peak −4 dBFS.
