@@ -14,6 +14,11 @@ import {DualMeter, BudgetBar} from '../DualMeter/DualMeter';
 import {TradeScale} from '../TradeScale/TradeScale';
 import {PullRequestCard} from '../PullRequestCard/PullRequestCard';
 import {RoutingLadder} from '../RoutingLadder/RoutingLadder';
+import {GraphBuild} from '../GraphBuild/GraphBuild';
+import {TicketCard} from '../TicketCard/TicketCard';
+import {CalendarFlip} from '../CalendarFlip/CalendarFlip';
+import {SyntaxTree} from '../SyntaxTree/SyntaxTree';
+import {CounterPair} from '../CounterPair/CounterPair';
 
 /** the 972x970 grid card every scene is drawn in */
 const Stage: React.FC<{children: React.ReactNode}> = ({children}) => (
@@ -46,6 +51,26 @@ const previews: Record<string, React.FC> = {
     </Stage>
   ),
   RoutingLadder: () => <Stage><RoutingLadder frameAt={0} prices={{small: '₹5', big: '₹100'}} rungs={[{label: 'Rules', sub: 'path → lane', at: 4}, {label: 'Classifier', sub: 'easy / hard', at: 10}, {label: 'Unsure → Big', sub: 'fail safe', at: 16}, {label: 'Measure', sub: 'cost per review', at: 22}]} active={[{at: 24, i: 1}]} drops={[{at: 14, land: 36, label: 'README', lane: 'small', rung: 0}, {at: 28, land: 50, label: 'charge.ts', lane: 'big', rung: 1}]} /></Stage>,
+  GraphBuild: () => {
+    const nodes = [{id: 'a', label: 'ApiController', x: 190, y: 200}, {id: 'b', label: 'UserService', x: 486, y: 400}, {id: 'c', label: 'Billing', x: 782, y: 400}, {id: 'd', label: 'AuthService', x: 190, y: 600}, {id: 'e', label: 'Mailer', x: 486, y: 760}, {id: 'f', label: 'invoices', x: 782, y: 760}];
+    return (
+      <Stage>
+        <GraphBuild nodes={nodes} nodeW={240} show={{a: 2, b: 5, c: 8, d: 11, e: 14, f: 17}} edges={[{a: 'a', b: 'b', at: 20}, {a: 'b', b: 'c', at: 23}, {a: 'c', b: 'f', at: 26}, {a: 'a', b: 'd', at: 29}, {a: 'b', b: 'e', at: 32, dashed: true}]}
+          clusters={[{label: 'Billing', ids: ['c', 'f'], at: 36}]} tags={[{edge: ['a', 'b'], text: 'found in code', at: 40, dx: -50}, {edge: ['b', 'e'], text: 'guessed', at: 44, tone: 'orange'}]} pulse={{id: 'b', at: 48}} />
+      </Stage>
+    );
+  },
+  TicketCard: () => <Stage><At x={106} y={200}><TicketCard id="TASK-101" title="Add CSV export" meta="Sprint 3 · assigned to you" at={2} /></At><At x={106} y={560}><TicketCard id="TASK-101" title="Add CSV export" at={6} size={44} done={20} /></At></Stage>,
+  CalendarFlip: () => <Stage><CalendarFlip days={[{label: 'Mon', at: 2}, {label: 'Tue', at: 10}, {label: 'Wed', at: 18}]} files={['router.ts', 'db.ts', 'auth.ts', 'billing.ts']} forgetAt={40} forgetText="context: forgotten" /></Stage>,
+  SyntaxTree: () => (
+    <Stage>
+      <div style={{position: 'absolute', left: 106, top: 60, width: 760, height: 800}}>
+        <SyntaxTree file="cart.py" code={['class Cart:', '  def total(self):', '    return sum(self.items)']} codeAt={0}
+          nodes={[{id: 'm', label: 'module', kind: 'root', x: 380, y: 290, at: 6}, {id: 'c', label: 'Cart', kind: 'class', x: 380, y: 400, parent: 'm', at: 12}, {id: 'f', label: 'total()', kind: 'function', x: 380, y: 510, parent: 'c', at: 18}, {id: 'k', label: 'sum', kind: 'call', x: 380, y: 620, parent: 'f', at: 24}]} />
+      </div>
+    </Stage>
+  ),
+  CounterPair: () => <div style={{width: 1080, height: 1080, background: C.dark, position: 'relative'}}><div style={{position: 'absolute', left: 54, top: 250, width: 972, height: 600}}><CounterPair left={{label: 'Attempts', to: 1200, at: 2, dur: 30}} right={{label: 'Successes', value: 0, at: 36}} y={0} /></div></div>,
 };
 
 export const Root: React.FC = () => (

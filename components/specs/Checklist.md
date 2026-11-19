@@ -3,7 +3,7 @@ code: components/code/Checklist/Checklist.tsx
 preview: components/code/Checklist/preview.png
 props: "items [{text, at}], size, gap"
 variants: "none"
-last_used: system-design-of-ai/05-model-routing
+last_used: Graphify
 ---
 # Checklist
 

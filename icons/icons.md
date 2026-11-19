@@ -21,6 +21,7 @@ The only place to look up logos and icons. **Read this before downloading anythi
 | anthropic-symbol | `logos/anthropic-symbol.svg` | SVG | https://www.anthropic.com/press-kit | Official press kit | 2026-11-06 | scion-9.11.26, system-design-of-ai/05-model-routing |
 | anthropic-wordmark | `logos/anthropic-wordmark.svg` | SVG | https://www.anthropic.com/press-kit | Official press kit | 2026-11-06 | scion-9.11.26 |
 | apple | `logos/apple.svg` | SVG | https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg | Wikimedia Commons copy of official mark; trademark of owner | 2026-10-28 | docker-explained-10.11.26, graphql-vs-rest, oidc-6&7.11.26, redis-invalidation |
+| astral-badge | `logos/astral-badge.svg` | SVG | https://raw.githubusercontent.com/astral-sh/uv/main/assets/svg/Astral.svg | Repo asset ("Made by Astral" badge, not the plain mark); trademark of owner | 2026-11-19 | Graphify |
 | auth0 | `logos/auth0.jpg` | JPG | https://upload.wikimedia.org/wikipedia/commons/9/91/Auth0_logo_2026.jpg | Trademark of owner (license not recorded) | 2026-11-04 (est.) | oidc-6&7.11.26 |
 | auth0 | `logos/auth0.svg` | SVG | https://upload.wikimedia.org/wikipedia/commons/5/5b/Logo_de_Auth0.svg | Official brand page | 2026-11-06 (est.) | jwt-is-dead-13.11.26 |
 | aws | `logos/aws.svg` | SVG | https://commons.wikimedia.org/wiki/File:Amazon_Web_Services_Logo.svg | Wikimedia Commons copy of official mark; trademark of owner | 2026-11-04 | ag-ui, jwt-is-dead-13.11.26, oidc-6&7.11.26, rate-limiter-5.11.26 |
@@ -30,7 +31,7 @@ The only place to look up logos and icons. **Read this before downloading anythi
 | chaicode | `logos/chaicode.svg` | SVG | https://chaicode.com/assets/favicon-dark-CYZX6cSs.svg | Site favicon, owner trademark | 2026-11-14 | WebdevCohort-review |
 | claude | `logos/claude.svg` | SVG | https://upload.wikimedia.org/wikipedia/commons/b/b0/Claude_AI_symbol.svg | Trademark of owner (license not recorded) | 2026-11-04 (est.) | oidc-6&7.11.26 |
 | claude-logo | `logos/claude-logo.svg` | SVG | https://www.anthropic.com/press-kit ("Claude logos": Claude logo, Slate) | Official press kit | 2026-11-06 | scion-9.11.26, system-design-of-ai/05-model-routing |
-| claude-spark | `logos/claude-spark.svg` | SVG | https://www.anthropic.com/press-kit ("Claude logos": Claude Spark, Clay) | Official press kit | 2026-11-06 | scion-9.11.26, system-design-of-ai/05-model-routing |
+| claude-spark | `logos/claude-spark.svg` | SVG | https://www.anthropic.com/press-kit ("Claude logos": Claude Spark, Clay) | Official press kit | 2026-11-06 | scion-9.11.26, system-design-of-ai/05-model-routing, Graphify |
 | clerk-logotype-full-primary | `logos/clerk-logotype-full-primary.svg` | SVG | https://clerk.com/brand-assets | Trademark of owner (license not recorded) | 2026-10-31 | fannout-day-01 |
 | clerk-logotype-full-primary-light | `logos/clerk-logotype-full-primary-light.svg` | SVG | https://clerk.com/brand-assets | Trademark of owner (license not recorded) | 2026-10-31 | fannout-day-01 |
 | clerk-symbol-primary | `logos/clerk-symbol-primary.svg` | SVG | https://clerk.com/brand-assets | Trademark of owner (license not recorded) | 2026-10-31 | fannout-day-01 |
@@ -70,12 +71,13 @@ The only place to look up logos and icons. **Read this before downloading anythi
 | git-logo | `logos/git-logo.svg` | SVG | https://git-scm.com/downloads/logos | CC BY 3.0 | 2026-11-06 | scion-9.11.26 |
 | github | `logos/github.svg` | SVG | https://commons.wikimedia.org/wiki/File:GitHub_Invertocat_Logo.svg | Wikimedia Commons copy of official mark; trademark of owner | 2026-11-03 | oidc-6&7.11.26, vercel-dot-app |
 | github-lockup | `logos/github-lockup.svg` | SVG | https://brand.github.com/GitHub_Logos.zip | Official brand toolkit | 2026-11-06 | scion-9.11.26 |
-| github-mark | `logos/github-mark.svg` | SVG | https://brand.github.com/GitHub_Logos.zip | Official brand toolkit | 2026-11-06 | scion-9.11.26, system-design-of-ai/05-model-routing |
+| github-mark | `logos/github-mark.svg` | SVG | https://brand.github.com/GitHub_Logos.zip | Official brand toolkit | 2026-11-06 | scion-9.11.26, system-design-of-ai/05-model-routing, Graphify |
 | github-octicon | `logos/github-octicon.svg` | SVG | https://raw.githubusercontent.com/primer/octicons/HEAD/icons/mark-github-24.svg | Repo asset; trademark of owner | 2026-11-06 (est.) | docker-is-dead-11.11.26 |
 | gmail | `logos/gmail.svg` | SVG | https://upload.wikimedia.org/wikipedia/commons/8/8f/Gmail_icon_ | Trademark of owner (license not recorded) | 2026-11-04 (est.) | oidc-6&7.11.26 |
 | go | `logos/go.svg` | SVG | https://upload.wikimedia.org/wikipedia/commons/5/5c/Okta_logo.svg | Official press kit | 2026-11-06 (est.) | jwt-is-dead-13.11.26 |
 | google | `logos/google.svg` | SVG | https://commons.wikimedia.org/wiki/File:Google_2015_logo.svg | Wikimedia Commons copy of official mark; trademark of owner | 2026-11-03 | ag-ui, jwt-is-dead-13.11.26, oidc-6&7.11.26, vercel-dot-app |
 | google-g | `logos/google-g.svg` | SVG | https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg | Wikimedia Commons copy of official mark; trademark of owner | 2026-11-04 | jwt-is-dead-13.11.26, oidc-6&7.11.26 |
+| graphify | `logos/graphify.svg` | SVG | https://graphify.com/assets/logo-icon.svg | Official site asset; trademark of owner | 2026-11-19 | Graphify |
 | graphql | `logos/graphql.svg` | SVG | https://raw.githubusercontent.com/graphql/graphql.github.io/source/public/img/logo.svg | Repo asset; trademark of owner | 2026-10-28 | graphql-vs-rest |
 | heroku | `logos/heroku.svg` | SVG | https://commons.wikimedia.org/wiki/File:Heroku_logo.svg | Wikimedia Commons copy of official mark; trademark of owner | 2026-11-03 | vercel-dot-app |
 | instagram | `logos/instagram.svg` | SVG | https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg | Wikimedia Commons copy of official mark; trademark of owner | 2026-10-28 | graphql-vs-rest |
@@ -143,7 +145,9 @@ The only place to look up logos and icons. **Read this before downloading anythi
 | tessl-symbol | `logos/tessl-symbol.svg` | SVG | https://tessl.io/favicon.svg | Site favicon, owner trademark | 2026-11-19 (est.) | system-design-of-ai/05-model-routing |
 | tessl-wordmark-white | `logos/tessl-wordmark-white.svg` | SVG | https://tessl.io/sanity/static/logo.svg | Trademark of owner (license not recorded) | 2026-11-19 (est.) | system-design-of-ai/05-model-routing |
 | threads | `logos/threads.svg` | SVG | https://upload.wikimedia.org/wikipedia/commons/9/9d/Threads_%28app%29_logo.svg | Wikimedia Commons copy of official mark; trademark of owner | 2026-10-28 | graphql-vs-rest |
+| tree-sitter | `logos/tree-sitter.png` | PNG | https://tree-sitter.github.io/tree-sitter/assets/images/tree-sitter-small.png | Repo asset; trademark of owner | 2026-11-19 | Graphify |
 | tux | `logos/tux.svg` | SVG | https://upload.wikimedia.org/wikipedia/commons/3/35/Tux.svg | Wikimedia Commons copy of official mark; trademark of owner | 2026-11-06 (est.) | docker-explained-10.11.26 |
+| uv | `logos/uv.svg` | SVG | https://raw.githubusercontent.com/astral-sh/uv/main/docs/assets/logo-letter.svg | Repo asset; trademark of owner | 2026-11-19 | Graphify |
 | vercel | `logos/vercel.svg` | SVG | https://commons.wikimedia.org/wiki/File:Vercel_logo_2025.svg | Wikimedia Commons copy of official mark; trademark of owner | 2026-11-03 | vercel-dot-app |
 | windows | `logos/windows.svg` | SVG | https://upload.wikimedia.org/wikipedia/commons/8/87/Windows_logo_-_2021.svg | Wikimedia Commons copy of official mark; trademark of owner | 2026-11-06 (est.) | docker-explained-10.11.26 |
 | x | `logos/x.svg` | SVG | https://commons.wikimedia.org/wiki/File:X_logo_2023.svg | Wikimedia Commons copy of official mark; trademark of owner | 2026-11-03 (est.) | rate-limiter-5.11.26 |

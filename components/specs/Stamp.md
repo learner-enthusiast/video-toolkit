@@ -3,7 +3,7 @@ code: components/code/Stamp/Stamp.tsx
 preview: components/code/Stamp/preview.png
 props: "x, y, at, out, text, tone (orange|dim), rotate, size"
 variants: "tone x2"
-last_used: system-design-of-ai/05-model-routing
+last_used: Graphify
 ---
 # Stamp
 
