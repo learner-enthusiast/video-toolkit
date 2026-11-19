@@ -21,7 +21,7 @@ Tracked rules for every episode in `projects/system-design-of-ai/<NN>-<topic>/` 
 **Visuals**
 - Layout states per `brand.md` (HEAD / FULL / SPLIT); creative direction per `CLAUDE.md`.
 - Server-side code cards are tagged **"server"** (small pill on the card).
-- Official tech logos for every named technology, sourced in the episode's `assets/logos/SOURCES.md`.
+- Official tech logos for every named technology, reused from or added to the shared `icons/` library (`icons/icons.md`).
 - Caption highlights are **orange** (`#E4572E`).
 
 **End card**

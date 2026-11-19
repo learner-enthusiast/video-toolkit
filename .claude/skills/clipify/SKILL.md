@@ -14,9 +14,9 @@ Changed from upstream for this machine; these notes win over anything below.
 - **Python:** `vt-python` (the shared user venv with numpy, Pillow, faster-whisper) instead of `python3`.
 - **Paths:** work in `projects/<name>/work/<skill>/`, never `/tmp` or next to the source. `raw/` and `assets/` are read-only.
 - **Priority:** `CLAUDE.md` and `brand.md` win over this skill's defaults (colors, fonts, caption style, pacing, motion).
-- **Use it for:** turning a long video into reels. Each picked clip then goes through `/reel` (hook, safe zones, captions per `components/Captions.md`).
-- **Captions:** use `components/Captions.md` (reel mode) instead of the opus/karaoke/minimal ASS presets. Use `build_ass.py` only for quick drafts.
-- **Reframing:** 16:9 → 9:16 must never stretch me or crop my face. Prefer `components/FaceTrackedCrop.md`. The hard-cut pan is fine for two-person dialogue.
+- **Use it for:** turning a long video into reels. Each picked clip then goes through `/reel` (hook, safe zones, captions per `components/specs/Captions.md`).
+- **Captions:** use `components/specs/Captions.md` (reel mode) instead of the opus/karaoke/minimal ASS presets. Use `build_ass.py` only for quick drafts.
+- **Reframing:** 16:9 → 9:16 must never stretch me or crop my face. Prefer `components/specs/FaceTrackedCrop.md`. The hard-cut pan is fine for two-person dialogue.
 
 Find compelling moments in a video, cut them as standalone clips, optionally reformat 16:9 → 9:16 (face-pan or split-screen), time-warp pans for tighter reveals, and burn opus-style word-by-word captions.
 

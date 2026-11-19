@@ -14,12 +14,12 @@ argument-hint: <name>
    Below, `projects/<name>/` means the chosen folder.
 3. Create:
    - `projects/<name>/raw/` for my recordings (read-only after I drop them in)
-   - `projects/<name>/assets/` for screenshots, clips and logos (read-only)
+   - `projects/<name>/assets/` for screenshots and clips (read-only). Logos and icons are not stored here: they live in the shared `icons/` library (`icons/icons.md`)
    - `projects/<name>/work/logs/` for everything intermediate
    - `projects/<name>/out/` for the deliverables
    - `projects/<name>/script.md`
    - `projects/<name>/log.md`, headed `# <name> log`, with this scaffolding as its first entry (see `pipeline/project-log.md`)
-4. Ask which kind of video: tutorial, project demo, or reel. Copy the matching file from `templates/` into `script.md`, and copy `templates/shotlist.md` into `work/shotlist.md`. Cues in the script use `[mm:ss–mm:ss | HEAD]`, `[… | FULL]` or `[… | SPLIT]` (`brand.md` Layout). Choose components from `components/INDEX.md` first. Then offer to draft or tighten `script.md` with `/scriptwriting`.
+4. Ask which kind of video: tutorial, project demo, or reel. Copy the matching file from `templates/` into `script.md`, and copy `templates/shotlist.md` into `work/shotlist.md`. Cues in the script use `[mm:ss–mm:ss | HEAD]`, `[… | FULL]` or `[… | SPLIT]` (`brand.md` Layout). Choose components from `components/index.md` first. Then offer to draft or tighten `script.md` with `/scriptwriting`.
 5. Copy `.env` into the project only if I ask. It is gitignored either way.
 6. Tell me where to drop the files and which skill to run next (`/coding-video` or `/reel`).
 

@@ -1,11 +1,19 @@
 # Standing rules
 
-This repo is instructions only. Build code per video inside `projects/<name>/work/`, never in the toolkit itself.
+Per-video code is built inside `projects/<name>/work/`, never in the toolkit. The toolkit holds two shared, git-tracked libraries that every video checks first: `icons/` (logos and icons) and `components/` (specs plus approved Remotion code).
+
+## Icons
+- Before downloading any icon or logo, read `icons/icons.md`. If it is listed, reuse `icons/<File>`. If not, download the **official** version into `icons/logos/` (generic UI icons: `icons/ui/`), add a row (source URL, license, today's date), then use it.
+- Never save icons inside project folders (no `assets/logos/`, no `SOURCES.md`). Add the project to "Used in" every time a video uses an icon.
+- Remotion reads them through `public/icons` (a symlink to `icons/`): `staticFile('icons/logos/<file>')`.
 
 ## Components
-- Read order: `CLAUDE.md`, `brand.md`, `components/INDEX.md`, then only the component specs the scene table needs.
-- Never bulk-read `components/`. Read `INDEX.md`, then open only the specs used in this video's scene table.
-- Maintenance: whenever a new component spec is created (including by a video prompt's new-component section), add its row to `components/INDEX.md` and to the matching intent group in the same commit.
+- Read order: `CLAUDE.md`, `brand.md`, `components/index.md`, then only the component specs (`components/specs/<Name>.md`) the scene table needs. Never bulk-read `components/`.
+- Compose: if `index.md` says `Code? ✓`, import `shared/<Name>/<Name>` and set props (`src/shared` is a symlink to `components/code/`). If a needed variation fits a new prop, extend the library component and keep old props working. Write new code only when nothing fits. The library is the default, not a limit: Creative direction still applies.
+- New component: write the spec first, then the code inside the project (`work/`).
+- **Deliver: save components.** After the final render, every new or extended component that worked is cleaned up (variations through props, colors/fonts/radius/border/spacing from `components/code/theme.ts`, no video-specific text, data, timings or asset paths), saved to `components/code/<Name>/<Name>.tsx` with a `preview.png`, and recorded in its spec (`code:`, `props:`, `variants:`, `last_used:`) and in `index.md`, in the same commit. Only approved code that rendered correctly in a finished video is saved. Update `last_used` on every component the video used.
+- Maintenance: whenever a new component spec is created, add its row to `components/index.md` and to the matching intent group in the same commit.
+- Remotion upgrades: after changing the Remotion version, re-render every `preview.png`, fix breaks, update `components/code/REMOTION_VERSION`.
 
 ## GPU
 - If `nvidia-smi` exists, create `~/bin/gpu-run`: an executable wrapper that exports `__NV_PRIME_RENDER_OFFLOAD=1` and `__GLX_VENDOR_LIBRARY_NAME=nvidia`, prepends the system lib dir to `LD_LIBRARY_PATH`, then `exec "$@"`. Put `~/bin` on PATH.
@@ -15,7 +23,7 @@ This repo is instructions only. Build code per video inside `projects/<name>/wor
 - Exception: when the GPU is busy with another heavy job (a render, Whisper), run small side jobs (stills, thumbnails, rembg, contact sheets) on the CPU instead of waiting (Remotion: no `gpu-run`, `--gl=swangle`). Say so in the log and report. Never move the main render, transcription or final encodes to the CPU.
 
 ## Delegation
-- You orchestrate. Two kinds of delegated work (`pipeline/delegation.md`): **low-stakes tasks** (scaffolding, renames, ffprobe reads, proxies, logo downloads + `SOURCES.md`, SRT wrapping, social JSON scaffold, `log.md`, boilerplate from a final spec) and **heavy jobs** (final renders, Whisper, final encodes, video-inspect runs, installs).
+- You orchestrate. Two kinds of delegated work (`pipeline/delegation.md`): **low-stakes tasks** (scaffolding, renames, ffprobe reads, proxies, logo downloads into `icons/` + `icons/icons.md` rows, SRT wrapping, social JSON scaffold, `log.md`, boilerplate from a final spec) and **heavy jobs** (final renders, Whisper, final encodes, video-inspect runs, installs).
 - **Never delegate:** script, cuts, storyboard, creative take, layout states, sound map, `brand.md`, final component visuals, render settings, QA, anything on screen that hasn't been reviewed.
 - Low-stakes chain: Copilot → Codex → cursor-agent → Haiku. Check Copilot and Codex usage before each delegation (skip if low or unreadable). cursor-agent has no usage command: run a tiny **canary** before each use; on pass send exactly one small chunk, canary again before the next. CLIs run non-interactively, in the background, with a timeout, logging to `work/delegation/<NN>-<tool>-<task>.log`; on a limit/auth error or a hang, kill and re-run the chunk on the next tool. Verify every result yourself and record tool, usage and fallback in `log.md`.
 - Heavy jobs never use the chain. You write the exact batch (`gpu-run`, flags, paths, timeouts); a Haiku runner launches each job detached, writes `work/jobs/<NN>-<job>.status`, stops and reports on any error. It never changes settings. You read the `.status` files and verify outputs; you don't tail logs.

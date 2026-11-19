@@ -18,7 +18,7 @@ Changed from upstream for this machine; these notes win over anything below.
   `vt-python scripts/zoom_lib.py filter INPUT map.json > work/add-zooms/zoom.filter.txt` then
   `ffmpeg -y -i INPUT -filter_complex_script work/add-zooms/zoom.filter.txt -map "[v]" -map 0:a -c:v h264_nvenc -preset p5 -rc vbr -cq 19 -b:v 0 -pix_fmt yuv420p -c:a copy -movflags +faststart OUTPUT`.
 - **Use punches and ratchets only.** Hard-cut punches are framing changes that also hide jump cuts (CLAUDE.md's 100% / ~108% rule). Skip `kenburns`: the engine ramps it linearly, and CLAUDE.md bans linear motion. Do slow pushes in the Remotion composition with ease-in-out instead.
-- **Focal point:** use the face position from `components/FaceTrackedCrop.md` for `--cx/--cy`, and never let a zoom crop the face.
+- **Focal point:** use the face position from `components/specs/FaceTrackedCrop.md` for `--cx/--cy`, and never let a zoom crop the face.
 - **Tella:** the `/tella-*` siblings aren't installed. Ignore those references.
 
 Add emphasis motion to a **flat talking-head video file** (usually a 9:16 vertical clip already cut for social): **dramatic punch-zooms** on emphasised words + listicles, and **Ken Burns slow-pushes** on insightful lines. Transcript-driven, ffmpeg-based, non-destructive (writes a new file).

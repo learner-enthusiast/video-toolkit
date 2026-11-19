@@ -1,9 +1,9 @@
 # Thumbnail
 
-**Goal:** a thumbnail that reads at phone size. See `components/Thumbnail.md` for the layout.
+**Goal:** a thumbnail that reads at phone size. See `components/specs/Thumbnail.md` for the layout.
 
 **Source photo**
-1. **Check for my photo first:** `raw/thumbnail_raw.*` (jpg, jpeg, png or webp) in the project folder.
+1. **Check for my photo first:** any image in the project's `raw/` whose name contains "thumb" (`thumbnail_raw.*`, `rawthumbnail.jpg`, …; jpg, jpeg, png or webp). Glob `raw/*thumb*`, and look again at Deliver: I may drop it in after Prep (`system-design-of-ai/05-model-routing`).
 2. **If it exists, it's the base image.** It's a deliberate still, so it's sharper and better posed than any video frame.
    - Don't extract a frame from the talking-head video.
    - Cut me out (background removal) only if the layout needs it, on a copy in `work/`; `raw/` stays untouched.
@@ -42,4 +42,5 @@ Also give me what I need to make my own thumbnail in ChatGPT (image generation),
 - List the assets in the ChatGPT kit and where the prompt file is.
 - Measure the headline against the cutout's head box, not just the safe margin. On `redis-invalidation`, 4 of 6 variants ran their second line ("Cache didn't", "can kill your", "at midnight?") under my head, and only the short two-word headlines stayed clear. Keep each line ≤ ~12 characters at 96 px, or wrap it to three lines.
 - rembg `u2net_human_seg` kept a chunk of the chair back and a pink hair fringe on `docker-explained`'s `thumbnail_raw`; `birefnet-portrait` (CPU, ~1 min) gave a clean cut. Try it first. A portrait photo whose shirt reaches the frame edges leaves a hard vertical edge when placed inside a 16:9 frame: fade the cutout's left edge with a CSS mask (`linear-gradient(to right, transparent 0, black 22%)`) or scale it so the edge leaves the frame.
+- `birefnet-portrait` keeps only the person: it cut away my microphone and boom arm (`system-design-of-ai/05-model-routing`), and I want the mic kept. `birefnet-general` (CPU, 973 MB model in `~/.rembg`, ~2 min at 1600 px) keeps the mic and arm with an equally clean hair edge. Place the cutout from the HEAD top (take it from a portrait pass), not the alpha bbox, which now starts at the boom arm.
 - ImageMagick renders some official SVGs blank (Docker press-kit `docker-mark.svg` uses CSS-class fills: a 1.8 KB all-transparent PNG). Rasterise logos for the ChatGPT kit with `vt-python -c "import cairosvg; cairosvg.svg2png(url=…, write_to=…, output_width=1000)"` and check the alpha mean is > 0.

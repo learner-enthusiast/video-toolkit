@@ -5,7 +5,7 @@
 **Props:** `lists` (items), `mergeAt`, `label`, `labelAt`, `count` (to, `at`), `rect`, `out`.
 
 **Look**
-- Two narrow columns of rank rows (JetBrains Mono rank + short label) that converge into one central column; label pill above; Counter below (`components/Counter.md`).
+- Two narrow columns of rank rows (JetBrains Mono rank + short label) that converge into one central column; label pill above; Counter below (`components/specs/Counter.md`).
 
 **Motion**
 - Rows slide diagonally into interleaved slots with springs (stagger 3 frames); duplicates merge into one (scale pulse).

@@ -35,10 +35,10 @@ Editorial, clean, "notebook" feel. Applies to every video (16:9 and 9:16) unless
 - 16:9: bottom center inside the safe margin, at most 2 lines.
 
 **Layout: HEAD / FULL / SPLIT**
-There is no fixed default layout. Every moment of a video is in exactly one of three states, chosen per beat from what the beat needs. Mix all three through the video. Full spec: `components/layout-states.md`.
+There is no fixed default layout. Every moment of a video is in exactly one of three states, chosen per beat from what the beat needs. Mix all three through the video. Full spec: `components/specs/layout-states.md`.
 - **HEAD:** my face fills the frame, with captions and lower-thirds on top. Story beats, emotion, reactions, transitions, punchlines.
 - **FULL:** the graphic fills the whole frame and my face is hidden, while my voice keeps going. Whenever a concept needs the whole screen: flows, code, timelines, comparisons, data.
-- **SPLIT:** my face and a graphic together (graphic on top, face docked below: `components/ReelSplit.md`). When my reaction or delivery matters while a simple graphic is on screen: a single card, a short list, a number, a punchline that points at a visual. Never for dense code or detailed diagrams; those go FULL.
+- **SPLIT:** my face and a graphic together (graphic on top, face docked below: `components/specs/ReelSplit.md`). When my reaction or delivery matters while a simple graphic is on screen: a single card, a short list, a number, a punchline that points at a visual. Never for dense code or detailed diagrams; those go FULL.
 - **Switching:** a hard cut or a fluid brand-style wipe (spring or ease-in-out, never linear), only on the beat where a concept starts or ends. Never mid-sentence unless the cut lands on an emphasised word.
 - **Script cues** are written `[mm:ss–mm:ss | HEAD]`, `[… | FULL]`, `[… | SPLIT]`. They are the layout plan; I may move a beat to another state if it explains better (`CLAUDE.md`, Creative direction).
 - **9:16 (1080x1920) framing:** HEAD uses a portrait source natively, or a landscape source face-tracked and centre-cropped to portrait. In SPLIT the docked head is a 16:9 window (landscape source) or a head-and-shoulders square on a blurred, darkened copy (portrait source). Keep the face out of the top ~12% and the bottom ~20% platform UI zones, and the docked head lifted clear of the platform caption overlay.
@@ -55,7 +55,7 @@ There is no fixed default layout. Every moment of a video is in exactly one of t
 **Icons and names**
 - **Always use the official logo** whenever I mention a company, product or technology that has one (PostgreSQL, Redis, GraphQL, Facebook, Instagram, Threads, Apple for "iPhone"…), shown when it's said. Never a text-written stand-in (a styled word, a coloured pill with the name) in place of a real logo.
 - Logos are the one exception to the brand palette: keep their official colours, gradients and shapes. Never recolour, redraw, stretch or crop them (`object-fit: contain`).
-- Use the official file (brand/press page, SVG preferred, Wikimedia Commons copy of the official mark, or one I supply), saved in the project's `assets/logos/` with its source in `assets/logos/SOURCES.md`.
+- Use the official file (brand/press page, SVG preferred, Wikimedia Commons copy of the official mark, or one I supply), saved in the shared `icons/logos/` library with its source and license in `icons/icons.md` (read it first; reuse before downloading). Never saved inside a project folder.
 - On off-white scenes the logo sits directly on the card. On dark scenes, or where its colours vanish against the background, put it on a small white tile: 2 px `#1A1A1A` border, the brand radius, ~20 px padding. A logo in focus gets an orange ring, and the others dim.
 - Only concepts with no official logo (REST, "Orders API", CDN) use a text label or a generic line icon. No emojis.
 

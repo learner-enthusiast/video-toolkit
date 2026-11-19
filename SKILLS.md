@@ -36,9 +36,9 @@ Upstream license files are kept inside each vendored skill folder.
 - The pause lengths in `pipeline/take-selection.md` (and `/reel`) override the skill's gap table. Default tone for tutorials is `balanced`.
 
 **clipify**
-- Choose components from `components/INDEX.md` first (it lists every spec by intent); open only the specs you will use.
-- Captions follow `components/Captions.md` instead of the opus/karaoke presets.
-- 16:9 → 9:16 reframing prefers `components/FaceTrackedCrop.md`.
+- Choose components from `components/index.md` first (it lists every spec by intent, with saved code in `components/code/`); open only the specs you will use.
+- Captions follow `components/specs/Captions.md` instead of the opus/karaoke presets.
+- 16:9 → 9:16 reframing prefers `components/specs/FaceTrackedCrop.md`.
 - Each clip continues through `/reel`.
 
 **frontend-design**

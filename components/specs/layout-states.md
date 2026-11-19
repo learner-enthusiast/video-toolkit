@@ -7,7 +7,7 @@
 **The states**
 - **HEAD:** my face fills the frame; captions and lower-thirds on top. For story beats, emotion, reactions, transitions, punchlines.
 - **FULL:** the graphic fills the whole frame, my face is hidden, my voice continues. For flows, code, timelines, comparisons, data, anything dense. 9:16 card: ~972x1400 inside the margin; draw scenes in the fixed 972x971 space centred in it so a scene can also live in SPLIT, and scale a sparse scene up (×1.35 from the card's top-left) so it doesn't look empty.
-- **SPLIT:** graphic on top, my face below (`components/ReelSplit.md`). For a simple graphic (one card, a short list, a number, a punchline pointing at a visual) while my delivery matters. Never dense code or detailed diagrams: those go FULL.
+- **SPLIT:** graphic on top, my face below (`components/specs/ReelSplit.md`). For a simple graphic (one card, a short list, a number, a punchline pointing at a visual) while my delivery matters. Never dense code or detailed diagrams: those go FULL.
 - Mix all three. A video that stays in one state for most of its length is wrong; HEAD is for the story, FULL for the concept, SPLIT for the reaction on a simple visual.
 
 **Transitions**
@@ -17,7 +17,7 @@
 - Switch only where a concept starts or ends. Never mid-sentence unless the cut lands on an emphasised word.
 
 **Caption placement** (captions stay on in every state; never over a graphic's key element)
-- HEAD, 9:16: lower third on an off-white block, clear of the chin and of the bottom ~20% platform overlay. Compute from the face track (see `components/Captions.md`).
+- HEAD, 9:16: lower third on an off-white block, clear of the chin and of the bottom ~20% platform overlay. Compute from the face track (see `components/specs/Captions.md`).
 - HEAD, 16:9: bottom centre inside the safe margin, ≤ 2 lines.
 - SPLIT, 9:16: the off-white strip between the card and the docked head.
 - FULL, 9:16: a band just below the card (or above the platform overlay), clear of the graphic's key element. 16:9: bottom centre, over a part of the card with no content, or on an off-white block.

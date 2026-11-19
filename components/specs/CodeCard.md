@@ -1,3 +1,10 @@
+---
+code: components/code/CodeCard/CodeCard.tsx
+preview: components/code/CodeCard/preview.png
+props: "lines, at, width, size, cps, hl [{line,at,off?,from?,to?}], logo, tags"
+variants: "with/without logo, line vs range highlight, tags"
+last_used: system-design-of-ai/05-model-routing
+---
 # CodeCard
 
 **Purpose:** a short code listing whose lines light up in the order I talk about them: which line does the work at each step of a flow.
@@ -17,3 +24,10 @@
 - Wrap long lines instead of shrinking the font: a 9:16 card (912 px inner) fits ~50 characters at 28 px. Move trailing comments to their own line.
 - If the script gives the code its own beat but the lines are spoken during a diagram, put the card under the diagram in the same FULL card and light each line on its word (`pipeline/composition.md`).
 - Highlight the long line and badge only short lines; a badge at the right edge covers the end of a long one.
+
+## Code
+
+Saved: `components/code/CodeCard/CodeCard.tsx` (preview: `preview.png`). Import it, set props; extend with a new prop rather than copying. Brand values come from `components/code/theme.ts`.
+
+- Code props: lines, at, width, size, cps, hl [{line,at,off?,from?,to?}], logo, tags.
+- Header pills come in as `tags` (first gets an orange dot); there is no default text.

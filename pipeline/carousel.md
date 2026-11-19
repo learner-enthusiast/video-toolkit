@@ -1,11 +1,11 @@
 # Carousel
 
-**Goal:** a 6–8 slide Instagram carousel twin of every 9:16 reel, in `out/carousel/`. The steps are in `/carousel` (`.claude/skills/carousel/SKILL.md`), the slide layout in `components/Carousel.md`.
+**Goal:** a 6–8 slide Instagram carousel twin of every 9:16 reel, in `out/carousel/`. The steps are in `/carousel` (`.claude/skills/carousel/SKILL.md`), the slide layout in `components/specs/Carousel.md`.
 
 **When:** Stage 4 · Deliver, after the final render and its QA, before the report. Also on its own for older projects (`/carousel <project>`).
 
 **Build**
-- Source is `script.md` only (plus `assets/logos/`), never the transcript: the slides show the intended words.
+- Source is `script.md` only (plus logos from `icons/`), never the transcript: the slides show the intended words.
 - Reuse the project's Remotion setup in `work/remotion/` (theme, fonts, logos in `public/`): add `src/carousel/`, register one `Still` per slide (ids `Carousel-01` …), and a bundle-once render script. If the project has no `work/remotion/` (older projects), create a fresh blank one there per `pipeline/composition.md` → Setup.
 - Slide text lives in `work/carousel/slides.json`, written from the approved outline, never typed into the components.
 - Render on the GPU (`gpu-run`, `--gl=angle`). If the GPU is busy with a heavy job, render stills on the CPU (`--gl=swangle`) per `CLAUDE.md` and say so.

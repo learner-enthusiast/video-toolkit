@@ -9,15 +9,16 @@
 - Copy media into `public/` (clips, screenshots, clean voice WAV). Never reference `raw/` or `assets/` directly.
 
 **Data in, not hard-coded**
-- A build script turns the EDL into `public/data/timeline.json`: segments (source in/out → output frames), beats, and every kept word with its output time. Add `face.json` from `components/FaceTrackedCrop.md`.
+- A build script turns the EDL into `public/data/timeline.json`: segments (source in/out → output frames), beats, and every kept word with its output time. Add `face.json` from `components/specs/FaceTrackedCrop.md`.
 - Every visual triggers on a word's output frame, found by phrase lookup (e.g. `at('indexes')`), never on a typed number.
 - The voice plays as one continuous WAV laid out on the output timeline. Picture segments are cut separately, which makes J/L cuts easy.
 
 **Build**
 - Read `brand.md` into one `theme.ts` (colors, fonts, radius, shadow, border, FPS).
-- Read the `script.md` cues. Choose components from `components/INDEX.md` first, never bulk-read `components/`. Build only the components the cues need, each from its `components/*.md` spec.
+- Read the `script.md` cues. Choose components from `components/index.md` first, never bulk-read `components/`. For each component the cues need: if `index.md` shows `Code? ✓`, import `shared/<Name>/<Name>` (`src/shared` → `components/code/`) and set props, extending the library component with a new prop (old props keep working) when a variation fits; otherwise write its spec (`components/specs/<Name>.md`) first, then the code in the project. The library is the default, not a limit (`CLAUDE.md`, Creative direction).
+- Wire the shared libraries when creating the Remotion project: symlink `public/icons` → `icons/` and `src/shared` → `components/code/` (relative links), add `Config.overrideWebpackConfig((c) => ({...c, resolve: {...c.resolve, symlinks: false}}))` to `remotion.config.ts` and `"preserveSymlinks": true` to `tsconfig.json`, so shared code resolves `remotion` from the project's `node_modules`. Use the Remotion version in `components/code/REMOTION_VERSION`.
 - **Storyboard first.** Write `work/storyboard.md`: one line per beat with its layout state (HEAD / FULL / SPLIT, from the script's `[mm:ss–mm:ss | STATE]` tags, moved if another state explains better) and the visual. Add a **Creative take** list: each idea, the beat it touches, one line on why it helps the explanation or retention (`CLAUDE.md`, Creative direction). Small improvements are just done and logged; bigger ones (a different visual concept for a whole beat, reordered beats, a new recurring motif) are shown in 3 approval stills, and I wait for my OK.
-- Use one geometry module for the three layout states (HEAD, FULL, SPLIT; `components/layout-states.md`) on the 5% grid; 16:9 TALK / SCREEN + BUBBLE map onto HEAD / SPLIT-style states the same way. Components take rects; they don't invent positions.
+- Use one geometry module for the three layout states (HEAD, FULL, SPLIT; `components/specs/layout-states.md`) on the 5% grid; 16:9 TALK / SCREEN + BUBBLE map onto HEAD / SPLIT-style states the same way. Components take rects; they don't invent positions.
 - Be a co-director, not an executor: the script's cues are the baseline; bring a better visual take where it explains better, within the limits in `CLAUDE.md`.
 - Use one composition per deliverable (full, trailer 16:9, trailer 9:16) sharing the beats.
 - Sound: follow `pipeline/sound.md`.
@@ -43,7 +44,7 @@
 - An unscoped `at("its client id")` resolves to the FIRST time I say it: in `oidc` Part 2 that was the login step 2 line, 1 min early, so a later scene showed a row before I spoke it. Scope repeated phrases to their beat (`at(phrase, from)`); the phrase check lists every unscoped phrase spoken more than once.
 - Remotion composition ids allow only a-z, A-Z, 0-9 and `-`: `Short_p1` throws at bundle time (validateCompositionId), and every still/render in that batch dies with it. Use `Short-p1`.
 - Word data stores number words as digits ("one" → `1`, "five" → `5`, "fifty" → `50`), so `at("best one first")` and `at("two indexes")` throw. Apply the same number map inside `at()` and the phrase check, and in the highlight-phrase matcher, or highlight words like "top five" silently never light up (`rag-pipeline`).
-- Running canvas (`components/PipelineCanvas.md`): stations have transparent backgrounds, so connectors drawn centre-to-centre cut through titles and gauges. Draw them edge-to-edge inside the gaps.
+- Running canvas (`components/specs/PipelineCanvas.md`): stations have transparent backgrounds, so connectors drawn centre-to-centre cut through titles and gauges. Draw them edge-to-edge inside the gaps.
 - The phrase lookup's number map turns "Three" into "3", so `at('Three')` matched "under 3 minutes" in the hook and idea 3's card rendered over every scene from 0:09 on (`scion`). Anchor numbered list items with the next word (`at('Three source')`) or a `from` frame.
 - An element whose `style` sets a positioning `transform` (`translate(-50%,-50%)`, a flip) and then spreads `enter()`/`popIn()` loses the positioning: the entrance transform overwrites it, and the "Works offline" badge slid half off-frame (`scion`). Put the positioning transform on an outer div and the entrance on an inner one.
 - Check the contact sheets for scenes whose first visual waits for a later word: a SPLIT card sat nearly empty for 1–2 s at the start of 4 scenes (`scion`). Bring the scene's base layout in on the scene's first word; trigger only the details on later words.

@@ -6,7 +6,7 @@ argument-hint: <name>
 
 # Coding video (16:9, 1920x1080, 30 fps)
 
-Work in `projects/<name>/` (or `projects/<playlist>/<NN>-<topic>/` for a playlist episode; then also follow `series/<playlist>.md`). Read `CLAUDE.md` and `brand.md` first. Choose components from `components/INDEX.md` first; open only the specs you will use. Follow each step's file in `pipeline/`.
+Work in `projects/<name>/` (or `projects/<playlist>/<NN>-<topic>/` for a playlist episode; then also follow `series/<playlist>.md`). Read `CLAUDE.md` and `brand.md` first. Logos come from `icons/` (`icons/icons.md`; download an official one into `icons/` only if missing). Choose components from `components/index.md` first; open only the specs you will use. Follow each step's file in `pipeline/`.
 
 Run this as four stages, one session each (`pipeline/stages.md`). Start each stage by reading `log.md` and the project files, and end it with a handoff in `log.md`. Shell work goes to Haiku as exact-command batches (`pipeline/delegation.md`). Vision goes through contact sheets (`pipeline/video-inspect.md`).
 
@@ -23,13 +23,14 @@ Run this as four stages, one session each (`pipeline/stages.md`). Start each sta
 
 **Stage 3 · Compose** (steps 7–8; only after my OK is recorded in `log.md`)
 
-7. **Composition:** `pipeline/composition.md`. Lay every beat out as HEAD, FULL or SPLIT (`brand.md` Layout, `components/layout-states.md`; no default, mix all three, read the script's `[mm:ss–mm:ss | STATE]` tags as the plan). For HEAD framing: crop if the source is ≥ 1440 px wide, otherwise `components/PresenterSplit.md`. Tell me which and why. Be a creative co-director: cues are the baseline, bring a better take within the rules in `CLAUDE.md` (Creative direction); write a "Creative take" list in `work/storyboard.md`, do small improvements and log them, and show bigger changes in 3 approval stills for my OK. Use `/add-zooms` to write the punch/ratchet map from the word timestamps. It decides where the ~108% framing lands to hide each jump cut, and those zooms are applied in the composition. No Ken Burns from add-zooms: do slow pushes in Remotion with ease-in-out.
+7. **Composition:** `pipeline/composition.md`. Lay every beat out as HEAD, FULL or SPLIT (`brand.md` Layout, `components/specs/layout-states.md`; no default, mix all three, read the script's `[mm:ss–mm:ss | STATE]` tags as the plan). For HEAD framing: crop if the source is ≥ 1440 px wide, otherwise `components/specs/PresenterSplit.md`. Tell me which and why. Be a creative co-director: cues are the baseline, bring a better take within the rules in `CLAUDE.md` (Creative direction); write a "Creative take" list in `work/storyboard.md`, do small improvements and log them, and show bigger changes in 3 approval stills for my OK. Use `/add-zooms` to write the punch/ratchet map from the word timestamps. It decides where the ~108% framing lands to hide each jump cut, and those zooms are applied in the composition. No Ken Burns from add-zooms: do slow pushes in Remotion with ease-in-out.
 8. **Render:** `pipeline/render.md`.
-**Stage 4 · Deliver** (steps 9–14)
+**Stage 4 · Deliver** (steps 9–15)
 
 9. **Subtitles:** `pipeline/subtitles.md`.
 10. **Trailers:** `pipeline/trailer.md`. Always make both: `out/<name>_trailer_16x9.mp4` and `out/<name>_trailer_9x16.mp4`.
 11. **QA:** `pipeline/qa.md`, on the main video and both trailers. Look at every contact sheet yourself before delivering. Fix what fails before reporting.
 12. **Thumbnail:** `pipeline/thumbnail.md`. Always.
 13. **Social copy:** `pipeline/social-copy.md`. Always write `out/<name>_social.json`.
-14. **Report:** list every file in `out/`, plus durations, loudness, choices made, lines worth re-recording, and anything you couldn't do. Then fold any lessons back into the toolkit `.md` files.
+14. **Save components:** `CLAUDE.md` (Components, Deliver): clean up every new or extended component that worked, save it to `components/code/` with a `preview.png`, update its spec and `components/index.md`, set `last_used` on every component the video used. Logos: confirm every icon used is in `icons/` with its `icons/icons.md` row and "Used in" updated.
+15. **Report:** list every file in `out/`, plus durations, loudness, choices made, lines worth re-recording, and anything you couldn't do. Then fold any lessons back into the toolkit `.md` files.

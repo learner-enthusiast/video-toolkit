@@ -87,7 +87,7 @@ Check after a build: 9 WAVs, 48 kHz mono, each peak −3.0 ±0.1 dBFS (`astats`)
 | Dark punch moment (HEAD/FULL dark style) | sub-boom, **max 2 per video** | 16 dB |
 | A big cut into a new part | riser into the cut, then the cut's own hit on it | 16 dB |
 
-Any other component: map it from `components/INDEX.md` by what the viewer sees (something appears → pop, something moves across → whoosh, something is written → pen-scratch, something counts → tick, something lands hard → stamp-thud). A component spec that already names an SFX keeps its intent but uses the kit sound.
+Any other component: map it from `components/index.md` by what the viewer sees (something appears → pop, something moves across → whoosh, something is written → pen-scratch, something counts → tick, something lands hard → stamp-thud). A component spec that already names an SFX keeps its intent but uses the kit sound.
 
 **3 · Timing**
 

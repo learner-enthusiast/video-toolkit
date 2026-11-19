@@ -1,3 +1,10 @@
+---
+code: components/code/Tag/Tag.tsx
+preview: components/code/Tag/preview.png
+props: "label, tone (orange|ink|dim|outline), size, monoFont; TagPop adds x, y, at, out, anchor"
+variants: "tone x4, monoFont, static (Tag) vs popping (TagPop)"
+last_used: system-design-of-ai/05-model-routing
+---
 # Tag
 
 **Purpose:** a small pill or chip for keywords, topics, verbs ("Summarize", "Draft reply") and icon-less tech names.
@@ -17,3 +24,10 @@
 **Gotchas**
 - Keep tags on a row grid. Measure text width so a row never overflows the free area.
 - No emojis inside tags.
+
+## Code
+
+Saved: `components/code/Tag/Tag.tsx` (preview: `preview.png`). Import it, set props; extend with a new prop rather than copying. Brand values come from `components/code/theme.ts`.
+
+- Code props: label, tone (orange|ink|dim|outline), size, monoFont; TagPop adds x, y, at, out, anchor.
+- Code tones are orange | ink | dim | outline (brand has no green/red). The older spec tones accent/good/bad/neutral map to orange/orange/dim/outline.

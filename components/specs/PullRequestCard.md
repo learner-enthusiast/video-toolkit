@@ -1,3 +1,10 @@
+---
+code: components/code/PullRequestCard/PullRequestCard.tsx
+preview: components/code/PullRequestCard/preview.png
+props: "title, files, add, del, diff, diffAt, tone (plain|risky|dim), dimT, tag, warn {at,text}, w, size; also exports MiniPR, SizeChip"
+variants: "tone x3, with/without diff, warn"
+last_used: system-design-of-ai/05-model-routing
+---
 # PullRequestCard
 
 **Purpose:** a GitHub-style pull request card in the brand look, so a code review story can show *what* changed at a glance: title, files touched, size, and (optionally) the diff itself. Used as a feed of boring PRs, as the one risky PR, and side by side to show that size is not risk.
@@ -20,3 +27,10 @@
 - A diff with long lines must wrap or shorten; never shrink the code below 28 px (`pipeline/composition.md`).
 - Keep the card's geometry identical everywhere it recurs so viewers read it as the same object.
 - All timings trigger on spoken-word frames (`at(phrase)`), never fixed times; every element has an exit (`out`). Motion is spring or ease-in-out only.
+
+## Code
+
+Saved: `components/code/PullRequestCard/PullRequestCard.tsx` (preview: `preview.png`). Import it, set props; extend with a new prop rather than copying. Brand values come from `components/code/theme.ts`.
+
+- Code props: title, files, add, del, diff, diffAt, tone (plain|risky|dim), dimT, tag, warn {at,text}, w, size; also exports MiniPR, SizeChip.
+- dimT greys the card at a frame ('not this one').

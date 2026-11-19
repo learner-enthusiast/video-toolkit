@@ -7,7 +7,7 @@
 **Low-stakes** = a task whose result can't lower the quality of the final video if it's slightly off, because Claude checks it afterwards:
 - folder/project scaffolding, renaming, moving files, cleaning up `work/`
 - ffprobe/metadata reads, duration measurements, proxy/low-res transcodes
-- downloading official logos and filling `assets/logos/SOURCES.md`
+- downloading official logos into `icons/` and adding their `icons/icons.md` rows
 - SRT formatting/line-wrapping, social copy JSON scaffolding, `log.md` updates
 - boilerplate for a component whose spec is already final (Claude reviews every line before use)
 

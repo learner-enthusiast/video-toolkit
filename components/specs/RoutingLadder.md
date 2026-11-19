@@ -1,3 +1,10 @@
+---
+code: components/code/RoutingLadder/RoutingLadder.tsx
+preview: components/code/RoutingLadder/preview.png
+props: "frameAt, rungs, active, drops, lanes, prices, laneNote, intake, out, layout"
+variants: "small/big lanes, laneNote vs prices"
+last_used: system-design-of-ai/05-model-routing
+---
 # RoutingLadder
 
 **Purpose:** the recurring picture of model routing as a decision ladder. A request (a PullRequestCard in miniature) drops in at the top, falls through the rungs, and lands in one of two output lanes: **Small model** or **Big model**. It builds one rung per step as I name it and stays on screen across the whole fix section, so each new step is seen in the context of the earlier ones.
@@ -19,3 +26,10 @@
 - Never show more than two mini PRs falling at once; stagger 6–10 frames.
 - Rung labels are short (≤ 16 chars); explanations belong in captions and spoken words.
 - All timings trigger on spoken-word frames (`at(phrase)`), never fixed times; every element has an exit (`out`). Motion is spring or ease-in-out only.
+
+## Code
+
+Saved: `components/code/RoutingLadder/RoutingLadder.tsx` (preview: `preview.png`). Import it, set props; extend with a new prop rather than copying. Brand values come from `components/code/theme.ts`.
+
+- Code props: frameAt, rungs, active, drops, lanes, prices, laneNote, intake, out, layout.
+- Any number of rungs; lane names, prices and the intake label are props (no default prices).

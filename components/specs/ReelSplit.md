@@ -1,6 +1,6 @@
 # ReelSplit (the SPLIT state)
 
-**Purpose:** the SPLIT state of the three-state layout (`components/layout-states.md`, `brand.md` Layout): grid card on top, caption strip, me docked at the bottom. It is one option chosen per beat, not the default. Use it when my reaction or delivery matters while a simple graphic is on screen; dense code or detailed diagrams go FULL.
+**Purpose:** the SPLIT state of the three-state layout (`components/specs/layout-states.md`, `brand.md` Layout): grid card on top, caption strip, me docked at the bottom. It is one option chosen per beat, not the default. Use it when my reaction or delivery matters while a simple graphic is on screen; dense code or detailed diagrams go FULL.
 
 **Props:** `face` track, `segments` (picture cuts), `states` (HEAD | FULL | SPLIT, each with `from`/`to` frames; DARK is a style flag on any of them), `punch` per segment.
 

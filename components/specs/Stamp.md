@@ -1,3 +1,10 @@
+---
+code: components/code/Stamp/Stamp.tsx
+preview: components/code/Stamp/preview.png
+props: "x, y, at, out, text, tone (orange|dim), rotate, size"
+variants: "tone x2"
+last_used: system-design-of-ai/05-model-routing
+---
 # Stamp
 
 **Purpose:** a punchline badge that lands hard ("−62.5% load time", "Shipped").
@@ -16,3 +23,10 @@
 **Gotchas**
 - Use at most one stamp per beat, or it stops being a punchline.
 - It triggers on the spoken number, not on the start of the sentence.
+
+## Code
+
+Saved: `components/code/Stamp/Stamp.tsx` (preview: `preview.png`). Import it, set props; extend with a new prop rather than copying. Brand values come from `components/code/theme.ts`.
+
+- Code props: x, y, at, out, text, tone (orange|dim), rotate, size.
+- Positioned by its centre (x, y).
