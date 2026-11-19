@@ -40,7 +40,7 @@ One-page lookup for every component spec in `components/specs/` and its saved co
 | [Bubble](specs/Bubble.md) | Presenter's face as small picture-in-picture during graphic beats | `face` track, `rect`, `at`/`out` frames, `corner` . | needs-cleanup | — | — |
 | [Buildings](specs/Buildings.md) | Office analogy: main site versus user content in a separate building | `office`, `annex`, `visitors`, `turnAway`, `moveTo`, `rect`, `at`, `out`. | spec-only | — | — |
 | [CacheTiers](specs/CacheTiers.md) | A request falls through cache layers until one tier answers | `tiers`, `hitAt`, `failAt`, `rect`, `out`. | needs-cleanup | — | — |
-| [CalendarFlip](specs/CalendarFlip.md) | Repeated work across days/sessions: each day flips in, the same item stack slides in again, greyer | days [{label, at}], files, sub, again, forgetAt, forgetText, w, forgetY | ✓ | with/without closing warning | Graphify |
+| [CalendarFlip](specs/CalendarFlip.md) | Repeated work across days/sessions: each day flips in, the same item stack slides in again, greyer | days [{label, at}], files, sub, again, forgetAt, forgetText, w, forgetY, ghostAt | ✓ | with/without closing warning | Graphify |
 | [CanvasZoomOut](specs/CanvasZoomOut.md) | Closing pull-back showing every pipeline station lighting as named | `zoomAt`, `pulses`, `card`, `out`. | spec-only | — | — |
 | [Captions](specs/Captions.md) | Word-by-word captions following the spoken words | `words`, `mode`, `avoid` rects . | needs-cleanup | — | — |
 | [Card](specs/Card.md) | Base panel container other graphics sit in | `rect` or `x/y/w`, `at`, `out`, `accent`, `children`. | needs-cleanup | — | — |
@@ -63,7 +63,7 @@ One-page lookup for every component spec in `components/specs/` and its saved co
 | [CostMeter](specs/CostMeter.md) | Recurring meter: plain counter that reveals a hidden needle as real cost runs away | `w`, `readout`, `caption`, `dial`, `needle`, `zone` . | needs-cleanup | — | — |
 | [CountdownKey](specs/CountdownKey.md) | A key's timer runs out, yet it lingers in memory | `w`, `h`, `keyAt`, `ttlAt`, `codeAt`, `timerFrom`, `zeroAt`, `out`. | spec-only | — | — |
 | [Counter](specs/Counter.md) | Animated number landing on a result to remember | `from`, `to`, `decimals`, `prefix`, `suffix`, `label`, `at`, `duration`, `tone`. | needs-cleanup | — | — |
-| [CounterPair](specs/CounterPair.md) | Dark punch: one number counts up beside one that stays stark (1,500 vs 0) | left {label, to, from, at, dur}, right {label, value, at}, w, y | ✓ | dark | Graphify |
+| [CounterPair](specs/CounterPair.md) | Dark punch: one number counts up beside one that stays stark (1,500 vs 0) | left {label, to, from, at, dur, countAt}, right {label, value, at, showAt, pending}, w, y | ✓ | dark | Graphify |
 | [CreditCTA](specs/CreditCTA.md) | Credit the original creator, send viewers to the full video | `mode`, `thumb`, `name`, `at`, `out`, `arrowAt`, `handle`. | spec-only | — | — |
 | [DataPlanPhone](specs/DataPlanPhone.md) | Mobile data analogy: plans sold by size because usage varies | `strikeAt`, `pillAt`, `visits`, `rect`, `at`, `out`. `mini`: only the "2 GB/day" pill . | spec-only | — | — |
 | [DecoderReveal](specs/DecoderReveal.md) | A token's payload is readable by anyone; reveal it | `state`, `token`, `payload`, `pasteAt`, `noAt`, `yesAt`, `flashAt`, `blurAt`, … | needs-cleanup | — | — |

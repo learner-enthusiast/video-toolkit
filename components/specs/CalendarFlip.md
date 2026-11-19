@@ -1,7 +1,7 @@
 ---
 code: components/code/CalendarFlip/CalendarFlip.tsx
 preview: components/code/CalendarFlip/preview.png
-props: "days [{label, at}], files string[], forgetAt?, forgetText?, sub?, again?, w?"
+props: "days [{label, at}], files string[], forgetAt?, forgetText?, forgetY?, sub?, again?, ghostAt? (dashed placeholders from this frame), w?"
 variants: "with/without a closing warning pill"
 last_used: Graphify
 ---
@@ -24,3 +24,4 @@ last_used: Graphify
 ## Code
 
 Saved: `components/code/CalendarFlip/CalendarFlip.tsx` (preview: `preview.png`).
+- Never leave the card empty before the first day word: `ghostAt` draws dashed "session N" placeholders where the days will land (`Graphify`: the beat opened 3 s before "Monday").

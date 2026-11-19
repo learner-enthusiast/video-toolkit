@@ -1,7 +1,7 @@
 ---
 code: components/code/CounterPair/CounterPair.tsx
 preview: components/code/CounterPair/preview.png
-props: "left {label, to, from?, at, dur?}, right {label, value, at}, w?, y?"
+props: "left {label, to, from?, at, dur?, countAt?}, right {label, value, at, showAt?, pending?}, w?, y?"
 variants: "dark punch (default)"
 last_used: Graphify
 ---
@@ -20,3 +20,4 @@ last_used: Graphify
 ## Code
 
 Saved: `components/code/CounterPair/CounterPair.tsx` (preview: `preview.png`).
+- A dark punch must not open on an empty card: bring both tiles in on the scene start (`left.at`, `right.showAt`), count on `left.countAt`, and show `pending` ("?") on the right until its word (`Graphify`).
