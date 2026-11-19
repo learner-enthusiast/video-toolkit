@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Modular, timeline-preserving voice cleanup for video-toolkit."""
 from __future__ import annotations
-import argparse, json, re, shutil, subprocess, sys, tempfile
+import argparse, json, os, re, shutil, subprocess, sys, tempfile, uuid
 from pathlib import Path
 
 PRESETS = {
@@ -79,9 +79,14 @@ def wpe_dereverb(input_wav, output_wav, strength, taps=10, delay=3, iterations=3
             rmat = (z * weights[None, :]) @ z.conj().T
             rhs = z @ (yf[valid].conj() * weights)
             try: filt = np.linalg.solve(rmat + eps * np.eye(taps), rhs)
-            except np.linalg.LinAlgError: break
+            except np.linalg.LinAlgError as e:
+                raise RuntimeError(f"WPE numerical failure at frequency bin {f}, iteration {_ + 1}") from e
+            if not np.all(np.isfinite(filt)):
+                raise RuntimeError(f"WPE produced non-finite filter coefficients at frequency bin {f}, iteration {_ + 1}")
             predicted = np.conj(filt) @ z
             estimate = yf[valid] - predicted
+            if not np.all(np.isfinite(estimate)):
+                raise RuntimeError(f"WPE produced non-finite enhanced audio at frequency bin {f}, iteration {_ + 1}")
             lam[valid] = np.maximum(np.abs(estimate) ** 2, eps)
         enhanced[f, valid] = estimate
     _, restored = istft(enhanced, fs=16000, nperseg=512, noverlap=384, input_onesided=True, boundary=True)
@@ -93,7 +98,7 @@ def wpe_dereverb(input_wav, output_wav, strength, taps=10, delay=3, iterations=3
     sf.write(output_wav, mixed, 16000, subtype="FLOAT")
     return {"applied": True, "algorithm": "single-channel WPE", "taps": taps, "delay_frames": delay, "iterations": iterations, "strength": strength}
 
-def clean(source, output, preset="studio", config_path=None, report_path=None, neural=True, mode="quality", deepfilter_python=None, deepfilter_executable=None):
+def _clean_impl(source, output, preset="studio", config_path=None, report_path=None, neural=True, mode="quality", deepfilter_python=None, deepfilter_executable=None):
     if not shutil.which("ffmpeg") or not shutil.which("ffprobe"):
         raise RuntimeError("FFmpeg and ffprobe are required. Install with: sudo apt install ffmpeg")
     if not source.is_file(): raise FileNotFoundError(source)
@@ -127,11 +132,8 @@ def clean(source, output, preset="studio", config_path=None, report_path=None, n
                 wpe_back = tmp / "wpe_back.wav"
                 run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(wpe_output), "-ar", "48000", "-ac", "1", "-c:a", "pcm_f32le", str(wpe_back)])
                 current = wpe_back
-            except ImportError as e:
-                raise RuntimeError(
-                    "WPE dereverberation is required for quality cleanup, but scipy or "
-                    f"soundfile is unavailable: {e}"
-                ) from e
+            except Exception as e:
+                raise RuntimeError(f"WPE dereverberation failed: {e}") from e
         engine = "ffmpeg-dsp"
         enhancement_report = {"enabled": False, "model": "DeepFilterNet3", "status": "disabled"}
         if neural and settings.get("speech_enhancement_enabled", True):
@@ -149,11 +151,9 @@ def clean(source, output, preset="studio", config_path=None, report_path=None, n
                 run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(current), "-i", str(candidates[0]), "-filter_complex", f"[0:a]volume={1-enhancement_strength}[dry];[1:a]volume={enhancement_strength}[wet];[dry][wet]amix=inputs=2:normalize=0", "-ar", "48000", "-ac", "1", "-c:a", "pcm_f32le", str(blend)])
                 current, engine = blend, "DeepFilterNet3"
                 enhancement_report = {"enabled": True, "model": "DeepFilterNet3", "backend": backend, "strength": enhancement_strength, "status": "processed", "device": device_match.group(1) if device_match else "see CLI log", "inference_seconds": float(time_match.group(1)) if time_match else None, "real_time_factor": float(time_match.group(2)) if time_match else None}
-            except (ImportError, RuntimeError, OSError, subprocess.CalledProcessError) as e:
+            except Exception as e:
                 raise RuntimeError(
-                    "DeepFilterNet3 was requested for quality cleanup but could not run. "
-                    "No substitute pipeline was applied; resolve the issue or explicitly "
-                    f"approve a different mode. Details: {e}"
+                    f"DeepFilterNet3 failed during required quality cleanup: {e}"
                 ) from e
         # Remaining FFmpeg stages handle noise cleanup and mastering.
         filters = ["highpass=f=78"]
@@ -162,12 +162,98 @@ def clean(source, output, preset="studio", config_path=None, report_path=None, n
         if settings.get("compression_enabled", True): filters.append("acompressor=threshold=0.125:ratio=2.2:attack=18:release=140:makeup=1")
         if settings.get("deess_enabled", True): filters.append("deesser=i=0.15:m=0.35:f=0.5")
         if settings.get("loudness_enabled", True): filters.append("loudnorm=I=-16:TP=-1.5:LRA=11:print_format=none")
-        run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(current), "-af", ",".join(filters), "-ar", "48000", "-ac", "1", "-c:a", "pcm_s24le", str(output)])
+        try:
+            run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(current), "-af", ",".join(filters), "-ar", "48000", "-ac", "1", "-c:a", "pcm_s24le", str(output)])
+        except Exception as e:
+            raise RuntimeError(f"FFmpeg mastering failed: {e}") from e
     out_info = probe(output)
     result = {"input": str(source), "output": str(output), "preset": preset, "mode": mode, "engine": engine, "speech_enhancement": enhancement_report, "dereverberation": dereverb_report, "input_audio": info, "input_measurements": measure(source), "output_measurements": measure(output), "input_clipping_suspected": (measure(source)["true_peak_dbtp"] is not None and measure(source)["true_peak_dbtp"] >= -0.1), "duration_seconds": out_info["duration"], "duration_delta_seconds": out_info["duration"]-info["duration"], "reverberation_note": "No automatic room-severity score is claimed; compare and listen."}
     if report_path:
         report_path.parent.mkdir(parents=True, exist_ok=True); report_path.write_text(json.dumps(result, indent=2)+"\n")
     return result
+
+def _atomic_json(path, data):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w") as f:
+            json.dump(data, f, indent=2); f.write("\n"); f.flush(); os.fsync(f.fileno())
+        os.replace(temp_name, path)
+    finally:
+        if os.path.exists(temp_name): os.unlink(temp_name)
+
+def clean(source, output, preset="studio", config_path=None, report_path=None, neural=True, mode="quality", deepfilter_python=None, deepfilter_executable=None):
+    source, output = Path(source), Path(output)
+    source_resolved, output_resolved = source.resolve(), output.resolve()
+    if source_resolved == output_resolved or (output.exists() and os.path.samefile(source, output)):
+        raise ValueError(f"Unsafe audio paths: output resolves to the source recording ({source_resolved})")
+    report = Path(report_path).resolve() if report_path else None
+    if report and report in (source_resolved, output_resolved):
+        raise ValueError("Unsafe audio paths: report must be separate from input and output")
+    source, output = source_resolved, output_resolved
+
+    run_id = uuid.uuid4().hex
+    status_path = output.with_name(output.name + ".run-status.json")
+    status_resolved = status_path.resolve()
+    if report and report == status_resolved:
+        raise ValueError("Unsafe audio paths: report path collides with the run-status file")
+    if status_resolved == source_resolved or (status_path.exists() and os.path.samefile(source, status_path)):
+        raise ValueError(f"Unsafe audio paths: run-status file aliases the source recording ({source_resolved})")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    if report: report.parent.mkdir(parents=True, exist_ok=True)
+    status = {"run_id": run_id, "status": "running", "input": str(source_resolved), "output": str(output_resolved), "report": str(report) if report else None, "existing_output_at_start": output.exists(), "existing_report_at_start": bool(report and report.exists())}
+    _atomic_json(status_path, status)
+
+    def temp_sibling(path):
+        fd, name = tempfile.mkstemp(prefix=f".{path.name}.{run_id}.", suffix=".tmp", dir=path.parent)
+        os.close(fd); os.unlink(name)
+        return Path(name)
+
+    staged_output = temp_sibling(output)
+    staged_report = temp_sibling(report) if report else None
+    output_backup = report_backup = None
+    output_published = report_published = False
+    try:
+        result = _clean_impl(source, staged_output, preset, config_path, staged_report, neural, mode, deepfilter_python, deepfilter_executable)
+        result["output"] = str(output_resolved)
+        if not staged_output.is_file() or staged_output.stat().st_size == 0:
+            raise RuntimeError("Mastering produced no valid output file")
+        probe(staged_output)
+        if staged_report:
+            staged_report.write_text(json.dumps(result, indent=2) + "\n")
+
+        if output.exists():
+            output_backup = output.with_name(output.name + f".previous-{run_id}")
+            os.replace(output, output_backup)
+        if report and report.exists():
+            report_backup = report.with_name(report.name + f".previous-{run_id}")
+            os.replace(report, report_backup)
+        os.replace(staged_output, output); output_published = True
+        if report and staged_report:
+            os.replace(staged_report, report); report_published = True
+        status.update({"status": "succeeded", "previous_output": str(output_backup) if output_backup else None, "previous_report": str(report_backup) if report_backup else None})
+        _atomic_json(status_path, status)
+        return result
+    except Exception as e:
+        if output_published and output.exists(): output.unlink()
+        if report_published and report and report.exists(): report.unlink()
+        if output_backup and output_backup.exists(): os.replace(output_backup, output)
+        if report_backup and report_backup.exists(): os.replace(report_backup, report)
+        failed_report = None
+        if report:
+            failed_report = report.with_name(report.name + f".run-{run_id}.failed.json")
+            _atomic_json(failed_report, {"run_id": run_id, "status": "failed", "input": str(source_resolved), "output": str(output_resolved), "error": str(e)})
+        message = str(e)
+        if "WPE" in message: failed_stage = "wpe"
+        elif "DeepFilterNet" in message: failed_stage = "deepfilternet3"
+        elif output_published or "Mastering" in message: failed_stage = "mastering_or_publish"
+        else: failed_stage = "processing"
+        status.update({"status": "failed", "failed_stage": failed_stage, "error": message, "failed_report": str(failed_report) if failed_report else None, "previous_output_preserved": bool(output_backup and output_backup.exists()) or (output.exists() and not output_published), "previous_report_preserved": bool(report_backup and report_backup.exists()) or bool(report and report.exists() and not report_published)})
+        _atomic_json(status_path, status)
+        raise
+    finally:
+        for temp_path in (staged_output, staged_report):
+            if temp_path and temp_path.exists(): temp_path.unlink()
 
 def main():
     p = argparse.ArgumentParser(description=__doc__, epilog="Production talking-head cleanup must use --mode quality (the default). balanced and performance are explicit alternate modes and do not satisfy the mandatory voice-cleaning gate."); p.add_argument("input", type=Path); p.add_argument("output", type=Path)
