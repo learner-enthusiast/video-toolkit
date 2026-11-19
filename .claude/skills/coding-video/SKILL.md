@@ -1,10 +1,12 @@
 ---
 name: coding-video
-description: 16:9 coding video pipeline (tutorial or project demo) from raw talking-head and screen footage to a delivered MP4 with SRT.
+description: Long-form (> 3:00) 16:9 coding video pipeline (tutorial or project demo) from raw talking-head and screen footage to a delivered MP4 with SRT. A coding video of ≤ 2:59 is a reel: 9:16 only.
 argument-hint: <name>
 ---
 
-# Coding video (16:9, 1920x1080, 30 fps)
+# Coding video (16:9, 1920x1080, 30 fps; long-form > 3:00)
+
+**Short coding videos (final length ≤ 2:59) are reels: 9:16 only (1080x1920).** Follow the stages below, but frame, lay out, render, QA and thumbnail everything per `/reel` and `components/specs/layout-states.md` in 9:16. No 16:9 main, trailer, thumbnail, stills or `PresenterSplit`. The 16:9 steps below apply to long-form only.
 
 Work in `projects/<name>/` (or `projects/<playlist>/<NN>-<topic>/` for a playlist episode; then also follow `series/<playlist>.md`). Read `CLAUDE.md` and `brand.md` first. Logos come from `icons/` (`icons/icons.md`; download an official one into `icons/` only if missing). Choose components from `components/index.md` first; open only the specs you will use. Follow each step's file in `pipeline/`.
 
@@ -35,8 +37,8 @@ Run this as four stages, one session each (`pipeline/stages.md`). Start each sta
 **Stage 4 · Deliver** (steps 14–20)
 
 14. **Subtitles:** `pipeline/subtitles.md`.
-15. **Trailers:** `pipeline/trailer.md`. Always make both: `out/<name>_trailer_16x9.mp4` and `out/<name>_trailer_9x16.mp4`.
-16. **QA:** `pipeline/qa.md`, on the main video and both trailers. Look at every contact sheet yourself before delivering. Fix what fails before reporting.
+15. **Trailer:** `pipeline/trailer.md`. Long-form: always make both `out/<name>_trailer_16x9.mp4` and `out/<name>_trailer_9x16.mp4`. A ≤ 2:59 video: `out/<name>_trailer_9x16.mp4` only.
+16. **QA:** `pipeline/qa.md`, on the main video and every trailer render. Look at every contact sheet yourself before delivering. Fix what fails before reporting.
 17. **Thumbnail:** `pipeline/thumbnail.md`. Always.
 18. **Social copy:** `pipeline/social-copy.md`. Always write `out/<name>_social.json`.
 19. **Save components:** `CLAUDE.md` (Components, Deliver): clean up every new or extended component that worked, save it to `components/code/` with a `preview.png`, update its spec and `components/index.md`, set `last_used` on every component the video used. Logos: confirm every icon used is in `icons/` with its `icons/icons.md` row and "Used in" updated.

@@ -22,8 +22,7 @@
 {
   "video": "<name>",
   "files": {
-    "main": "<name>_16x9.mp4",
-    "trailer_landscape": "<name>_trailer_16x9.mp4",
+    "main": "<name>_9x16.mp4",
     "trailer_portrait": "<name>_trailer_9x16.mp4",
     "thumbnail": "thumbnail/thumb_a.png"
   },
@@ -44,6 +43,7 @@
 
 - `hashtags` are arrays with the `#`. Each `post`/`caption` already ends with its hashtags, so it can be pasted as-is.
 - `thumbnail` names the variant I'd pick (the one recommended in `thumbnail.md`).
+- `files` above is the reel (≤ 2:59) shape: 9:16 files only, no 16:9 fields. Long-form (> 3:00) only: set `"main": "<name>_16x9.mp4"` and add `"trailer_landscape": "<name>_trailer_16x9.mp4"` next to `trailer_portrait`.
 
 **Checks**
 - Count characters for X, Threads and the YouTube title and fix anything over the limit.

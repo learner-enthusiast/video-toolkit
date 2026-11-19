@@ -20,7 +20,7 @@ Contents
 **A/V two-column with a text track**
 
 ```markdown
-# Tally · "Day 40" · 30 s · 9:16 + 16:9 · es-CO, tú
+# Tally · "Day 40" · 30 s · 9:16 · es-CO, tú
 Message: Tally chases unpaid invoices so you don't have to.
 Viewer: a freelance designer, 40 days into an unpaid invoice, embarrassed to ask again.
 Structure: ABT (cold audience); hook formula: stated cost. Feeling: valley (awkward) → relief.

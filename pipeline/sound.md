@@ -94,7 +94,7 @@ Any other component: map it from `components/index.md` by what the viewer sees (
 - Each SFX **starts 2–3 frames before its visual lands** (the frame where the spring settles or the element reaches its place). Early reads as in sync; late reads as broken.
 - Riser into a cut: it ends exactly on the cut frame, and the hit (whoosh or sub-boom) starts on the cut.
 - Cues come from the same word-triggered events as the visuals (`timeline.json`, the `at()` lookups), never typed times. Export them to `work/audio/sfx_cues.json`: one entry per sound with `t` (seconds, output timeline), `visual_t` (the landing time it serves), `sound`, `gain_db` and `event` (a short label).
-- Re-derive the cues for each composition: main, trailer 16:9 and trailer 9:16. A trailer that replays Main per segment maps each main cue through its segment offset and drops cues outside the kept ranges.
+- Re-derive the cues for each composition: main and trailer 9:16, plus trailer 16:9 for long-form only (a reel has no 16:9 composition). A trailer that replays Main per segment maps each main cue through its segment offset and drops cues outside the kept ranges.
 
 **4 · Density**
 
@@ -120,7 +120,7 @@ Any other component: map it from `components/index.md` by what the viewer sees (
 2. **Music (if any):** loop or trim to length (`aloop` / `atrim`, fade the last 1.5 s), set to about −24 LUFS with `volume`, then duck it with `sidechaincompress` keyed on the clean voice. Start at `threshold=0.02:ratio=2.5:attack=15:release=350` and adjust `ratio` until the measured duck in speech windows is 8–10 dB.
 3. **Mix:** `amix=inputs=3:normalize=0` of `clean.wav` (laid out on the output timeline), `sfx.wav` and the ducked music → `work/audio/mix.wav`, 48 kHz.
 
-`pipeline/render.md` muxes `mix.wav` (one per composition: `mix.wav`, `mix_trailer_16x9.wav`, `mix_trailer_9x16.wav`); the Remotion master's own audio isn't used. SFX `<Audio>` in the Remotion composition is for preview only.
+`pipeline/render.md` muxes `mix.wav` (one per composition: `mix.wav`, `mix_trailer_9x16.wav`, and `mix_trailer_16x9.wav` for long-form only); the Remotion master's own audio isn't used. SFX `<Audio>` in the Remotion composition is for preview only.
 
 **8 · Delegation**
 

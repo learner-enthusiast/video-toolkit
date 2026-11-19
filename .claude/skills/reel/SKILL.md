@@ -39,8 +39,9 @@ If cleaning fails, stop and report it; do not switch modes or transcribe origina
 - **Big captions.** See `components/specs/Captions.md` (reel mode): 1–3 words at a time, ~80 px, placed per state (HEAD lower third clear of the face, SPLIT in the strip, FULL in a band clear of the graphic's key element).
 - **Safe zones.** Keep text clear of the right ~15% (platform buttons) and the bottom ~20% (description overlay).
 - **Ending.** A one-line recap (the payoff of the hook), then "Bye bye, sayonara!" with a wave. A short `EndCard` (≤ 2 s) may follow.
-- **Deliver.** `out/<name>_9x16.mp4` plus an SRT, at -14 to -16 LUFS. Always make a thumbnail with `pipeline/thumbnail.md` (9:16 variant). Then save new or extended components to `components/code/` and update `icons/icons.md` "Used in" (`CLAUDE.md`, Icons and Components).
-- **Trailer.** Always make exactly one short cut, rendered in both aspect ratios: `out/<name>_trailer_16x9.mp4` and `out/<name>_trailer_9x16.mp4` (`pipeline/trailer.md`). If the prompt defines a short cut, that is the trailer; otherwise the default 15–20 s trailer. Never both.
+- **Deliver.** `out/<name>_9x16.mp4` plus an SRT, at -14 to -16 LUFS. Always make a cover/thumbnail with `pipeline/thumbnail.md`: 1080x1920 only, no 1280x720. Then save new or extended components to `components/code/` and update `icons/icons.md` "Used in" (`CLAUDE.md`, Icons and Components).
+- **9:16 only.** A reel never builds, previews, stills, QAs or renders anything in 16:9: no landscape layout, composition, trailer or thumbnail (`CLAUDE.md`, Deliverables).
+- **Trailer.** Always make exactly one short cut, rendered in 9:16 only: `out/<name>_trailer_9x16.mp4` (`pipeline/trailer.md`). If the prompt defines a short cut, that is the trailer; otherwise the default 15–20 s trailer. Never both.
 - **Carousel twin.** After the final render's QA, run `/carousel <name>` (`pipeline/carousel.md`): 6–8 slides in `out/carousel/`, with its outline and slide-1 approval stops.
 - **Social copy.** Always write `out/<name>_social.json` per `pipeline/social-copy.md`. YouTube chapters don't apply to a reel; use the `shorts_title` and a short description instead.
 

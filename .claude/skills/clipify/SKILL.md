@@ -33,7 +33,7 @@ If the user says "I'm not talking in this," you're in action mode. If they say "
 ## Inputs
 
 - A video file path (the user will provide it; otherwise ask)
-- Optional: requested format (9:16, 16:9, 1:1) — if not given, ask after candidates are picked
+- Format: 9:16 (toolkit default for clips/reels; see Step 3)
 - Optional: subtitle style preference — if not given, ask before captioning
 
 ## Tooling (use only the fastest path)
@@ -125,7 +125,9 @@ ffmpeg -y -ss "$START" -t "$DURATION" -i "$VIDEO" -an -c:v copy projects/<name>/
 
 ### Step 3 — Decide the output format
 
-Ask the user (skip if they already specified): "9:16 (TikTok / Reels), 16:9 (YouTube), or 1:1 (Insta feed)?"
+**Toolkit rule:** clips are reels (≤ 2:59), so the output is **9:16 only**. Don't ask and don't render 16:9 or 1:1 (`CLAUDE.md`, Deliverables). Use another format only if the user explicitly asks for it.
+
+Upstream default (only when the user asks for a non-reel format): "9:16 (TikTok / Reels), 16:9 (YouTube), or 1:1 (Insta feed)?"
 
 ### Step 4 — If 16:9 → 9:16: pan-between-faces vs split-screen
 

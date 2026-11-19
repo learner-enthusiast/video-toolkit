@@ -1,6 +1,6 @@
 # PresenterSplit
 
-**Purpose:** 16:9 TALK layout when the portrait source is under 1440 px wide (a crop would look soft).
+**Purpose:** long-form only (> 3:00; never in a reel): 16:9 TALK layout when the portrait source is under 1440 px wide (a crop would look soft).
 
 **Props:** `face` track, `segments` (picture cuts), `side` (default left), `punch` per segment.
 

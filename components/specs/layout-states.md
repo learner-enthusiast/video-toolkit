@@ -1,6 +1,8 @@
 # Layout states (HEAD / FULL / SPLIT)
 
-**Purpose:** the three-state layout system. Every beat is in exactly one state. There is no default; pick per beat from what the viewer must understand. `brand.md` (Layout) is the rule, this file is the build spec. Applies to 9:16 and 16:9.
+**Purpose:** the three-state layout system. Every beat is in exactly one state. There is no default; pick per beat from what the viewer must understand. `brand.md` (Layout) is the rule, this file is the build spec.
+
+**Aspect scope:** a reel (final length ≤ 2:59) is designed and laid out for 9:16 (1080x1920) only: no dual-layout composition, no 16:9 safe-area checks, no landscape variant. Every "16:9" rule below is **long-form only** (> 3:00) and is kept for those videos.
 
 **Props:** `face` track, `segments` (picture cuts), `states` (HEAD | FULL | SPLIT, each with `from`/`to` frames, from the script's `[mm:ss–mm:ss | STATE]` cues), `transition` per switch (`cut` | `wipe`), `dark` flag for punch moments.
 
@@ -18,15 +20,15 @@
 
 **Caption placement** (captions stay on in every state; never over a graphic's key element)
 - HEAD, 9:16: lower third on an off-white block, clear of the chin and of the bottom ~20% platform overlay. Compute from the face track (see `components/specs/Captions.md`).
-- HEAD, 16:9: bottom centre inside the safe margin, ≤ 2 lines.
+- HEAD, 16:9 (long-form only): bottom centre inside the safe margin, ≤ 2 lines.
 - SPLIT, 9:16: the off-white strip between the card and the docked head.
-- FULL, 9:16: a band just below the card (or above the platform overlay), clear of the graphic's key element. 16:9: bottom centre, over a part of the card with no content, or on an off-white block.
+- FULL, 9:16: a band just below the card (or above the platform overlay), clear of the graphic's key element. 16:9 (long-form only): bottom centre, over a part of the card with no content, or on an off-white block.
 - Hide captions for the first ~9 frames of a morph and fade them back in.
 
 **Framing the talking head**
 - Portrait phone footage (1080x1920): face centred, safe margins for 9:16 UI: face out of the top ~12% and bottom ~20%, nothing important in the right ~15%.
 - HEAD, 9:16: the portrait source natively. A landscape source is face-tracked and centre-cropped to portrait (`FaceTrackedCrop`).
-- HEAD, 16:9: crop if the source is ≥ 1440 px wide, otherwise `PresenterSplit`.
+- HEAD, 16:9 (long-form only): crop if the source is ≥ 1440 px wide, otherwise `PresenterSplit`.
 - SPLIT, 9:16: a landscape source is a 16:9 window scaled to 1080 wide; a portrait source gets a face-tracked head-and-shoulders square (face ~40–60% down the crop) on a blurred, darkened copy filling the sides. A 16:9 crop of a portrait frame cuts forehead and chin.
 - Never stretch me; never cover my face with a graphic or caption.
 
@@ -34,7 +36,7 @@
 - Compute every rect for the three states in one geometry module; components get rects, never invent positions.
 - A graphic that lives in both FULL and SPLIT is drawn once in card-local coordinates and scaled, never redrawn.
 - Hiding my face in FULL does not change the audio: the voice WAV keeps playing on the output timeline.
-- FULL card chrome (`vectorless-rag`, `work/remotion/src/lib/layout.tsx`): 9:16 FULL card = 972x1320 = 150 px header (small-caps kicker + serif orange title per beat) + the 972x970 scene space + a 200 px footer. The footer pins the story's question as a chat bubble beside the character's avatar, so every diagram reads as an answer to it; it also fills the "sparse FULL scene" gap without scaling the scene. 16:9 keeps the plain 972x970 card (no chrome) with me in the right panel.
+- FULL card chrome (`vectorless-rag`, `work/remotion/src/lib/layout.tsx`): 9:16 FULL card = 972x1320 = 150 px header (small-caps kicker + serif orange title per beat) + the 972x970 scene space + a 200 px footer. The footer pins the story's question as a chat bubble beside the character's avatar, so every diagram reads as an answer to it; it also fills the "sparse FULL scene" gap without scaling the scene. Long-form 16:9 keeps the plain 972x970 card (no chrome) with me in the right panel.
 - HEAD ↔ FULL as a wipe: an off-white full-frame sheet with an orange bottom edge slides down over the head on the layout spring while the card rides in with it; once settled, the talking head is simply not rendered until the next HEAD/SPLIT (5,355 frames with 12 FULL beats rendered in 5 m 50 s at concurrency 3).
 - A dark punch shorter than ~1 s right before a HEAD beat (hook "Wrong." → credit): keep the current state and only flip it to dark (SPLIT dark) instead of cutting to FULL dark and back; two layout jumps in under a second read as a glitch.
 - Model the layout as keys `{at, mode, dark?, cut?}`; a key with the same mode and `dark` + `cut` gives the hard "it's wrong" stop inside a FULL beat.

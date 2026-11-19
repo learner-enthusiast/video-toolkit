@@ -30,7 +30,7 @@ export const BORDER = `2px solid ${C.border}`;
 export const SHADOW = '0 8px 24px rgba(17,17,17,.08)'; // none on dark scenes
 
 export const FPS = 30;
-export const CANVAS = {w: 1080, h: 1920} as const; // 9:16 reel; 16:9 videos pass their own size via props
+export const CANVAS = {w: 1080, h: 1920} as const; // 9:16 reel (reels are 9:16 only); long-form 16:9 videos pass their own size via props
 
 /** square notebook-grid background (~40 px cells) */
 export const gridBg = (cell = 40) => ({

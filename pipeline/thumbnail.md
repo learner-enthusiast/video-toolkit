@@ -11,12 +11,12 @@
 3. **If it doesn't, fall back to the video:** the sharpest frame with eyes open, mouth closed or mid-smile, and no motion blur (see Do).
 4. **Build the design around the video's content either way.** Pull the topic, key visuals and on-screen graphics (logos, charts, code, screenshots) from the video and `script.md`. Add motion-style accents (the video's orange arrows, glows, highlight blocks) so the still echoes its animations.
 5. **Follow `brand.md`** for fonts, colors and layout.
-6. **Export** the recommended variant to `out/thumbnail.png` at 1280x720, plus `out/thumbnail_9x16.png` at 1080x1920 for Shorts/Reels.
+6. **Export** the recommended variant. Reel (≤ 2:59): the cover `out/thumbnail_9x16.png` at 1080x1920 only, no 1280x720. Long-form (> 3:00): `out/thumbnail.png` at 1280x720, plus `out/thumbnail_9x16.png` at 1080x1920 for its 9:16 trailer.
 
 **Do**
 - No `thumbnail_raw`: pick 5–8 candidate frames of me from the final edit: eyes open, mouth closed or mid-smile, sharp, face fully lit. Look at each and keep the best 2–3.
 - Cut me out with `rembg` (person model) on a copy, to a PNG with alpha. Clean the hair edge if it is ragged.
-- Build the `Thumbnail` composition as a Remotion still, at both 1280x720 and 1080x1920.
+- Build the `Thumbnail` composition as a Remotion still: 1080x1920 only for a reel; 1280x720 and 1080x1920 for long-form.
 - Make 3 variants that differ in one thing each (headline wording, side, or accent visual). Render them to `out/thumbnail/thumb_a.png`, `thumb_b.png`, `thumb_c.png`.
 
 **DIY kit for ChatGPT**
@@ -28,12 +28,12 @@ Also give me what I need to make my own thumbnail in ChatGPT (image generation),
   Pick only what helps the thumbnail; fewer is fine. Copies only, never move or edit `raw/` or `assets/`.
 - **`out/thumbnail/chatgpt_prompt.md`** with:
   - A one-line "how to use": open ChatGPT, attach the files in `assets/`, paste one prompt.
-  - **Claude's prompt:** a ready-to-paste prompt written from the final video's content. It names each attached asset by file name and says how to use it ("use image 1 as the person, keep the face unchanged"). It gives the size and aspect (1280x720, 16:9; 1080x1920, 9:16 for reels), the exact headline (2–5 words), the layout and side, the colors from `brand.md`, high contrast, readable at phone size, and nothing in the bottom-right corner.
+  - **Claude's prompt:** a ready-to-paste prompt written from the final video's content. It names each attached asset by file name and says how to use it ("use image 1 as the person, keep the face unchanged"). It gives the size and aspect (reel: 1080x1920, 9:16 only; long-form: 1280x720, 16:9), the exact headline (2–5 words), the layout and side, the colors from `brand.md`, high contrast, readable at phone size, and nothing in the bottom-right corner.
   - **Your own prompt:** a short fill-in template (headline, mood, layout, colors) that uses the same attached assets, so I can write my own instead.
   - A line saying ChatGPT may alter the face, and to ask it to keep the face from image 1 exactly as it is.
 
 **Checks**
-- Downscale each to 320x180 and look at it. The headline must be readable, the face recognizable, and the subject clear in under a second.
+- Downscale each to phone size and look at it (180x320 for a 9:16 cover; 320x180 for a long-form 16:9 thumbnail). The headline must be readable, the face recognizable, and the subject clear in under a second.
 - No text in the bottom-right corner (platform timestamp badge).
 - Under 2 MB, PNG or high-quality JPG.
 
@@ -41,6 +41,6 @@ Also give me what I need to make my own thumbnail in ChatGPT (image generation),
 - Show me all three and recommend one with a one-line reason.
 - List the assets in the ChatGPT kit and where the prompt file is.
 - Measure the headline against the cutout's head box, not just the safe margin. On `redis-invalidation`, 4 of 6 variants ran their second line ("Cache didn't", "can kill your", "at midnight?") under my head, and only the short two-word headlines stayed clear. Keep each line ≤ ~12 characters at 96 px, or wrap it to three lines.
-- rembg `u2net_human_seg` kept a chunk of the chair back and a pink hair fringe on `docker-explained`'s `thumbnail_raw`; `birefnet-portrait` (CPU, ~1 min) gave a clean cut. Try it first. A portrait photo whose shirt reaches the frame edges leaves a hard vertical edge when placed inside a 16:9 frame: fade the cutout's left edge with a CSS mask (`linear-gradient(to right, transparent 0, black 22%)`) or scale it so the edge leaves the frame.
+- rembg `u2net_human_seg` kept a chunk of the chair back and a pink hair fringe on `docker-explained`'s `thumbnail_raw`; `birefnet-portrait` (CPU, ~1 min) gave a clean cut. Try it first. A portrait photo whose shirt reaches the frame edges leaves a hard vertical edge when placed inside a long-form 16:9 frame: fade the cutout's left edge with a CSS mask (`linear-gradient(to right, transparent 0, black 22%)`) or scale it so the edge leaves the frame.
 - `birefnet-portrait` keeps only the person: it cut away my microphone and boom arm (`system-design-of-ai/05-model-routing`), and I want the mic kept. `birefnet-general` (CPU, 973 MB model in `~/.rembg`, ~2 min at 1600 px) keeps the mic and arm with an equally clean hair edge. Place the cutout from the HEAD top (take it from a portrait pass), not the alpha bbox, which now starts at the boom arm.
 - ImageMagick renders some official SVGs blank (Docker press-kit `docker-mark.svg` uses CSS-class fills: a 1.8 KB all-transparent PNG). Rasterise logos for the ChatGPT kit with `vt-python -c "import cairosvg; cairosvg.svg2png(url=…, write_to=…, output_width=1000)"` and check the alpha mean is > 0.

@@ -2,7 +2,7 @@
 
 **Message:** <one sentence the viewer could repeat>
 
-**URL:** <sub.domain> · **Target:** <n> min · **Aspect:** 16:9 (+ 9:16 trailer?)
+**URL:** <sub.domain> · **Target:** <n> min · **Aspect:** 16:9 + 9:16 trailer if > 3:00 (long-form); 9:16 only if ≤ 2:59 (reel)
 
 ## Glossary (exact spellings for captions)
 - <term>, <term>

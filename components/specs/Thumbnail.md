@@ -2,7 +2,7 @@
 
 **Purpose:** a still composition for the video thumbnail (or reel cover). The steps are in `pipeline/thumbnail.md`.
 
-**Props:** `cutout` (my PNG with alpha), `headline` (2–5 words), `accentVisual` (an icon, screenshot crop or number), `side`, `size` (1280x720 | 1080x1920).
+**Props:** `cutout` (my PNG with alpha), `headline` (2–5 words), `accentVisual` (an icon, screenshot crop or number), `side`, `size` (1080x1920 for a reel, the only size it gets; 1280x720 is long-form only).
 
 **Look**
 - Brand background with a soft accent radial glow behind me.

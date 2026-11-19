@@ -2,9 +2,9 @@
 
 **Purpose:** burned-in captions with word-by-word highlight, from the final timeline's words.
 
-**Props:** `words` (text, start/end output frames), `mode` (16:9 | reel), `avoid` rects (bubble, lower third, bottom overlays).
+**Props:** `words` (text, start/end output frames), `mode` (16:9 | reel; reels always use `reel`, `16:9` is long-form only), `avoid` rects (bubble, lower third, bottom overlays).
 
-**16:9 look**
+**16:9 look** (long-form only)
 - At most 2 lines, bottom center inside the safe margin, Inter 600 at about 44 px in white, with a soft dark text shadow or a translucent backing.
 - The current word is in the accent color; spoken words stay white, upcoming ones about 70% white.
 - Split into pages by phrase: about 42 characters per line, breaking at punctuation and pauses.

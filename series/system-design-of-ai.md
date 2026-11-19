@@ -29,7 +29,7 @@ Tracked rules for every episode in `projects/system-design-of-ai/<NN>-<topic>/` 
 - A next-episode tease: one line naming the next topic.
 - Plus the standard links from `brand.md`.
 
-**Deliverables:** the standard set from `CLAUDE.md` (main video, one trailer in both ratios, SRTs, thumbnails + ChatGPT kit, social JSON, carousel for reels). Put "AI System Design · #N" in the social copy and thumbnail.
+**Deliverables:** the standard set from `CLAUDE.md` for reels (main video, one trailer and the cover/thumbnail, all 9:16 only; SRTs, ChatGPT kit, social JSON, carousel). No 16:9 output. Put "AI System Design · #N" in the social copy and thumbnail.
 
 **Episodes**
 | # | Folder | Topic |

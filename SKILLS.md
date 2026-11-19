@@ -38,7 +38,8 @@ Upstream license files are kept inside each vendored skill folder.
 **clipify**
 - Choose components from `components/index.md` first (it lists every spec by intent, with saved code in `components/code/`); open only the specs you will use.
 - Captions follow `components/specs/Captions.md` instead of the opus/karaoke presets.
-- 16:9 → 9:16 reframing prefers `components/specs/FaceTrackedCrop.md`.
+- 16:9 → 9:16 reframing (of a landscape source) prefers `components/specs/FaceTrackedCrop.md`.
+- Output is 9:16 only (clips are reels, ≤ 2:59); the 9:16 / 16:9 / 1:1 question is skipped unless I ask for another format.
 - Each clip continues through `/reel`.
 
 **frontend-design**

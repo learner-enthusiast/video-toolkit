@@ -46,7 +46,7 @@ Then paste a video file path when asked. The skill will:
 
 1. Transcribe → propose 3–5 funny candidate clips with timestamps and titles
 2. Ask which to cut
-3. Ask 9:16 / 16:9 / 1:1
+3. Output 9:16 (clips are reels; 16:9 / 1:1 only if explicitly asked)
 4. If 9:16 from 16:9 with two faces: ask pan vs split-screen
 5. Ask subtitle style (opus / karaoke / minimal — or paste a reference image to match)
 6. Render and open the result

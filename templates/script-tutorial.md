@@ -2,7 +2,7 @@
 
 **Message:** <one sentence the viewer could repeat>
 
-**Audience:** <who> · **Outcome:** viewer can <do X> · **Target:** <n> min · **Aspect:** 16:9
+**Audience:** <who> · **Outcome:** viewer can <do X> · **Target:** <n> min · **Aspect:** 16:9 if > 3:00 (long-form); 9:16 only if ≤ 2:59 (reel)
 
 ## Glossary (exact spellings for captions)
 - <term>, <term>
