@@ -64,6 +64,9 @@ Flags and VLM captions are leads, not verdicts. Judge them against this file and
 - If an OpenAI model is truly needed, pick a smaller, cheaper model, never the flagship, and tell me which one and why.
 - Load keys from `.env`. Never print, log or copy them.
 
+## Voice Recording Cleanup
+- Before Whisper or editing any talking-head recording, follow `pipeline/voice-cleaning.md` for every recording. Quality mode must confirm WPE and DeepFilterNet 3 in each report, followed by listening verification; stop and get explicit approval if a required stage fails or listening is unavailable.
+
 ## Installs
 - CLIs and models are global or user-wide (apt, `npm i -g`, pipx or one shared user venv; models stay in `~/.cache`).
 - Libraries (Remotion, simple-icons) are per project, inside `work/`.

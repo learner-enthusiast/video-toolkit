@@ -23,7 +23,7 @@ chmod +x ~/bin/deep-filter
 
 The Torch/Torchaudio pair is pinned together because DeepFilterNet 0.5.6 uses Torchaudio APIs removed in newer releases. The model is loaded with `--model-base-dir DeepFilterNet3`; weights are downloaded once and reused from the user cache. Verify the CLI with `gpu-run deep-filter --version` and a real WAV before use. If CUDA is unavailable, PyTorch selects CPU automatically; `CUDA_VISIBLE_DEVICES='' deep-filter ...` forces a CPU check.
 
-The cleaner detects `deep-filter`, `deepFilter`, or the default global interpreter. Override discovery with `DEEPFILTERNET_EXECUTABLE`, `DEEPFILTERNET_PYTHON`, `--deepfilter-executable`, or `--deepfilter-python`. `--no-neural` / `--mode balanced` skips DeepFilterNet; WPE remains its independent room-tail stage.
+The cleaner detects `deep-filter`, `deepFilter`, or the default global interpreter. Override discovery with `DEEPFILTERNET_EXECUTABLE`, `DEEPFILTERNET_PYTHON`, `--deepfilter-executable`, or `--deepfilter-python`. Production talking-head cleanup must use the default `--mode quality`, which requires both WPE and DeepFilterNet 3. Missing dependencies or a failed/skipped stage stop the run with a non-zero exit; do not use `balanced` or `performance` as a workaround. Those are explicit alternate modes and do not pass the production gate. See `pipeline/voice-cleaning.md` for per-recording reports, listening checks, and approval behavior.
 
 ## Carousel PDF
 

@@ -105,10 +105,10 @@ def clean(source, output, preset="studio", config_path=None, report_path=None, n
         settings["dereverb_enabled"] = False
     elif mode != "quality": raise ValueError(f"Unknown processing mode: {mode}")
     if mode == "quality":
-        if not neural or settings.get("speech_enhancement_enabled") is False:
-            raise ValueError("Quality mode requires DeepFilterNet3; use another mode only with user approval.")
-        if settings.get("dereverb_enabled") is False:
-            raise ValueError("Quality mode requires WPE dereverberation; use another mode only with user approval.")
+        if not neural or not settings.get("speech_enhancement_enabled", True):
+            raise ValueError("Quality mode requires DeepFilterNet3; speech enhancement cannot be disabled.")
+        if not settings.get("dereverb_enabled", True):
+            raise ValueError("Quality mode requires WPE dereverberation; dereverberation cannot be disabled.")
     strength = max(0., min(1., float(settings.get("dereverb_strength", .55))))
     noise = max(0., min(1., float(settings.get("noise_strength", .35))))
     info = probe(source); output.parent.mkdir(parents=True, exist_ok=True)
@@ -121,10 +121,12 @@ def clean(source, output, preset="studio", config_path=None, report_path=None, n
                 wpe_input, wpe_output = tmp / "pre_wpe.wav", tmp / "wpe.wav"
                 run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(current), "-ar", "16000", "-ac", "1", "-c:a", "pcm_f32le", str(wpe_input)])
                 dereverb_report = wpe_dereverb(wpe_input, wpe_output, strength)
-                if dereverb_report.get("applied"):
-                    wpe_back = tmp / "wpe_back.wav"
-                    run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(wpe_output), "-ar", "48000", "-ac", "1", "-c:a", "pcm_f32le", str(wpe_back)])
-                    current = wpe_back
+                if not dereverb_report.get("applied"):
+                    reason = dereverb_report.get("reason", "WPE did not report successful application")
+                    raise RuntimeError(f"WPE dereverberation failed: {reason}")
+                wpe_back = tmp / "wpe_back.wav"
+                run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(wpe_output), "-ar", "48000", "-ac", "1", "-c:a", "pcm_f32le", str(wpe_back)])
+                current = wpe_back
             except ImportError as e:
                 raise RuntimeError(
                     "WPE dereverberation is required for quality cleanup, but scipy or "
@@ -168,8 +170,8 @@ def clean(source, output, preset="studio", config_path=None, report_path=None, n
     return result
 
 def main():
-    p = argparse.ArgumentParser(description=__doc__); p.add_argument("input", type=Path); p.add_argument("output", type=Path)
-    p.add_argument("--preset", choices=PRESETS, default="studio"); p.add_argument("--mode", choices=("quality", "balanced", "performance"), default="quality"); p.add_argument("--config", type=Path); p.add_argument("--report", type=Path); p.add_argument("--deepfilter-python", help="Override DEEPFILTERNET_PYTHON"); p.add_argument("--deepfilter-executable", help="Override DEEPFILTERNET_EXECUTABLE")
+    p = argparse.ArgumentParser(description=__doc__, epilog="Production talking-head cleanup must use --mode quality (the default). balanced and performance are explicit alternate modes and do not satisfy the mandatory voice-cleaning gate."); p.add_argument("input", type=Path); p.add_argument("output", type=Path)
+    p.add_argument("--preset", choices=PRESETS, default="studio"); p.add_argument("--mode", choices=("quality", "balanced", "performance"), default="quality", help="Processing mode (quality is mandatory for production voice cleanup)"); p.add_argument("--config", type=Path); p.add_argument("--report", type=Path); p.add_argument("--deepfilter-python", help="Override DEEPFILTERNET_PYTHON"); p.add_argument("--deepfilter-executable", help="Override DEEPFILTERNET_EXECUTABLE")
     a = p.parse_args()
     try: print(json.dumps(clean(a.input, a.output, a.preset, a.config, a.report, True, a.mode, a.deepfilter_python, a.deepfilter_executable), indent=2)); return 0
     except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as e: print(f"audio cleaning failed: {e}", file=sys.stderr); return 1
