@@ -27,13 +27,13 @@ Per-video code is built inside `projects/<name>/work/`, never in the toolkit. Th
 - **Never delegate:** script, cuts, storyboard, creative take, layout states, sound map, `brand.md`, final component visuals, render settings, QA, anything on screen that hasn't been reviewed.
 - Low-stakes chain: Copilot → Codex → cursor-agent → Haiku. Check Copilot and Codex usage before each delegation (skip if low or unreadable). cursor-agent has no usage command: run a tiny **canary** before each use; on pass send exactly one small chunk, canary again before the next. CLIs run non-interactively, in the background, with a timeout, logging to `work/delegation/<NN>-<tool>-<task>.log`; on a limit/auth error or a hang, kill and re-run the chunk on the next tool. Verify every result yourself and record tool, usage and fallback in `log.md`.
 - Heavy jobs never use the chain. You write the exact batch (`gpu-run`, flags, paths, timeouts); a Haiku runner launches each job detached, writes `work/jobs/<NN>-<job>.status`, stops and reports on any error. It never changes settings. You read the `.status` files and verify outputs; you don't tail logs.
-- Vision goes through contact sheets and video-inspect reports (`pipeline/video-inspect.md`). You do the final visual QA yourself.
+- Vision goes through contact sheets and video-inspect reports, looked at by the vision subagent (`pipeline/video-inspect.md`, Vision subagent), which returns a text report. Final visual QA is Opus in that subagent.
 
 ## Inspecting a video
 Whenever a prompt asks to check, review, inspect, QA or "look at" a video, its frames, captions, cuts or edits:
 1. Run video-inspect first (`pipeline/video-inspect.md`, as a heavy job via the Haiku runner, `pipeline/delegation.md`). Never dump frames as images.
-2. Read `report.json` (`summary` and `flags` first) and `contact_sheet.jpg`.
-3. Open with Read only the flagged frames plus one keyframe per scene, to judge framing, colour, pacing and visual quality.
+2. Read `report.json` (`summary` and `flags` first).
+3. The vision subagent (`pipeline/video-inspect.md`, Vision subagent) looks at `contact_sheet.jpg`, the flagged frames and one keyframe per scene, judges framing, colour, pacing and visual quality, and returns text (`timestamp · what · severity · proposed fix`). The main session reads that report, not the images; it opens a frame itself only for the 3 approval stills or when the report is ambiguous.
 4. Use `--thorough` for the final check before publishing.
 5. Report issues with timestamps and a proposed fix for each.
 

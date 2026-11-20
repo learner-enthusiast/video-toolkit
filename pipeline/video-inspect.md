@@ -1,6 +1,6 @@
 # Video inspect
 
-**Goal:** see a video's content and measure its defects for a few thousand tokens, instead of reading frames one by one. Local tools scan every frame and write a compact text report; Opus reads the report and opens only the frames that matter. Every image read stays in the session context for every later turn.
+**Goal:** see a video's content and measure its defects for a few thousand tokens, instead of reading frames one by one. Local tools scan every frame and write a compact text report; Opus reads the report, and an Opus vision subagent looks at the images that matter. Every image read stays in the session context for every later turn, so images never enter the main session (exceptions below).
 
 **Inputs:** a video path, optional `--start/--end` (seconds), optional `--thorough` (final pre-publish check).
 **Output:** `work/inspect/<deliverable>/` (`<deliverable>` = the file's stem): `report.json`, `contact_sheet.jpg`, `keyframes/` (one per scene, plus every flagged frame), and `sheet_NN.jpg` for beat QA.
@@ -39,12 +39,20 @@
 
 **Contact sheets for QA**
 - One frame from the middle of every beat (or every 5 s for a cut without beats), scaled to 480 px wide, with its output timestamp burned in at the bottom-left. Tile them 4x3 (12 frames per sheet) into `work/inspect/<deliverable>/sheet_NN.jpg`.
-- Opus looks at sheets, not single frames. Pull a full-size frame only to settle something a sheet or a flag raises (text near the margin, face under an overlay, caption legibility).
+- The vision subagent looks at sheets, not single frames. It pulls a full-size frame only to settle something a sheet or a flag raises (text near the margin, face under an overlay, caption legibility).
 - For QA and the face/margin checks, the beat frames come from `pipeline/qa.md`; this file only defines how they're laid out.
 
 **Who looks**
 - A delegated helper (order in `pipeline/delegation.md`) may **pre-screen** sheets during a stage and list the timestamps worth a look. A pre-screen never passes anything.
-- **Final visual QA before deliverables is done by Opus, looking at every contact sheet itself** (and one keyframe per scene in `--thorough`), plus the report's flags and intervals. Every flag, freeze, silence or black interval is either explained (an intended hold, the end card) or fixed.
+- **Final visual QA before deliverables is done by Opus in the vision subagent below, looking at every contact sheet** (and one keyframe per scene in `--thorough`), plus the report's flags and intervals. Every flag, freeze, silence or black interval is either explained (an intended hold, the end card) or fixed.
+
+## Vision subagent (images stay out of the main session)
+Every look at stills, contact sheets, keyframes, flagged frames or carousel slides runs in a subagent; the main session reads its text report, never the images.
+- **Model:** the same as the main session (Opus: Agent tool, `model: "opus"`). Never a cheaper model for judging (the fresh-eyes restate test in `pipeline/qa.md` is the one exception).
+- **Its prompt:** the image paths; `report.json` `summary` + `flags` when there is one; the beat list (storyboard rows or script beats with times and layout state); and the instruction to read and follow `brand.md`, `CLAUDE.md` (Quality bar, Inspecting a video, Creative direction) and the checklist that applies (`pipeline/qa.md` Frames, `pipeline/composition.md` Checks, or `pipeline/carousel.md` QA). Those rules win over its own taste.
+- **It returns text only:** one line per issue, `timestamp · what · severity (blocker / fix / nit) · proposed fix`, then the OK beats listed briefly (`0:00–0:12 OK`). Flags it can't settle say "ambiguous" with the frame path.
+- **Main session:** reads the report, decides fixes, re-runs the subagent on the fixed frames. A pre-screen or report is still a lead; a pass means the Opus subagent looked at every sheet.
+- **Exceptions that stay in the main session:** the **3 approval stills** (and the carousel slide-1 look) that I must see, and opening one specific frame when a subagent report is ambiguous.
 - Look at sheets in the stage that needs them, then hand off; don't carry sheets from an earlier stage (`pipeline/stages.md`).
 
 **Checks**

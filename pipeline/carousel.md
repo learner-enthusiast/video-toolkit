@@ -19,7 +19,7 @@ caption.txt       hook line, 3-line summary, "Save this", 5–8 hashtags
 alt-text.txt      one line per slide: "01: <what the slide shows and says>"
 ```
 
-**QA** (Opus opens every PNG; a contact sheet alone doesn't pass a slide)
+**QA** (Opus opens every PNG, in the vision subagent (`pipeline/video-inspect.md`, Vision subagent); a contact sheet alone doesn't pass a slide)
 - Size: every PNG is 1080x1350 (`ffprobe` or `identify`), 6–8 of them, numbered without gaps; the PDF has the same page count.
 - Text: nothing clipped or overflowing its card, nothing outside the 80 px margin, body ≥ 40 px, ≤ ~25 words a slide.
 - Chrome: header and footer identical on every slide; counter right (`3/7`) and arrow present on all but the last; the bottom-right box otherwise empty.

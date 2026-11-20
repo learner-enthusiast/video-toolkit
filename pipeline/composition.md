@@ -24,7 +24,8 @@
 - Sound: follow `pipeline/sound.md`.
 
 **Checks**
-- `npx tsc --noEmit` passes. Render stills of 3–4 beats and look at them before any full render.
+- Every stills or sheet check in this file runs through the vision subagent (`pipeline/video-inspect.md`, Vision subagent); only the 3 approval stills are opened in the main session.
+- `npx tsc --noEmit` passes. Render stills of 3–4 beats and have them checked before any full render.
 
 **Gotchas**
 - Code in a 9:16 grid card (972 px wide) needs ≥ 28 px JetBrains Mono to read on a phone; 23–26 px looked fine in the editor and was unreadable at half scale. Wrap long lines and drop trailing comments instead of shrinking the font (`graphql-vs-rest` resolvers card).

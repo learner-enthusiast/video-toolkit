@@ -62,7 +62,7 @@ Prompts follow `templates/editing-prompt.md` (topic, path, speed-up cap, notes/s
 
 14. **Subtitles:** `pipeline/subtitles.md`.
 15. **Trailer:** `pipeline/trailer.md`. Long-form: always make both `out/<name>_trailer_16x9.mp4` and `out/<name>_trailer_9x16.mp4`. A ≤ 2:59 video: `out/<name>_trailer_9x16.mp4` only.
-16. **QA:** `pipeline/qa.md`, on the main video and every trailer render. Look at every contact sheet yourself before delivering. Fix what fails before reporting.
+16. **QA:** `pipeline/qa.md`, on the main video and every trailer render. Every contact sheet is looked at by the vision subagent (`pipeline/video-inspect.md`, Vision subagent) before delivering. Fix what fails before reporting.
 17. **Thumbnail:** `pipeline/thumbnail.md`. Always.
 18. **Social copy:** `pipeline/social-copy.md`. Always write `out/<name>_social.json`.
 19. **Save components:** `CLAUDE.md` (Components, Deliver): clean up every new or extended component that worked, save it to `components/code/` with a `preview.png`, update its spec and `components/index.md`, set `last_used` on every component the video used. Logos: confirm every icon used is in `icons/` with its `icons/icons.md` row and "Used in" updated.
