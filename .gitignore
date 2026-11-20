@@ -13,3 +13,7 @@ skills-lock.json
 # Project-log hooks (tools/hooks/): per-session state and the current project
 .hook-state/
 .current-project
+
+# Python bytecode
+__pycache__/
+*.pyc

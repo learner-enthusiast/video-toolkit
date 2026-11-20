@@ -80,6 +80,7 @@ Flags and VLM captions are leads, not verdicts. Judge them against this file and
 - Logs go to `work/logs/`, never into the chat. Report a summary.
 - Every turn on a project gets a `projects/<name>/log.md` entry (`pipeline/project-log.md`). Hooks save my prompt to `work/prompts/`, write the entry header and add time and tokens; you write only **Changes / Decisions / Not done / Handoff** under that header. Never re-type the prompt, never compute tokens. Append only.
 - When a video teaches us something (a better setting, a gotcha), update the relevant toolkit `.md`, not just the project.
+- When adding a lesson, add it to the matching Gotchas section as one line and merge duplicates; no stories.
 
 ## Quality bar
 - Hide every jump cut: alternate 100% / ~108% framing, or cover the cut with a screen or graphic.
