@@ -8,7 +8,9 @@ Reads the hook JSON on stdin. Never prints to stdout (that would land in the
 conversation), never exits non-zero; errors go to <project>/work/logs/hooks.log
 (or <repo>/.hook-state/hooks.log when no project is known).
 """
+import contextlib
 import datetime as dt
+import fcntl
 import glob
 import json
 import os
@@ -79,6 +81,20 @@ def current_project(root):
         return None
 
 
+@contextlib.contextmanager
+def log_lock(root, project):
+    """Exclusive lock on the project's log.md (work/logs/.log.lock), so the prompt
+    hook's append and the Stop hook's read-modify-write never interleave."""
+    d = os.path.join(root, project, "work", "logs")
+    os.makedirs(d, exist_ok=True)
+    with open(os.path.join(d, ".log.lock"), "a") as lf:
+        fcntl.flock(lf, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(lf, fcntl.LOCK_UN)
+
+
 def utc_now_iso():
     return dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
@@ -97,19 +113,20 @@ def write_header(root, project, st):
         if not st["prompt"].endswith("\n"):
             f.write("\n")
     title = " ".join(st["prompt"].split())[:60] or "(empty prompt)"
-    log = os.path.join(root, project, "log.md")
-    lead = ""
-    if os.path.exists(log) and os.path.getsize(log):
-        with open(log, "rb") as f:
-            f.seek(-1, 2)
-            lead = "" if f.read() == b"\n" else "\n"
-        lead += "\n"
-    else:
-        lead = f"# Log: {project[len('projects/'):]}\n\n"
-    with open(log, "a") as f:
-        f.write(f"{lead}## {now:%Y-%m-%d %H:%M} IST · {title}\n\n"
-                f"**Prompt:** work/prompts/{name}\n"
-                f"**Started** {now:%H:%M:%S}\n\n")
+    with log_lock(root, project):
+        log = os.path.join(root, project, "log.md")
+        lead = ""
+        if os.path.exists(log) and os.path.getsize(log):
+            with open(log, "rb") as f:
+                f.seek(-min(2, os.path.getsize(log)), 2)
+                tail = f.read()
+            lead = "" if tail.endswith(b"\n\n") else ("\n" if tail.endswith(b"\n") else "\n\n")
+        else:
+            lead = f"# Log: {project[len('projects/'):]}\n\n"
+        with open(log, "a") as f:
+            f.write(f"{lead}## {now:%Y-%m-%d %H:%M} IST · {title}\n\n"
+                    f"**Prompt:** work/prompts/{name}\n"
+                    f"**Started** {now:%H:%M:%S}\n\n")
     st["project"] = project
     st["prompt_ref"] = f"work/prompts/{name}"
 
@@ -133,9 +150,12 @@ def cmd_prompt(data, root):
         json.dump(st, f)
 
 
-def usage_since(paths, since, main_only=None):
-    """Sum assistant usage (deduped by message id) for entries at/after `since`."""
-    seen, tot = set(), dict(input=0, cache_write=0, cache_read=0, output=0)
+def usage_since(paths, since, main_only=None, seen=None):
+    """Sum assistant usage (deduped by message id) for entries at/after `since`.
+    Pass a shared `seen` set to dedupe across several calls."""
+    seen = set() if seen is None else seen
+    n0 = len(seen)
+    tot = dict(input=0, cache_write=0, cache_read=0, output=0)
     last = None
     for p in paths:
         try:
@@ -165,7 +185,7 @@ def usage_since(paths, since, main_only=None):
                 tot["cache_read"] += u.get("cache_read_input_tokens") or 0
                 tot["output"] += u.get("output_tokens") or 0
                 last = max(last or "", e["timestamp"])
-    return tot, last, len(seen)
+    return tot, last, len(seen) - n0
 
 
 def fmt(t):
@@ -176,6 +196,9 @@ def fmt(t):
 def insert_footer(log, prompt_ref, footer):
     with open(log) as f:
         lines = f.read().split("\n")
+    hold = float(os.environ.get("PROJLOG_TEST_HOLD") or 0)
+    if hold:  # tests only: widen the read-modify-write window
+        time.sleep(hold)
     start = None
     for i, ln in enumerate(lines):
         if ln.strip() == f"**Prompt:** {prompt_ref}":
@@ -196,6 +219,15 @@ def insert_footer(log, prompt_ref, footer):
         f.write(text if text.endswith("\n") else text + "\n")
 
 
+def drop_state(sp, started_utc):
+    """Remove this turn's state file, unless the next prompt already replaced it."""
+    try:
+        if json.load(open(sp)).get("started_utc") == started_utc:
+            os.remove(sp)
+    except (OSError, ValueError):
+        pass
+
+
 def cmd_tokens(data, root):
     sid = data.get("session_id") or "nosession"
     sp = os.path.join(state_dir(root), f"{sid}.json")
@@ -210,12 +242,13 @@ def cmd_tokens(data, root):
         if not project:
             if st.get("mentioned"):
                 log_err(root, None, f"prompt names {st['mentioned']}, which is not a project; prompt not logged")
-            os.remove(sp)
+            drop_state(sp, st["started_utc"])
             return
         with open(os.path.join(root, ".current-project"), "w") as f:
             f.write(project + "\n")
         write_header(root, project, st)
     project = st["project"]
+    started_key = st["started_utc"]
     if os.environ.get("PROJLOG_NO_WAIT") != "1":
         time.sleep(1.0)  # let Claude Code flush the last assistant message
     tp = data.get("transcript_path") or ""
@@ -224,8 +257,9 @@ def cmd_tokens(data, root):
     sub_paths = []
     if tp:
         sub_paths = glob.glob(os.path.join(tp[:-len(".jsonl")] if tp.endswith(".jsonl") else tp, "subagents", "*.jsonl"))
-    sub, slast, n_sub = usage_since(sub_paths, since)
-    side, sdlast, n_side = usage_since([tp], since, main_only=False) if tp else (None, None, 0)
+    sub_seen = set()  # one id set across subagents/*.jsonl and main-transcript sidechain entries
+    sub, slast, n_sub = usage_since(sub_paths, since, seen=sub_seen)
+    side, sdlast, n_side = usage_since([tp], since, main_only=False, seen=sub_seen) if tp else (None, None, 0)
     for k in sub:
         sub[k] += side[k] if side else 0
     started = parse_iso(since)
@@ -239,8 +273,9 @@ def cmd_tokens(data, root):
     else:
         tok = "**Tokens:** not available (no assistant usage found in the transcript)"
     footer = (f"**Finished** {finished.astimezone(IST):%H:%M:%S} · **Took** {took}\n{tok}")
-    insert_footer(os.path.join(root, project, "log.md"), st["prompt_ref"], footer)
-    os.remove(sp)
+    with log_lock(root, project):
+        insert_footer(os.path.join(root, project, "log.md"), st["prompt_ref"], footer)
+    drop_state(sp, started_key)
 
 
 def main():
