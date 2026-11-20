@@ -24,6 +24,30 @@ import {CallTimeline} from '../CallTimeline/CallTimeline';
 import {IncidentCard} from '../IncidentCard/IncidentCard';
 import {TerminalCard} from '../TerminalCard/TerminalCard';
 import {DefinitionChip} from '../DefinitionChip/DefinitionChip';
+import {ProviderNode} from '../ProviderNode/ProviderNode';
+import {RetryStorm} from '../RetryStorm/RetryStorm';
+import {CircuitBreakerMCB} from '../CircuitBreakerMCB/CircuitBreakerMCB';
+import {FallbackLadder} from '../FallbackLadder/FallbackLadder';
+import {ErrorTriage} from '../ErrorTriage/ErrorTriage';
+import {JsonValidator} from '../JsonValidator/JsonValidator';
+import {CustomerBurn} from '../CustomerBurn/CustomerBurn';
+import {AppTile, SrvTile, Wire, Booths} from '../PhoneLine/PhoneLine';
+import {TicketSlip} from '../TicketSlip/TicketSlip';
+import {XMark, TickMark} from '../glyphs';
+import {QueueShield} from '../QueueShield/QueueShield';
+import {QuotaTank} from '../QuotaTank/QuotaTank';
+import {JsonlFile} from '../JsonlFile/JsonlFile';
+import {Machine, GpuRow} from '../LaundryToGpu/LaundryToGpu';
+import {OutputShuffle} from '../OutputShuffle/OutputShuffle';
+import {DeadlineLane} from '../DeadlineLane/DeadlineLane';
+
+import {PhoneMockup} from '../PhoneMockup/PhoneMockup';
+import {TokenStream} from '../TokenStream/TokenStream';
+import {ExamSheet, RoughSheet} from '../ExamSheet/ExamSheet';
+import {BarCompare} from '../BarCompare/BarCompare';
+import {FlowLanes} from '../FlowDiagram/FlowDiagram';
+import {LineChart} from '../LineChart/LineChart';
+import {ChatBubble} from '../ChatBubble/ChatBubble';
 
 /** the 972x970 grid card every scene is drawn in */
 const Stage: React.FC<{children: React.ReactNode}> = ({children}) => (
@@ -81,6 +105,39 @@ const previews: Record<string, React.FC> = {
     </Stage>
   ),
   CounterPair: () => <div style={{width: 1080, height: 1080, background: C.dark, position: 'relative'}}><div style={{position: 'absolute', left: 54, top: 250, width: 972, height: 600}}><CounterPair left={{label: 'Attempts', to: 1200, at: 2, dur: 30}} right={{label: 'Successes', value: 0, at: 36}} y={0} /></div></div>,
+  ProviderNode: () => <Stage><At x={60} y={200}><ProviderNode label="Primary API" sub="down" dim={0.6} badge={<XMark size={48} />} /></At><At x={560} y={200}><ProviderNode label="Backup" sub="healthy" ring={1} badge={<TickMark size={52} />} /></At></Stage>,
+  RetryStorm: () => <Stage><RetryStorm at={-60} out={1e9} nodeLogo={{file: 'openai.svg', w: 76, h: 76}} nodeLabel="Provider" waveEvery={20} /></Stage>,
+  CircuitBreakerMCB: () => <Stage><At x={400} y={260}><CircuitBreakerMCB at={-60} tripAt={20} failAts={[-40, -30, -20]} w={170} /></At></Stage>,
+  FallbackLadder: () => <Stage><FallbackLadder x={170} y={20} dropAt={0} landAt={50} rungs={[{label: 'Primary', sub: 'down', at: -60, failAt: 4}, {label: 'Same model, other region', sub: 'second', at: -55, failAt: 22}, {label: 'Other provider', sub: 'third', at: -50, failAt: 38}, {label: 'Human', sub: 'last stop', at: -45}]} /></Stage>,
+  ErrorTriage: () => <Stage><ErrorTriage at={-60} items={[{code: '429', lane: 0, at: -50}, {code: '503', lane: 0, at: -40}, {code: '400', lane: 1, at: -30}]} lanes={[{label: 'Retry', tone: 'orange', at: -55}, {label: 'Never retry', tone: 'dim', at: -55}]} /></Stage>,
+  JsonValidator: () => <Stage><JsonValidator at={-60} bad={'{ "status": "o'} good={'{ "status": "ok" }'} rejectAt={-40} rerunAt={-20} passAt={-4} /></Stage>,
+  CustomerBurn: () => <div style={{width: 1080, height: 1080, background: C.dark, position: 'relative'}}><div style={{position: 'absolute', left: 54, top: 55, width: 972, height: 970}}><CustomerBurn tagAt={-90} gridAt={-70} leaveAt={-50} countAt={-40} countTo={1000000} unit="₹1,000" unitNote="per customer" gridLabel="× 2,000 customers" leaveTo="Rival" leaveNote="half leave" counterNote="lost" /></div></div>,
+  PhoneLine: () => (
+    <Stage>
+      <AppTile at={-60} />
+      <SrvTile at={-60} glow={1} />
+      <Wire calls={[{drawAt: -50, silentAt: -30, snipAt: 40, snipX: 560}]} travels={[{t0: -48, t1: -36, dir: 'up'}]} />
+      <Booths booths={[
+        {x: 362, logo: 'cloudflare.svg', lw: 102, lh: 34, label: 'Proxy A', at: -60, limit: '100 s', limitAt: -60},
+        {x: 486, logo: 'nginx.svg', lw: 104, lh: 22, label: 'Proxy B', at: -60, limit: '60 s', limitAt: -60},
+        {x: 610, logo: 'heroku.svg', lw: 104, lh: 29, label: 'Router', at: -60, timer: {t0: 0, t1: 36, to: 30, hotAt: 36}, scissorsAt: 30},
+      ]} />
+    </Stage>
+  ),
+  QueueShield: () => <Stage><QueueShield x={300} y={300} w={170} h={300} at={0} floodAt={10} floodFrom={{x: 40, y: 330}} bypassAt={30} bypassFrom={{x: 600, y: 360}} bypassTo={{x: 760, y: 420}} /></Stage>,
+  QuotaTank: () => <Stage><QuotaTank x={140} y={190} w={260} h={560} at={0} labelAt={0} drainAt={10} dryAt={40} taps={['Thick tap', 'Thin tap']} /><QuotaTank x={580} y={190} w={320} h={560} at={0} labelAt={0} splitAt={20} flowAgainAt={40} dryAt={0} /></Stage>,
+  JsonlFile: () => <Stage><JsonlFile at={0} out={1e9} stackAt={0} counterAt={30} dropAt={1e9} chipAt={40} /></Stage>,
+  LaundryToGpu: () => <Stage><div style={{position: 'absolute', left: 60, top: 80}}><Machine size={300} load="one" tone="dim" /></div><div style={{position: 'absolute', left: 560, top: 80}}><Machine size={300} load="full" tone="orange" /></div><GpuRow x={60} y={560} at={0} busy={[0, 1]} spareAt={0} fillAt={60} size={120} /></Stage>,
+  OutputShuffle: () => <Stage><OutputShuffle at={0} out={1e9} shuffleAt={4} mapAt={1e9} rewindAt={1e9} fixAt={10} snapAt={20} matchAt={30} /></Stage>,
+  DeadlineLane: () => <Stage><DeadlineLane at={0} out={1e9} runFrom={0} runTo={30} deadlineAt={34} peelAt={40} laneAt={50} start="day 1, 6 PM" deadline="day 2, 9 AM" leftover="40 pending" lane="Real-time fallback" /></Stage>,
+  TicketSlip: () => <Stage><TicketSlip x={486} y={300} w={380} id="#0001" at={2} sub="we'll call you" /><TicketSlip x={486} y={680} w={340} id="#0002" at={0} sub="job_0002" morphFrom={{text: '{ "jobId": "job_0002" }', at: 30}} /></Stage>,
+  PhoneMockup: () => <Stage><At x={60} y={40}><PhoneMockup w={420} h={880} app="TripMate" subtitle="Goa · 5 days" days={[{title: 'Day 1', text: 'Land in Panaji. Check in, then a sunset walk on the beach.'}, {title: 'Day 2', text: 'North Goa: a fort at 9, lunch, the beach by evening.'}, {title: 'Day 3', text: 'Morning: take the ferry to'}]} typeFrom={0} typeTo={40} blinkFrom={42} emptyDays={2} at={0} /></At><At x={520} y={40}><PhoneMockup w={400} h={800} variant="home" app="TripMate" at={0} /></At></Stage>,
+  TokenStream: () => <Stage><At x={36} y={100}><TokenStream chips={[' take', ' the', ' ferry', ' to']} cutTail=" Chorão…" from={0} to={24} capAt={46} cap={1000} payAt={4} perTok={0.00085} at={0} /></At></Stage>,
+  ExamSheet: () => <Stage><At x={30} y={60}><ExamSheet w={440} h={820} lines={10} fillFrom={0} bellAt={44} penStopAt={48} at={0} /></At><At x={500} y={60}><RoughSheet w={440} h={820} drawFrom={0} drawTo={40} at={0} /></At></Stage>,
+  BarCompare: () => <Stage><At x={36} y={380}><BarCompare w={900} max={14000} rows={[{label: 'all calls', value: 14000, tone: 'ink', at: 0}, {label: 'wasted', value: 6000, tone: 'orange', at: 8}]} /></At></Stage>,
+  FlowDiagram: () => <Stage><At x={36} y={80}><FlowLanes aAt={0} failAt={10} bAt={14} retryAt={40} at={0} /></At></Stage>,
+  LineChart: () => <Stage><At x={36} y={120}><LineChart w={900} h={740} drawAt={0} spikeAt={20} dotAt={44} at={0} /></At></Stage>,
+  ChatBubble: () => <Stage><div style={{position: 'absolute', left: 300, right: 40, top: 200}}><ChatBubble role="user" text="Five days in Goa." at={0} size={46} /></div><div style={{position: 'absolute', left: 40, right: 200, top: 420}}><ChatBubble role="bot" text="Here's a day-by-day plan." at={6} size={46} /></div></Stage>,
 };
 
 export const Root: React.FC = () => (

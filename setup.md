@@ -21,9 +21,37 @@ printf '#!/bin/sh\nexec "$HOME/.local/share/deepfilternet/venv/bin/deepFilter" "
 chmod +x ~/bin/deep-filter
 ```
 
-The Torch/Torchaudio pair is pinned together because DeepFilterNet 0.5.6 uses Torchaudio APIs removed in newer releases. The model is loaded with `--model-base-dir DeepFilterNet3`; weights are downloaded once and reused from the user cache. Verify the CLI with `gpu-run deep-filter --version` and a real WAV before use. If CUDA is unavailable, PyTorch selects CPU automatically; `CUDA_VISIBLE_DEVICES='' deep-filter ...` forces a CPU check.
+**Rebuild** (when `vt-python tools/voice_preflight.py` says `NOT READY` for the launcher, environment or pinned versions, e.g. after an Ubuntu Python upgrade or an accidental `pip install --upgrade`). It recreates exactly the known-good set frozen in `tools/deepfilternet.lock.txt`; the model cache is kept:
+```bash
+rm -rf ~/.local/share/deepfilternet/venv
+python3.12 -m venv ~/.local/share/deepfilternet/venv
+~/.local/share/deepfilternet/venv/bin/pip install \
+  --index-url https://download.pytorch.org/whl/cu126 --extra-index-url https://pypi.org/simple \
+  -r tools/deepfilternet.lock.txt
+printf '#!/bin/sh\nexec "$HOME/.local/share/deepfilternet/venv/bin/deepFilter" "$@"\n' > ~/bin/deep-filter && chmod +x ~/bin/deep-filter
+vt-python tools/voice_preflight.py        # READY
+```
+After any intentional change to that environment, re-freeze the lock (`pip freeze` with the 3 header lines kept) in the same commit.
 
-The cleaner detects `deep-filter`, `deepFilter`, or the default global interpreter. Override discovery with `DEEPFILTERNET_EXECUTABLE`, `DEEPFILTERNET_PYTHON`, `--deepfilter-executable`, or `--deepfilter-python`. Production talking-head cleanup must use the default `--mode quality`, which requires both WPE and DeepFilterNet 3. Missing dependencies or a failed/skipped stage stop the run with a non-zero exit; do not use `balanced` or `performance` as a workaround. Those are explicit alternate modes and do not pass the production gate. See `pipeline/voice-cleaning.md` for per-recording reports, listening checks, and approval behavior.
+The Torch/Torchaudio pair is pinned together because DeepFilterNet 0.5.6 uses Torchaudio APIs removed in newer releases. Don't upgrade a working install. The model is loaded with `--model-base-dir DeepFilterNet3`; weights are downloaded once into `~/.cache/DeepFilterNet/DeepFilterNet3/checkpoints/` and reused. WPE needs only `numpy`, `scipy` and `soundfile` in the shared venv (`vt-python`); it runs on the CPU and downloads no model.
+
+**Verify** (no recording needed):
+```bash
+vt-python tools/voice_preflight.py                      # READY, ~5 s; Prep runs this before every cleaning
+deep-filter --version                                   # DeepFilterNet 0.5.6
+~/.local/share/deepfilternet/venv/bin/python -c "import torch; print(torch.__version__, torch.cuda.is_available())"   # 2.6.0+cu126 True
+vt-python -c "import numpy, scipy, soundfile"
+vt-python -m unittest tests.test_clean_audio            # 16 tests, ~1 min, CPU; uses a stub deep-filter
+```
+
+**GPU/CPU.** DeepFilterNet picks `cuda:0` when PyTorch sees the card, otherwise the CPU (`CUDA_VISIBLE_DEVICES='' deep-filter …` forces a CPU check). The model is small: the CPU is fast enough, and on a busy 4 GB card it can be quicker. The device is never silent: the report's `speech_enhancement.device` records it, and a CPU run adds a warning to disclose in the log.
+
+**Modes.** The cleaner finds `deep-filter`, `deepFilter`, `~/bin/deep-filter`, then the venv interpreter (`python -m df.enhance`). Override with `DEEPFILTERNET_EXECUTABLE`, `DEEPFILTERNET_PYTHON`, `--deepfilter-executable` or `--deepfilter-python`. There is no `--no-neural` switch.
+
+- **`--mode quality`** is the default and the only production mode. It requires both WPE and DeepFilterNet 3, and rejects config that disables either or sets its strength to 0.
+- **`balanced`** (no DeepFilterNet 3) and **`performance`** (no WPE, no DeepFilterNet 3) are explicit alternate modes. Their reports say `production_gate.automated_checks_passed: false`. They never pass the voice-cleaning gate, and Claude uses them only with the user's explicit approval, never as an automatic fallback.
+
+A missing dependency or a failed, skipped or unverifiable stage stops the run with exit 1 and publishes no output. See `pipeline/voice-cleaning.md` for per-recording paths, report checks, listening and approval.
 
 ## Carousel PDF
 

@@ -1,3 +1,10 @@
+---
+code: components/code/LineChart/LineChart.tsx
+preview: components/code/LineChart/preview.png
+props: "w, h, a[], b[], markIdx, drawAt, spikeAt, dotAt, labels {a,b,mark,alert,x}, at, out"
+variants: "two series, B spikes orange after a marker, alert dot"
+last_used: system-design-of-ai/11-max-tokens-and-truncation
+---
 # LineChart
 
 **Purpose:** a line that draws itself on simple axes (U-curve "lost in the middle"), with an annotated dip and a citation.
@@ -15,3 +22,14 @@
 - A conceptual curve must say so (no fake axis numbers).
 - Brand: no red/green; bad = dim grey #8A857C + orange warning mark, good = orange #E4572E (`brand.md`). No emojis.
 - All timings trigger on spoken-word frames (`at(phrase)`), never fixed times; every element has an exit (`out`). Motion is spring or ease-in-out only.
+
+## Variant: two series + marker (added for system-design-of-ai/11-max-tokens-and-truncation)
+
+Series A (near-black, e.g. ₹ spend) and series B (dim, e.g. a failure rate) draw left→right on `drawAt`; a dashed vertical marker (e.g. "prompt v7") appears on `spikeAt` and B's segment after it redraws in orange as a spike; an orange alert dot with a label pulses on its last point at `dotAt`. Sound: `pen-scratch` on the spike, `pop` on the alert.
+
+## Code
+
+Saved: `components/code/LineChart/LineChart.tsx` (preview: `preview.png`). Import it, set props; extend with a new prop rather than copying. Brand values come from `components/code/theme.ts`.
+
+- Code props: w, h, a[], b[], markIdx, drawAt, spikeAt, dotAt, labels {a,b,mark,alert,x}, at, out.
+- First built and rendered in `system-design-of-ai/11-max-tokens-and-truncation`.

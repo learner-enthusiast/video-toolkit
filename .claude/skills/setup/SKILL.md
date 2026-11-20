@@ -9,7 +9,8 @@ description: Check which video tools are installed, ask before installing the mi
    - `ffmpeg`/`ffprobe`, and whether `-encoders` lists `h264_nvenc` and `-filters` lists `arnndn`/`afftdn`/`loudnorm`
    - `nvidia-smi`, `~/bin/gpu-run`, and `~/bin` on PATH
    - Node ≥ 20 and `npx`
-   - A Python env with torch + CUDA, faster-whisper (or whisper-ctranslate2), mediapipe, opencv, and transformers (for forced alignment); `vt-python -c "import numpy, scipy, soundfile"` for voice-cleaner WPE; report whether optional `df.enhance` is installed
+   - A Python env with torch + CUDA, faster-whisper (or whisper-ctranslate2), mediapipe, opencv, and transformers (for forced alignment); `vt-python -c "import numpy, scipy, soundfile"` for voice-cleaner WPE
+   - Voice cleaner DeepFilterNet 3 (required for the voice-cleaning gate, `setup.md` → Voice cleaner): `vt-python tools/voice_preflight.py` prints `READY` (it checks the launcher, the versions pinned in `tools/deepfilternet.lock.txt`, CUDA and the cached model); `vt-python -m unittest tests.test_clean_audio` passes. If any is missing, list it for install (it blocks every talking-head video); never suggest `--mode balanced`/`performance` as a substitute
    - Cached models: faster-whisper large-v3, wav2vec2 alignment model
    - Delegation CLIs (`pipeline/delegation.md`): `copilot --version` and `gh auth status`; `codex --version` and `codex login status`; `cursor-agent --version` and `cursor-agent status`. Each must be installed **and** logged in; also report the Copilot usage reading (`gh api /copilot_internal/user`) and the cursor-agent canary result. Missing ones: ask, then install globally
    - `rembg` (optional, used for thumbnails)

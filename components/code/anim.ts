@@ -29,3 +29,8 @@ export const popIn = (f: number, at: number, out = 1e9) => {
 export const typed = (f: number, at: number, text: string, cps = 2) => text.slice(0, Math.max(0, Math.floor((f - at) * cps)));
 /** small 6% scale bump over 10 frames when a value lands */
 export const bump = (f: number, at: number) => 1 + 0.06 * Math.sin(Math.PI * Math.max(0, Math.min(1, (f - at) / 10)));
+/** ease-in-out (cubic) interpolation of a value between frames a..b, clamped (never linear) */
+export const tween = (f: number, a: number, b: number, from: number, to: number) =>
+  interpolate(f, [a, b], [from, to], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+/** decaying horizontal shake (px) for ~14 frames from `at` (a hit, a crash) */
+export const shake = (f: number, at: number, amp = 10) => (f >= at && f < at + 14 ? Math.sin((f - at) * 2.4) * amp * (1 - (f - at) / 14) : 0);

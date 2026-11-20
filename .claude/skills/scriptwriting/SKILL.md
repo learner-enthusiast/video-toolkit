@@ -8,7 +8,7 @@ description: Writes, rewrites, tightens or critiques a video `script.md`, a hook
 Changed from upstream for this toolkit; these notes win over everything below them in this skill.
 
 - **Priority:** `CLAUDE.md`, `brand.md`, `series/<playlist>.md` and the `templates/script-*.md` format win over this skill.
-- **What to read:** always this `SKILL.md`, `references/hooks.md` and `references/craft.md`. Read `references/structures.md` only when choosing a structure, and `references/formats.md` only for a beat sheet. This replaces "Step 0: read every file before the first action" below, to save tokens.
+- **What to read:** always this `SKILL.md`, `references/hooks.md` and `references/craft.md`. Read `references/structures.md` only when choosing a structure, and `references/formats.md` only for a beat sheet. This replaces upstream's "read every file" Step 0 (`references/upstream-step0.md`), to save tokens.
 - **Fixed opener:** every script starts with "Namoshkar!" (hands folded, smile, ~1 s hold, half-second pause), then the hook line. The anti-hook rule on greetings (`hooks.md`) applies to the line after "Namoshkar!", never to "Namoshkar!" itself. The on-screen text hook (≤ 6 words) is on screen from frame 0, so muted viewers get the hook while I greet. The spoken hook starts by ~1.5 s and lands within the first 3 s.
 - **Fixed closer:** a one-line recap (the payoff of the hook), then "Bye bye, sayonara!" with a wave. This replaces the CTA and loopable-ending rules below.
 - **Pace:** I speak at ~140 wpm (~2.3 words/s), not 2.5 words/s. Max spoken words by length: 30 s ~60, 60 s ~130, 90 s ~200, 2 min ~265, 3 min ~390 (hard cap ~420). If it's over, cut points; never plan to speed up delivery.
@@ -23,13 +23,9 @@ Changed from upstream for this toolkit; these notes win over everything below th
 A video is only as good as the story or message it carries. Polish can't rescue a script with nothing to say, and a clear,
 true, specific script survives plain visuals. This skill produces the script; `/coding-video` and `/reel` turn the script into a video; I record it myself on camera.
 
-## Step 0: read every file before the first action
+## Where each topic lives
 
-This skill is loaded whole, never in part. Read this `SKILL.md` to the end, then every file in the table below, each to
-its last line: no `offset`/`limit`, no `head`, `grep` or skimming, no "only the sections this task needs". If a read comes
-back truncated, keep reading until the file ends. The task decides what you apply, never what you read; the table says
-where each topic lives, not which files to skip. This holds when the skill is called on its own, from `/coding-video` or `/reel`, or
-by a sub-agent. If the context is summarised mid-task, read the set again before the next action that depends on it.
+Read per the Toolkit adaptation above (upstream's read-everything Step 0: `references/upstream-step0.md`).
 
 | Topic | File |
 |---|---|

@@ -3,16 +3,16 @@
 Per-video code is built inside `projects/<name>/work/`, never in the toolkit. The toolkit holds two shared, git-tracked libraries that every video checks first: `icons/` (logos and icons) and `components/` (specs plus approved Remotion code).
 
 ## Icons
-- Before downloading any icon or logo, read `icons/icons.md`. If it is listed, reuse `icons/<File>`. If not, download the **official** version into `icons/logos/` (generic UI icons: `icons/ui/`), add a row (source URL, license, today's date), then use it.
+- Before downloading any icon or logo, `grep -i '<brand>' icons/icons.md` (never Read it whole). If it is listed, reuse `icons/<File>`. If not, download the **official** version into `icons/logos/` (generic UI icons: `icons/ui/`), add a row (source URL, license, today's date), then use it.
 - Never save icons inside project folders (no `assets/logos/`, no `SOURCES.md`). Add the project to "Used in" every time a video uses an icon.
 - Remotion reads them through `public/icons` (a symlink to `icons/`): `staticFile('icons/logos/<file>')`.
 
 ## Components
-- Read order: `CLAUDE.md`, `brand.md`, `components/index.md`, then only the component specs (`components/specs/<Name>.md`) the scene table needs. Never bulk-read `components/`.
-- Compose: if `index.md` says `Code? ✓`, import `shared/<Name>/<Name>` and set props (`src/shared` is a symlink to `components/code/`). If a needed variation fits a new prop, extend the library component and keep old props working. Write new code only when nothing fits. The library is the default, not a limit: Creative direction still applies.
+- Read order: `brand.md`, `components/index.md` (intent lists, ✓ = saved code), then single rows with `grep -i '^| \[<Name>\]' components/index-full.md` and only the component specs (`components/specs/<Name>.md`) the scene table needs. Never read `components/index-full.md` whole; never bulk-read `components/`.
+- Compose: if `index.md` marks a name ✓ (`Code? ✓` in its row), import `shared/<Name>/<Name>` and set props (`src/shared` is a symlink to `components/code/`). If a needed variation fits a new prop, extend the library component and keep old props working. Write new code only when nothing fits. The library is the default, not a limit: Creative direction still applies.
 - New component: write the spec first, then the code inside the project (`work/`).
-- **Deliver: save components.** After the final render, every new or extended component that worked is cleaned up (variations through props, colors/fonts/radius/border/spacing from `components/code/theme.ts`, no video-specific text, data, timings or asset paths), saved to `components/code/<Name>/<Name>.tsx` with a `preview.png`, and recorded in its spec (`code:`, `props:`, `variants:`, `last_used:`) and in `index.md`, in the same commit. Only approved code that rendered correctly in a finished video is saved. Update `last_used` on every component the video used.
-- Maintenance: whenever a new component spec is created, add its row to `components/index.md` and to the matching intent group in the same commit.
+- **Deliver: save components.** After the final render, every new or extended component that worked is cleaned up (variations through props, colors/fonts/radius/border/spacing from `components/code/theme.ts`, no video-specific text, data, timings or asset paths), saved to `components/code/<Name>/<Name>.tsx` with a `preview.png`, and recorded in its spec (`code:`, `props:`, `variants:`, `last_used:`), in its `components/index-full.md` row and with ✓ in `components/index.md`, in the same commit. Only approved code that rendered correctly in a finished video is saved. Update `last_used` on every component the video used.
+- Maintenance: whenever a new component spec is created, add its row to `components/index-full.md` and its name to the matching intent group in `components/index.md`, in the same commit.
 - Remotion upgrades: after changing the Remotion version, re-render every `preview.png`, fix breaks, update `components/code/REMOTION_VERSION`.
 
 ## GPU
@@ -27,13 +27,13 @@ Per-video code is built inside `projects/<name>/work/`, never in the toolkit. Th
 - **Never delegate:** script, cuts, storyboard, creative take, layout states, sound map, `brand.md`, final component visuals, render settings, QA, anything on screen that hasn't been reviewed.
 - Low-stakes chain: Copilot → Codex → cursor-agent → Haiku. Check Copilot and Codex usage before each delegation (skip if low or unreadable). cursor-agent has no usage command: run a tiny **canary** before each use; on pass send exactly one small chunk, canary again before the next. CLIs run non-interactively, in the background, with a timeout, logging to `work/delegation/<NN>-<tool>-<task>.log`; on a limit/auth error or a hang, kill and re-run the chunk on the next tool. Verify every result yourself and record tool, usage and fallback in `log.md`.
 - Heavy jobs never use the chain. You write the exact batch (`gpu-run`, flags, paths, timeouts); a Haiku runner launches each job detached, writes `work/jobs/<NN>-<job>.status`, stops and reports on any error. It never changes settings. You read the `.status` files and verify outputs; you don't tail logs.
-- Vision goes through contact sheets and video-inspect reports (`pipeline/video-inspect.md`). You do the final visual QA yourself.
+- Vision goes through contact sheets and video-inspect reports, judged by the Opus vision subagent (`pipeline/video-inspect.md`), including final visual QA.
 
 ## Inspecting a video
 Whenever a prompt asks to check, review, inspect, QA or "look at" a video, its frames, captions, cuts or edits:
 1. Run video-inspect first (`pipeline/video-inspect.md`, as a heavy job via the Haiku runner, `pipeline/delegation.md`). Never dump frames as images.
-2. Read `report.json` (`summary` and `flags` first) and `contact_sheet.jpg`.
-3. Open with Read only the flagged frames plus one keyframe per scene, to judge framing, colour, pacing and visual quality.
+2. Read `report.json` (`summary` and `flags` first).
+3. The Opus vision subagent (`pipeline/video-inspect.md`) judges `contact_sheet.jpg`, the flagged frames and one keyframe per scene (framing, colour, pacing, quality) and returns text: `timestamp · what · severity · fix`. Read that, not the images (exceptions: the 3 approval stills, an ambiguous report).
 4. Use `--thorough` for the final check before publishing.
 5. Report issues with timestamps and a proposed fix for each.
 
@@ -65,7 +65,7 @@ Flags and VLM captions are leads, not verdicts. Judge them against this file and
 - Load keys from `.env`. Never print, log or copy them.
 
 ## Voice Recording Cleanup
-- Before Whisper or editing any talking-head recording, follow `pipeline/voice-cleaning.md` for every recording. Quality mode must confirm WPE and DeepFilterNet 3 in each report, followed by listening verification; stop and get explicit approval if a required stage fails or listening is unavailable.
+- **Before any Whisper/ASR on talking-head audio, pass the gate in `pipeline/voice-cleaning.md`. No exceptions without my explicit approval.** Originals in `raw/` stay untouched; each recording gets its own cleaned WAV and report (`--mode quality` only).
 
 ## Installs
 - CLIs and models are global or user-wide (apt, `npm i -g`, pipx or one shared user venv; models stay in `~/.cache`).
@@ -75,11 +75,12 @@ Flags and VLM captions are leads, not verdicts. Judge them against this file and
 - Never modify `raw/` or `assets/`. Work on copies in `work/`.
 - For each paragraph, keep my LAST complete, clean take. Captions follow my actual words, not the script.
 - Playlists: a video may belong to a series. Episodes live in `projects/<playlist>/<NN>-<topic>/` (same structure as any project) and obey the tracked rules file `series/<playlist>.md` on top of this file and `brand.md`. See `README.md` (Playlists).
-- Work in stages, one session each: Prep, Cut, Compose, Deliver (`pipeline/stages.md`). Start every stage by reading `log.md` and the project files. End it with a handoff in `log.md`: decisions and reasons, rejected options, open issues, files produced, next steps. Use `/compact` only as a fallback.
+- Work in stages, one session each: Prep, Cut, Compose, Deliver (`pipeline/stages.md`). Start every stage from the latest `### Handoff` and open issues in `log.md` (`grep -n '### Handoff'`, read from the last match; never the whole log), then the project files the stage needs. End it with a handoff in `log.md`: decisions and reasons, rejected options, open issues, files produced, next steps. Use `/compact` only as a fallback.
 - Stop at the rough cut (end of Cut) and wait for my OK before composing.
 - Logs go to `work/logs/`, never into the chat. Report a summary.
-- At the end of every turn on a project, append an entry to `projects/<name>/log.md`: date and time, my prompt verbatim, what changed, how long it took, and token usage (`pipeline/project-log.md`). Append only.
+- Every turn on a project gets a `log.md` entry (`pipeline/project-log.md`): hooks save my prompt, write the header and add time and tokens; you write only **Changes / Decisions / Not done / Handoff** under it. Never re-type the prompt or compute tokens. Append only.
 - When a video teaches us something (a better setting, a gotcha), update the relevant toolkit `.md`, not just the project.
+- When adding a lesson, add it to the matching Gotchas section as one line and merge duplicates; no stories.
 
 ## Quality bar
 - Hide every jump cut: alternate 100% / ~108% framing, or cover the cut with a screen or graphic.

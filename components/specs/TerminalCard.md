@@ -3,7 +3,7 @@ code: components/code/TerminalCard/TerminalCard.tsx
 preview: components/code/TerminalCard/preview.png
 props: "w, cmd {text,at,cps}, keys {text,at,note?}, log [{text,at,tone,mark?,label?}], labels, pulse {line,at}, note {line,at,text}, at, out"
 variants: "bad/good log lines, key-cap, pulse + note on a line"
-last_used: system-design-of-ai/06-cancellation
+last_used: system-design-of-ai/11-max-tokens-and-truncation
 ---
 # TerminalCard
 

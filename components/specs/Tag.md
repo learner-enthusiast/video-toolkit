@@ -3,7 +3,7 @@ code: components/code/Tag/Tag.tsx
 preview: components/code/Tag/preview.png
 props: "label, tone (orange|ink|dim|outline), size, monoFont; TagPop adds x, y, at, out, anchor"
 variants: "tone x4, monoFont, static (Tag) vs popping (TagPop)"
-last_used: system-design-of-ai/05-model-routing
+last_used: system-design-of-ai/05-model-routing, system-design-of-ai/07-provider-failover
 ---
 # Tag
 
