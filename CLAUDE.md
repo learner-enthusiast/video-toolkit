@@ -3,16 +3,16 @@
 Per-video code is built inside `projects/<name>/work/`, never in the toolkit. The toolkit holds two shared, git-tracked libraries that every video checks first: `icons/` (logos and icons) and `components/` (specs plus approved Remotion code).
 
 ## Icons
-- Before downloading any icon or logo, read `icons/icons.md`. If it is listed, reuse `icons/<File>`. If not, download the **official** version into `icons/logos/` (generic UI icons: `icons/ui/`), add a row (source URL, license, today's date), then use it.
+- Before downloading any icon or logo, look it up with `grep -i '<brand>' icons/icons.md` (never Read it whole) and `ls icons/logos | grep -i <brand>`. If it is listed, reuse `icons/<File>`. If not, download the **official** version into `icons/logos/` (generic UI icons: `icons/ui/`), add a row (source URL, license, today's date), then use it.
 - Never save icons inside project folders (no `assets/logos/`, no `SOURCES.md`). Add the project to "Used in" every time a video uses an icon.
 - Remotion reads them through `public/icons` (a symlink to `icons/`): `staticFile('icons/logos/<file>')`.
 
 ## Components
-- Read order: `CLAUDE.md`, `brand.md`, `components/index.md`, then only the component specs (`components/specs/<Name>.md`) the scene table needs. Never bulk-read `components/`.
-- Compose: if `index.md` says `Code? ✓`, import `shared/<Name>/<Name>` and set props (`src/shared` is a symlink to `components/code/`). If a needed variation fits a new prop, extend the library component and keep old props working. Write new code only when nothing fits. The library is the default, not a limit: Creative direction still applies.
+- Read order: `brand.md`, `components/index.md` (intent lists, ✓ = saved code), then single rows with `grep -i '^| \[<Name>\]' components/index-full.md` and only the component specs (`components/specs/<Name>.md`) the scene table needs. Never read `components/index-full.md` whole; never bulk-read `components/`.
+- Compose: if `index.md` marks a name ✓ (`Code? ✓` in its row), import `shared/<Name>/<Name>` and set props (`src/shared` is a symlink to `components/code/`). If a needed variation fits a new prop, extend the library component and keep old props working. Write new code only when nothing fits. The library is the default, not a limit: Creative direction still applies.
 - New component: write the spec first, then the code inside the project (`work/`).
-- **Deliver: save components.** After the final render, every new or extended component that worked is cleaned up (variations through props, colors/fonts/radius/border/spacing from `components/code/theme.ts`, no video-specific text, data, timings or asset paths), saved to `components/code/<Name>/<Name>.tsx` with a `preview.png`, and recorded in its spec (`code:`, `props:`, `variants:`, `last_used:`) and in `index.md`, in the same commit. Only approved code that rendered correctly in a finished video is saved. Update `last_used` on every component the video used.
-- Maintenance: whenever a new component spec is created, add its row to `components/index.md` and to the matching intent group in the same commit.
+- **Deliver: save components.** After the final render, every new or extended component that worked is cleaned up (variations through props, colors/fonts/radius/border/spacing from `components/code/theme.ts`, no video-specific text, data, timings or asset paths), saved to `components/code/<Name>/<Name>.tsx` with a `preview.png`, and recorded in its spec (`code:`, `props:`, `variants:`, `last_used:`), in its `components/index-full.md` row and with ✓ in `components/index.md`, in the same commit. Only approved code that rendered correctly in a finished video is saved. Update `last_used` on every component the video used.
+- Maintenance: whenever a new component spec is created, add its row to `components/index-full.md` and its name to the matching intent group in `components/index.md`, in the same commit.
 - Remotion upgrades: after changing the Remotion version, re-render every `preview.png`, fix breaks, update `components/code/REMOTION_VERSION`.
 
 ## GPU

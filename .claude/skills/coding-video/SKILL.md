@@ -10,7 +10,7 @@ argument-hint: <name>
 
 **Short coding videos (final length ≤ 2:59) are reels: 9:16 only (1080x1920).** Follow the stages below, but frame, lay out, render, QA and thumbnail everything per `/reel` and `components/specs/layout-states.md` in 9:16. No 16:9 main, trailer, thumbnail, stills or `PresenterSplit`. The 16:9 steps below apply to long-form only.
 
-Work in `projects/<name>/` (or `projects/<playlist>/<NN>-<topic>/` for a playlist episode; then also follow `series/<playlist>.md`). Read `brand.md` first (`CLAUDE.md` is already loaded). Logos come from `icons/` (`icons/icons.md`; download an official one into `icons/` only if missing). Choose components from `components/index.md` first; open only the specs you will use. Follow each step's file in `pipeline/`.
+Work in `projects/<name>/` (or `projects/<playlist>/<NN>-<topic>/` for a playlist episode; then also follow `series/<playlist>.md`). Read `brand.md` first (`CLAUDE.md` is already loaded). Logos come from `icons/` (look up with `grep -i '<brand>' icons/icons.md` (never Read it whole); download an official one into `icons/` only if missing). Choose components from `components/index.md` first (rows: `grep -i '^| \[<Name>\]' components/index-full.md`); open only the specs you will use. Follow each step's file in `pipeline/`.
 
 Run this as four stages, one session each (`pipeline/stages.md`). Start each stage from the latest `### Handoff` in `log.md` (`pipeline/stages.md`, Starting a stage), and end it with a handoff in `log.md`. Shell work goes to Haiku as exact-command batches (`pipeline/delegation.md`). Vision goes through contact sheets (`pipeline/video-inspect.md`).
 
@@ -65,5 +65,5 @@ Prompts follow `templates/editing-prompt.md` (topic, path, speed-up cap, notes/s
 16. **QA:** `pipeline/qa.md`, on the main video and every trailer render. Every contact sheet is looked at by the vision subagent (`pipeline/video-inspect.md`, Vision subagent) before delivering. Fix what fails before reporting.
 17. **Thumbnail:** `pipeline/thumbnail.md`. Always.
 18. **Social copy:** `pipeline/social-copy.md`. Always write `out/<name>_social.json`.
-19. **Save components:** `CLAUDE.md` (Components, Deliver): clean up every new or extended component that worked, save it to `components/code/` with a `preview.png`, update its spec and `components/index.md`, set `last_used` on every component the video used. Logos: confirm every icon used is in `icons/` with its `icons/icons.md` row and "Used in" updated.
+19. **Save components:** `CLAUDE.md` (Components, Deliver): clean up every new or extended component that worked, save it to `components/code/` with a `preview.png`, update its spec, its `components/index-full.md` row and the ✓ in `components/index.md`, set `last_used` on every component the video used. Logos: confirm every icon used is in `icons/` with its `icons/icons.md` row and "Used in" updated.
 20. **Report:** list every file in `out/`, plus durations, loudness, choices made, lines worth re-recording, and anything you couldn't do. Then fold any lessons back into the toolkit `.md` files.

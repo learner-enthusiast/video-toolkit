@@ -8,7 +8,7 @@ argument-hint: <name>
 
 **Read only what the current stage needs (`pipeline/stages.md`). `CLAUDE.md` is already loaded — never Read it again.**
 
-Choose components from `components/index.md` first; open only the specs you will use. If a component has saved code (`Code? ✓`), import it from `shared/` and set props. Logos come from `icons/` (`icons/icons.md`).
+Choose components from `components/index.md` first (rows: `grep -i '^| \[<Name>\]' components/index-full.md`); open only the specs you will use. If a component has saved code (✓), import it from `shared/` and set props. Logos come from `icons/` (look up with `grep -i '<brand>' icons/icons.md` (never Read it whole)).
 
 Use the same four stages and delegation/vision rules as `/coding-video` (`pipeline/stages.md`, `pipeline/delegation.md`, `pipeline/video-inspect.md`). **Stage 1 · Prep runs in this exact order:**
 

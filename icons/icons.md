@@ -1,13 +1,12 @@
 # Icon registry
 
-The only place to look up logos and icons. **Read this before downloading anything.**
+The only place to look up logos and icons. **Never Read this file whole:** look up with `grep -i '<brand>' icons/icons.md` and `ls icons/logos icons/ui | grep -i '<brand>'` before downloading anything.
 
-- If the icon is listed, reuse `icons/<File>`. Do not download or copy it again.
-- If not, download the **official** version (brand kit, press kit, official repo or Wikimedia Commons copy of the official mark), save it in `icons/logos/` (brands, tech) or `icons/ui/` (generic: arrow, check, warning), add a row here (source, license, today's date), then use it.
-- Never save icons inside project folders. Add the project to **Used in** every time a video uses an icon.
-- File names: lowercase-kebab-case, plus a variant suffix when needed (`-wordmark`, `-lockup`, `-mono`, `-simple`, `-dark`, `-light`, `-alt`). Plain `<brand>.svg` is the preferred official mark; prefer SVG, then the highest-resolution PNG.
-- Dates are YYYY-MM-DD; "(est.)" means taken from the file's modified time. License column: what the source says, else "Trademark of owner (license not recorded)": logos stay the brand owner's, used nominatively.
-- Remotion: every project's `public/icons` is a symlink to this folder, so use `staticFile('icons/logos/<file>')`.
+- Listed: reuse `icons/<File>`; never download or copy it again. Not listed: download the **official** mark (brand/press kit, official repo, or the Wikimedia Commons copy of it) into `icons/logos/` (brands, tech) or `icons/ui/` (generic), append a row here (source, license, today's date), then use it.
+- Never save icons in project folders. Every video that uses an icon adds the project to **Used in** (edit that one line).
+- Names: lowercase-kebab-case, variant suffix if needed (`-wordmark`, `-lockup`, `-mono`, `-simple`, `-dark`, `-light`, `-alt`); plain `<brand>.svg` = preferred official mark; SVG first, else the largest PNG.
+- Dates YYYY-MM-DD ("(est.)" = file mtime). License: what the source says, else "Trademark of owner (license not recorded)"; logos are used nominatively.
+- Remotion: `public/icons` → this folder, so `staticFile('icons/logos/<file>')`.
 
 | Name | File | Type | Source URL | License / brand guidelines | Downloaded | Used in |
 |------|------|------|------------|----------------------------|------------|---------|
