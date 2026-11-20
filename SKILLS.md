@@ -34,6 +34,7 @@ Upstream license files are kept inside each vendored skill folder.
 - The Tella-upload cross-check is replaced with a second local ASR. Nothing is uploaded.
 - "Render without approval" is kept, but the toolkit's rough-cut checkpoint still applies.
 - The pause lengths in `pipeline/take-selection.md` (and `/reel`) override the skill's gap table. Default tone for tutorials is `balanced`.
+- Token diet (2026-11-20): `SKILL.md` keeps every rule, threshold, padding and order but drops the incident stories. Moved to `references/`: `upstream-notes.md` (the stories and reasoning, verbatim), `manual-editor.md` (Step 3.5, only when I ask), `benchmark.md` (calibration video), `2a-legacy.md` (history; the gap table itself stays in 2a).
 
 **clipify**
 - Choose components from `components/index.md` first (every spec by intent, ✓ = saved code in `components/code/`); single rows from `grep -i '^| \[<Name>\]' components/index-full.md`, never the whole `index-full.md`; open only the specs you will use.
@@ -41,6 +42,7 @@ Upstream license files are kept inside each vendored skill folder.
 - 16:9 → 9:16 reframing (of a landscape source) prefers `components/specs/FaceTrackedCrop.md`.
 - Output is 9:16 only (clips are reels, ≤ 2:59); the 9:16 / 16:9 / 1:1 question is skipped unless I ask for another format.
 - Each clip continues through `/reel`.
+- Token diet (2026-11-20): action mode (Step 1B), split-screen (4b) and time-warp (4c) moved verbatim to `references/` (`action-mode.md`, `split-screen.md`, `time-warp.md`), with a one-line pointer each. Step 1.5 verify frames go through the vision subagent.
 
 **frontend-design**
 - Added a note: use it for web-style visuals in compositions, and defer to `brand.md` (one grid, radius, shadow and border).
@@ -59,6 +61,7 @@ Upstream license files are kept inside each vendored skill folder.
   - Story with depth; AI System Design episodes map the series format onto ABT (normal flow / where it breaks with LLMs / the fix).
   - Toolkit template format with `[mm:ss–mm:ss | HEAD|FULL|SPLIT]` cues instead of the A/V two-column format; `**Message:**` line at the top of `script.md`.
   - Ignores the TTS spoken layer, voice casting, localisation and the Spanish sections.
+  - Token diet (2026-11-20): upstream's superseded Step 0 ("read every file") moved to `references/upstream-step0.md`; the topic table stays.
   - Keeps the three-track hook, recognition ladder, re-hooks every 5–8 s, AI-tells bans (no em dashes), swap test and fact audit as-is.
 
 ## What each one runs on this machine
