@@ -65,7 +65,9 @@ Flags and VLM captions are leads, not verdicts. Judge them against this file and
 - Load keys from `.env`. Never print, log or copy them.
 
 ## Voice Recording Cleanup
-- Before Whisper or editing any talking-head recording, follow `pipeline/voice-cleaning.md` for every recording. Quality mode must confirm WPE and DeepFilterNet 3 in each report, followed by listening verification; stop and get explicit approval if a required stage fails or listening is unavailable.
+- Before Whisper or editing any talking-head recording, clean every recording per `pipeline/voice-cleaning.md` (the authoritative procedure; every production skill runs it in Prep). Originals in `raw/` stay untouched; each recording gets its own cleaned WAV and report.
+- `--mode quality` only. Each report must confirm WPE and DeepFilterNet 3 both processed; then inspect the report and listen to original vs cleaned (skip the listening stop only under the approved-setup exemption in `pipeline/voice-cleaning.md`).
+- A missing dependency, failed or skipped stage, or invalid report: stop and report. Never switch modes or transcribe original audio without my explicit approval. If a listening stop is needed and you can't listen, say so and ask before Whisper.
 
 ## Installs
 - CLIs and models are global or user-wide (apt, `npm i -g`, pipx or one shared user venv; models stay in `~/.cache`).

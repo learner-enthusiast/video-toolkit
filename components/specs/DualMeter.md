@@ -3,7 +3,7 @@ code: components/code/DualMeter/DualMeter.tsx
 preview: components/code/DualMeter/preview.png
 props: "req, reqMax, tok, reqText, tokText, reqTitle, tokTitle, counterO, counterDx, dark, geometry; BudgetBar: x, y, w, h, segs [{frac,kind,label?,lock?}], dark, radius"
 variants: "pair meters, dark, budget bar (BudgetBar export)"
-last_used: system-design-of-ai/05-model-routing
+last_used: system-design-of-ai/11-max-tokens-and-truncation
 ---
 # DualMeter
 

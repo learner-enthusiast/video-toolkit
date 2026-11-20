@@ -56,13 +56,13 @@ Working dir: `projects/<name>/work/clipify/` (mkdir at start, leave artifacts fo
 
 ### Step 0 — Gate dialogue/hybrid transcription on voice cleaning
 
-Before Step 1A (or the dialogue portion of Hybrid), inspect/probe the original footage, identify each talking-head source recording, and read `pipeline/voice-cleaning.md`. Run `vt-python tools/clean_audio.py` separately per recording in `studio`/`quality` mode. Write unique outputs/reports under `projects/<name>/work/clipify/audio/cleaned/<recording-id>.wav` and `projects/<name>/work/clipify/audio/reports/<recording-id>-clean-report.json`. Inspect every report and require WPE `applied: true` and DeepFilterNet3 `status: processed`; listen to each original/clean pair for quality and sync. If either stage fails, stop and report; never switch modes or transcribe original audio without explicit approval. If listening is unavailable, disclose it and request approval before Whisper. Use only the verified cleaned WAV for all ASR, including the full-source candidate scan and clip-level caption timestamps. Keep each recording's files separate. Action mode's transient detector does not invoke Whisper; if Hybrid contains talking-head dialogue, gate that portion before its Whisper pass.
+Before Step 1A (or the dialogue portion of Hybrid): If the Prep handoff in `log.md` already maps this recording to a cleaned WAV whose gate passed, use that WAV (`projects/<name>/work/audio/cleaned/<recording-id>.wav`) and skip to the next step. Otherwise (standalone use) run the gate in `pipeline/voice-cleaning.md`: run `vt-python tools/voice_preflight.py` (stop on `NOT READY`), probe the original, assign each talking-head recording an ID, run `vt-python tools/clean_audio.py "$SRC" "projects/<name>/work/audio/cleaned/<recording-id>.wav" --preset studio --mode quality --report "projects/<name>/work/audio/reports/<recording-id>-clean-report.json"` once per recording, check every report (`status: succeeded`, matching `run_id`, `stages.wpe` and `stages.deepfilternet3` both `processed`, `production_gate.automated_checks_passed: true`), and listen to each original/cleaned pair at matched loudness unless the approved-setup exemption in `pipeline/voice-cleaning.md` applies. A non-zero exit or any failed check: stop and report. If listening is unavailable, disclose it and request explicit approval before Whisper. Never switch modes, transcribe source audio, or overwrite another recording's output/report without explicit approval. Use only the verified cleaned WAV for all ASR, including the full-source candidate scan and clip-level caption timestamps, and for the clip's delivered audio. Keep each recording's files separate. Action mode's transient detector does not invoke Whisper; if Hybrid contains talking-head dialogue, gate that portion before its Whisper pass.
 
 ### Step 1A — Find dialogue moments (dialogue mode)
 
 ```bash
 mkdir -p projects/<name>/work/clipify
-ffmpeg -y -i projects/<name>/work/clipify/audio/cleaned/<recording-id>.wav -ac 1 -ar 16000 projects/<name>/work/clipify/audio.wav
+ffmpeg -y -i projects/<name>/work/audio/cleaned/<recording-id>.wav -ac 1 -ar 16000 projects/<name>/work/clipify/audio.wav
 gpu-run whisper-ctranslate2 --device cuda --compute_type float16 projects/<name>/work/clipify/audio.wav --model tiny.en --word_timestamps True --output_format json --output_dir projects/<name>/work/clipify --language en
 ```
 
@@ -232,22 +232,24 @@ Else use the preset:
 
 ```bash
 # Trim the verified cleaned source audio to the selected source interval, then transcribe that cleaned clip.
-ffmpeg -y -ss "$START" -i projects/<name>/work/clipify/audio/cleaned/<recording-id>.wav -t "$DURATION" -ac 1 -ar 16000 projects/<name>/work/clipify/clip_audio.wav
+ffmpeg -y -ss "$START" -i projects/<name>/work/audio/cleaned/<recording-id>.wav -t "$DURATION" -ac 1 -ar 16000 projects/<name>/work/clipify/clip_audio.wav
 gpu-run whisper-ctranslate2 --device cuda --compute_type float16 projects/<name>/work/clipify/clip_audio.wav --model tiny.en --word_timestamps True --output_format json --output_dir projects/<name>/work/clipify --language en
+# Delivered audio: the same interval from the verified cleaned WAV at 48 kHz (clip_audio.wav is a 16 kHz ASR copy only).
+ffmpeg -y -ss "$START" -i projects/<name>/work/audio/cleaned/<recording-id>.wav -t "$DURATION" -c:a pcm_s24le projects/<name>/work/clipify/clip_voice.wav
 vt-python <skill-dir>/scripts/build_ass.py projects/<name>/work/clipify/clip_panned.json projects/<name>/work/clipify/captions.ass opus
 ```
 
 Burn captions:
 
 ```bash
-ffmpeg -y -i projects/<name>/work/clipify/clip_panned.mp4 -i projects/<name>/work/clipify/clip_audio.wav \
+ffmpeg -y -i projects/<name>/work/clipify/clip_panned.mp4 -i projects/<name>/work/clipify/clip_voice.wav \
   -vf "subtitles=projects/<name>/work/clipify/captions.ass" -map 0:v -map 1:a \
   -c:v h264_nvenc -preset p5 -rc vbr -cq 20 -b:v 0 -c:a aac -b:a 192k "$OUTPUT.mp4"
 ```
 
 ### Step 6 — Deliver
 
-- Save each output to `<source_dir>/clipify_out/` (mkdir if missing)
+- Inside a project, save each output to `projects/<name>/work/clipify/out/` (never into `raw/` or `assets/`; chosen clips are finished by `/reel` into `out/`). Outside a project, use `<source_dir>/clipify_out/` (mkdir if missing)
 - Print one line per clip: name, duration, what was funny, output path
 - Open the first output with `xdg-open <path>` so the user can check it
 - Offer to iterate (different style, different ROI, swap to split-screen, retime captions)

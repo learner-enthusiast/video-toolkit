@@ -3,7 +3,7 @@ code: components/code/SourceChip/SourceChip.tsx
 preview: components/code/SourceChip/preview.png
 props: "at, logo {file,w,h}, children, size"
 variants: "with/without logo"
-last_used: system-design-of-ai/05-model-routing
+last_used: system-design-of-ai/11-max-tokens-and-truncation
 ---
 # SourceChip
 

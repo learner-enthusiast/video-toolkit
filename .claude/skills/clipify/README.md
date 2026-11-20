@@ -51,7 +51,7 @@ Then paste a video file path when asked. The skill will:
 5. Ask subtitle style (opus / karaoke / minimal — or paste a reference image to match)
 6. Render and open the result
 
-Final clips land in `<source-video-dir>/clipify_out/`.
+Final clips land in `projects/<name>/work/clipify/out/` inside a video-toolkit project (never `raw/`), otherwise in `<source-video-dir>/clipify_out/`.
 
 ## How the face-pan works
 

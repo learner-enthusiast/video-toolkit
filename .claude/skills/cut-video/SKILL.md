@@ -44,7 +44,7 @@ Tighten a long-form recording **aggressively**: remove silences, fillers, hedges
 
 ## Step 0 — Inspect source and pass the voice-cleaning gate
 
-Probe the original video and audio, identify every relevant talking-head recording, and read `pipeline/voice-cleaning.md`. Run `vt-python tools/clean_audio.py "$SRC" "projects/<name>/work/cut-video/audio/cleaned/<recording-id>.wav" --preset studio --mode quality --report "projects/<name>/work/cut-video/audio/reports/<recording-id>-clean-report.json"` once per recording. Inspect every report; require WPE `applied: true` and DeepFilterNet3 `status: processed`; then listen to each original/clean pair for audio quality and sync. If either model stage fails, stop and report it. If listening is unavailable, disclose it and request explicit approval before Whisper. Never switch modes, transcribe source audio, or overwrite earlier outputs/reports without explicit approval. Continue only after every relevant recording passes.
+If the Prep handoff in `log.md` already maps this recording to a cleaned WAV whose gate passed, use that WAV (`projects/<name>/work/audio/cleaned/<recording-id>.wav`) and skip to the next step. Otherwise (standalone use) run the gate in `pipeline/voice-cleaning.md`: run `vt-python tools/voice_preflight.py` (stop on `NOT READY`), probe the original, assign each talking-head recording an ID, run `vt-python tools/clean_audio.py "$SRC" "projects/<name>/work/audio/cleaned/<recording-id>.wav" --preset studio --mode quality --report "projects/<name>/work/audio/reports/<recording-id>-clean-report.json"` once per recording, check every report (`status: succeeded`, matching `run_id`, `stages.wpe` and `stages.deepfilternet3` both `processed`, `production_gate.automated_checks_passed: true`), and listen to each original/cleaned pair at matched loudness unless the approved-setup exemption in `pipeline/voice-cleaning.md` applies. A non-zero exit or any failed check: stop and report. If listening is unavailable, disclose it and request explicit approval before Whisper. Never switch modes, transcribe source audio, or overwrite another recording's output/report without explicit approval. Continue only after every relevant recording passes.
 
 ## Step 0.5 — Make a video-only proxy (the single biggest speed move)
 
@@ -69,7 +69,7 @@ ffmpeg -y -hwaccel cuda -i "$SRC" \
 Use only the WAV that passed Step 0's report and listening checks. Do not use proxy audio, source video audio, or an unverified extraction for Whisper or MFA.
 
 ```bash
-ffmpeg -y -i projects/<name>/work/cut-video/audio/cleaned/<recording-id>.wav \
+ffmpeg -y -i projects/<name>/work/audio/cleaned/<recording-id>.wav \
   -ac 1 -ar 16000 projects/<name>/work/cut-video/audio.wav
 ```
 
@@ -302,7 +302,7 @@ Write the filtergraph to a file (it'll get long — aggressive cuts mean 200–4
 
 ```bash
 ffmpeg -y -hwaccel cuda -i projects/<name>/work/cut-video/proxy.mp4 \
-  -i projects/<name>/work/cut-video/audio/cleaned/<recording-id>.wav \
+  -i projects/<name>/work/audio/cleaned/<recording-id>.wav \
   -filter_complex_script projects/<name>/work/cut-video/filter.txt \
   -map "[outv]" -map "[outa]" \
   -c:v h264_nvenc -preset p5 -rc vbr -cq 20 -b:v 0 -pix_fmt yuv420p \
@@ -334,7 +334,7 @@ This avoids re-encoding entirely on the trim pass.
 - **Don't encode on the CPU.** Use `h264_nvenc`; if it fails, fix it or stop and tell me (CLAUDE.md).
 - **Don't wait for approval before rendering the rough cut** (changed 2026-07-09 — the gate wasted more time than it saved), but do stop at the rough cut checkpoint afterwards. Print the plan, render immediately. The old worry (a "silent" gap holding a laugh, a "filler" that's intentional emphasis) is handled by the amplitude check below + preserved-pauses list in the summary — and a bad cut just means a quick re-render.
 - **Don't trim a long "silence" without checking amplitude** — that's usually laughter, a thinking pause, or a setup-payoff beat.
-- **Never transcribe source/proxy audio.** `audio.wav` is derived only from the Prep-verified cleaned WAV in Step 0.5; all later ASR windows come from that cleaned track. Final cut audio is trimmed from the verified cleaned 48 kHz WAV, not the proxy.
+- **Never transcribe source/proxy audio.** `audio.wav` is derived only from the Prep-verified cleaned WAV in Step 0.75; all later ASR windows come from that cleaned track. Final cut audio is trimmed from the verified cleaned 48 kHz WAV, not the proxy.
 - **Don't re-encode audio twice.** If you only changed video, use `-c:a copy` to skip an unnecessary AAC pass.
 - **Don't be timid.** Default to `aggressive`. The reference cut style is fast — if the output feels "safe", it's not matching Louise's CapCut pacing.
 - **Don't render from MFA times alone on retake-heavy or noisy footage.** Measured 1–6s drift on the 2026-07-02 DJI run. Ground-truth every keep boundary with isolated windows (Step 2.5) first.

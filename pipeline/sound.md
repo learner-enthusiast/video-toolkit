@@ -71,7 +71,15 @@ A=(-ar 48000 -ac 1 -c:a pcm_s16le)
 "afade=t=in:d=0.004,afade=t=out:st=0.75:d=0.15,highpass=f=25,volume=0.649" "${A[@]}" "$O/sub-boom.wav"
 ```
 
-Check after a build: 9 WAVs, 48 kHz mono, each peak −3.0 ±0.1 dBFS (`astats`), lengths as in the table. Save a tiled spectrogram sheet (`showspectrumpic` per file, `tile`) as `sheet.png` next to them.
+**Kit v2 (2026-11-20, `system-design-of-ai/11-max-tokens-and-truncation`): v1 + `bell.wav`.** Built into `~/.cache/video-toolkit/sfx/v2/` (v1 files copied unchanged, so v1 projects still match). Use it for an exam/time's-up bell (a hard limit hitting), at most a signature cue or two per video, ~9 dB under the voice peak:
+
+```bash
+# bell: hand-bell partials (1180 / 2360 / 3257 / 6372 Hz) with exponential decays and a 7 Hz shimmer, then calibrated to -3.0 dBFS peak
+ffmpeg -hide_banner -loglevel error -y -f lavfi -i "aevalsrc='(0.6*sin(2*PI*1180*t)*exp(-3.2*t)+0.35*sin(2*PI*2360*t)*exp(-4.5*t)+0.28*sin(2*PI*3257*t)*exp(-6*t)+0.12*sin(2*PI*6372*t)*exp(-11*t))*(1+0.25*sin(2*PI*7*t))':d=1.4:s=48000" \
+  -af "afade=t=in:d=0.002,afade=t=out:st=1.15:d=0.25,highpass=f=300,volume=0.7079" -ar 48000 -ac 1 -c:a pcm_s16le "$O/bell.wav"
+```
+
+Check after a build: 9 WAVs (v2: 10), 48 kHz mono, each peak −3.0 ±0.1 dBFS (`astats`), lengths as in the table. Save a tiled spectrogram sheet (`showspectrumpic` per file, `tile`) as `sheet.png` next to them.
 
 **2 · Default event map.** Creative direction in `CLAUDE.md` may change it per video; the map below is the default.
 
@@ -115,6 +123,8 @@ Any other component: map it from `components/index.md` by what the viewer sees (
 - Put the file in `projects/<name>/assets/music/` with a line in `assets/music/SOURCES.md`: URL, author, licence. If you can't download it, tell me which track (link, author, licence) and I'll drop it in.
 
 **7 · Mix offline.** Remotion does no ducking, so the delivered audio is built with ffmpeg, not taken from the render.
+
+The voice is always the Prep-verified cleaned voice (`pipeline/voice-cleaning.md`): `work/audio/clean.wav` is a copy of a verified `work/audio/cleaned/<recording-id>.wav`, and the cut voice is trimmed from it, from each recording's own cleaned WAV when there are several. Never re-extract voice from `raw/`, a proxy or the Remotion render. Don't add more denoise or dereverb here; the main mix and both trailer mixes use the same voice source.
 
 1. **SFX track:** `work/audio/sfx.wav`, from `sfx_cues.json`: each cue's file through `adelay=<t in ms>:all=1` and `volume=<gain_db>dB`, all through `amix=inputs=N:normalize=0`, padded to the composition length (`apad=whole_dur=<s>`). A small per-project script in `work/scripts/` writes the filtergraph.
 2. **Music (if any):** loop or trim to length (`aloop` / `atrim`, fade the last 1.5 s), set to about −24 LUFS with `volume`, then duck it with `sidechaincompress` keyed on the clean voice. Start at `threshold=0.02:ratio=2.5:attack=15:release=350` and adjust `ratio` until the measured duck in speech windows is 8–10 dB.

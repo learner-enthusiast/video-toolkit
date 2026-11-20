@@ -12,7 +12,7 @@ Use the same four stages and delegation/vision rules as `/coding-video` (`pipeli
 
 1. Inspect and probe original footage (`pipeline/probe-and-trim.md`).
 2. Inventory every talking-head recording and assign a unique ID.
-3. Read `pipeline/voice-cleaning.md`.
+3. Read `pipeline/voice-cleaning.md`, then run `vt-python tools/voice_preflight.py`. On `NOT READY`, stop and show me the `FAIL` lines and fixes; install nothing without my OK.
 4. Run the cleaner once per recording, with unique output and report paths:
    ```bash
    vt-python tools/clean_audio.py "projects/<name>/raw/<recording>" \
@@ -20,13 +20,14 @@ Use the same four stages and delegation/vision rules as `/coding-video` (`pipeli
      --preset studio --mode quality \
      --report "projects/<name>/work/audio/reports/<recording-id>-clean-report.json"
    ```
-5. Inspect every report and match it to its source/output.
-6. Require WPE `applied: true` and DeepFilterNet3 `status: processed` for every recording.
-7. Listen to each original/cleaned pair and verify quality and sync.
-8. Only after all recordings pass, run Whisper on the corresponding verified cleaned WAVs.
-9. Continue remaining Prep and log each source/output/report mapping.
+   A non-zero exit fails the gate: read the `*.failed.json` and stop.
+5. Inspect every report: `status: succeeded` with the same `run_id` as `<wav>.run-status.json`, source/output identity, duration delta, LUFS, true peak, clipping flags and `warnings` (`pipeline/voice-cleaning.md`, Required report checks).
+6. Require `mode: quality`, `stages.wpe: processed` and `stages.deepfilternet3: processed` (model `DeepFilterNet3`, device recorded), and `production_gate.automated_checks_passed: true` for every recording.
+7. Listen to each original/cleaned pair at matched loudness and verify echo, hiss, clarity, natural voice, artifacts and sync, unless the approved-setup exemption in `pipeline/voice-cleaning.md` applies (approved setup, passing report and tone check; log it).
+8. Only after all recordings pass, run Whisper on the corresponding verified cleaned WAVs (`pipeline/transcribe.md`).
+9. Review each transcript and its timestamps, then continue the remaining Prep and log the per-recording table (source → cleaned WAV → report/run_id → stage statuses → listening result → transcript).
 
-If cleaning fails, stop and report it; do not switch modes or transcribe original audio without explicit approval. If listening is unavailable, disclose that limitation and request explicit approval before Whisper. Keep reports separate; no reel candidate search or editing may use a transcription that bypassed this gate.
+If cleaning fails, stop and report it; do not switch modes or transcribe original audio without explicit approval. If listening is unavailable, disclose that limitation and request explicit approval before Whisper. Keep reports separate; no reel candidate search or editing may use a transcription that bypassed this gate. `/clipify`, `/cut-video` and `/add-zooms` reuse these verified WAVs; they don't clean again.
 
 - **Skills.** Cut with `/cut-video` (`aggressive` tone, but this file's pause lengths win), and punch in with `/add-zooms` (punches and ratchets only). If the source is a long video, use `/clipify` (dialogue mode) to pick 3–5 candidate moments. Show them to me, then build each chosen one as a reel with the rules below.
 
