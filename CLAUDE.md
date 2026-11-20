@@ -3,7 +3,7 @@
 Per-video code is built inside `projects/<name>/work/`, never in the toolkit. The toolkit holds two shared, git-tracked libraries that every video checks first: `icons/` (logos and icons) and `components/` (specs plus approved Remotion code).
 
 ## Icons
-- Before downloading any icon or logo, look it up with `grep -i '<brand>' icons/icons.md` (never Read it whole) and `ls icons/logos | grep -i <brand>`. If it is listed, reuse `icons/<File>`. If not, download the **official** version into `icons/logos/` (generic UI icons: `icons/ui/`), add a row (source URL, license, today's date), then use it.
+- Before downloading any icon or logo, `grep -i '<brand>' icons/icons.md` (never Read it whole). If it is listed, reuse `icons/<File>`. If not, download the **official** version into `icons/logos/` (generic UI icons: `icons/ui/`), add a row (source URL, license, today's date), then use it.
 - Never save icons inside project folders (no `assets/logos/`, no `SOURCES.md`). Add the project to "Used in" every time a video uses an icon.
 - Remotion reads them through `public/icons` (a symlink to `icons/`): `staticFile('icons/logos/<file>')`.
 
@@ -27,13 +27,13 @@ Per-video code is built inside `projects/<name>/work/`, never in the toolkit. Th
 - **Never delegate:** script, cuts, storyboard, creative take, layout states, sound map, `brand.md`, final component visuals, render settings, QA, anything on screen that hasn't been reviewed.
 - Low-stakes chain: Copilot → Codex → cursor-agent → Haiku. Check Copilot and Codex usage before each delegation (skip if low or unreadable). cursor-agent has no usage command: run a tiny **canary** before each use; on pass send exactly one small chunk, canary again before the next. CLIs run non-interactively, in the background, with a timeout, logging to `work/delegation/<NN>-<tool>-<task>.log`; on a limit/auth error or a hang, kill and re-run the chunk on the next tool. Verify every result yourself and record tool, usage and fallback in `log.md`.
 - Heavy jobs never use the chain. You write the exact batch (`gpu-run`, flags, paths, timeouts); a Haiku runner launches each job detached, writes `work/jobs/<NN>-<job>.status`, stops and reports on any error. It never changes settings. You read the `.status` files and verify outputs; you don't tail logs.
-- Vision goes through contact sheets and video-inspect reports, looked at by the vision subagent (`pipeline/video-inspect.md`, Vision subagent), which returns a text report. Final visual QA is Opus in that subagent.
+- Vision goes through contact sheets and video-inspect reports, judged by the Opus vision subagent (`pipeline/video-inspect.md`), including final visual QA.
 
 ## Inspecting a video
 Whenever a prompt asks to check, review, inspect, QA or "look at" a video, its frames, captions, cuts or edits:
 1. Run video-inspect first (`pipeline/video-inspect.md`, as a heavy job via the Haiku runner, `pipeline/delegation.md`). Never dump frames as images.
 2. Read `report.json` (`summary` and `flags` first).
-3. The vision subagent (`pipeline/video-inspect.md`, Vision subagent) looks at `contact_sheet.jpg`, the flagged frames and one keyframe per scene, judges framing, colour, pacing and visual quality, and returns text (`timestamp · what · severity · proposed fix`). The main session reads that report, not the images; it opens a frame itself only for the 3 approval stills or when the report is ambiguous.
+3. The Opus vision subagent (`pipeline/video-inspect.md`) judges `contact_sheet.jpg`, the flagged frames and one keyframe per scene (framing, colour, pacing, quality) and returns text: `timestamp · what · severity · fix`. Read that, not the images (exceptions: the 3 approval stills, an ambiguous report).
 4. Use `--thorough` for the final check before publishing.
 5. Report issues with timestamps and a proposed fix for each.
 
@@ -75,10 +75,10 @@ Flags and VLM captions are leads, not verdicts. Judge them against this file and
 - Never modify `raw/` or `assets/`. Work on copies in `work/`.
 - For each paragraph, keep my LAST complete, clean take. Captions follow my actual words, not the script.
 - Playlists: a video may belong to a series. Episodes live in `projects/<playlist>/<NN>-<topic>/` (same structure as any project) and obey the tracked rules file `series/<playlist>.md` on top of this file and `brand.md`. See `README.md` (Playlists).
-- Work in stages, one session each: Prep, Cut, Compose, Deliver (`pipeline/stages.md`). Start every stage: read only the latest `### Handoff` block and the open issues in `log.md` (`grep -n '### Handoff' log.md`, then read from the last match), not the whole file, then the project files the stage needs. End it with a handoff in `log.md`: decisions and reasons, rejected options, open issues, files produced, next steps. Use `/compact` only as a fallback.
+- Work in stages, one session each: Prep, Cut, Compose, Deliver (`pipeline/stages.md`). Start every stage from the latest `### Handoff` and open issues in `log.md` (`grep -n '### Handoff'`, read from the last match; never the whole log), then the project files the stage needs. End it with a handoff in `log.md`: decisions and reasons, rejected options, open issues, files produced, next steps. Use `/compact` only as a fallback.
 - Stop at the rough cut (end of Cut) and wait for my OK before composing.
 - Logs go to `work/logs/`, never into the chat. Report a summary.
-- Every turn on a project gets a `projects/<name>/log.md` entry (`pipeline/project-log.md`). Hooks save my prompt to `work/prompts/`, write the entry header and add time and tokens; you write only **Changes / Decisions / Not done / Handoff** under that header. Never re-type the prompt, never compute tokens. Append only.
+- Every turn on a project gets a `log.md` entry (`pipeline/project-log.md`): hooks save my prompt, write the header and add time and tokens; you write only **Changes / Decisions / Not done / Handoff** under it. Never re-type the prompt or compute tokens. Append only.
 - When a video teaches us something (a better setting, a gotcha), update the relevant toolkit `.md`, not just the project.
 - When adding a lesson, add it to the matching Gotchas section as one line and merge duplicates; no stories.
 
