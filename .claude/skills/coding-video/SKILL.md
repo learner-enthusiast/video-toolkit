@@ -6,11 +6,35 @@ argument-hint: <name>
 
 # Coding video (16:9, 1920x1080, 30 fps; long-form > 3:00)
 
+**Read only what the current stage needs (`pipeline/stages.md`). `CLAUDE.md` is already loaded — never Read it again.**
+
 **Short coding videos (final length ≤ 2:59) are reels: 9:16 only (1080x1920).** Follow the stages below, but frame, lay out, render, QA and thumbnail everything per `/reel` and `components/specs/layout-states.md` in 9:16. No 16:9 main, trailer, thumbnail, stills or `PresenterSplit`. The 16:9 steps below apply to long-form only.
 
-Work in `projects/<name>/` (or `projects/<playlist>/<NN>-<topic>/` for a playlist episode; then also follow `series/<playlist>.md`). Read `CLAUDE.md` and `brand.md` first. Logos come from `icons/` (`icons/icons.md`; download an official one into `icons/` only if missing). Choose components from `components/index.md` first; open only the specs you will use. Follow each step's file in `pipeline/`.
+Work in `projects/<name>/` (or `projects/<playlist>/<NN>-<topic>/` for a playlist episode; then also follow `series/<playlist>.md`). Read `brand.md` first (`CLAUDE.md` is already loaded). Logos come from `icons/` (`icons/icons.md`; download an official one into `icons/` only if missing). Choose components from `components/index.md` first; open only the specs you will use. Follow each step's file in `pipeline/`.
 
 Run this as four stages, one session each (`pipeline/stages.md`). Start each stage by reading `log.md` and the project files, and end it with a handoff in `log.md`. Shell work goes to Haiku as exact-command batches (`pipeline/delegation.md`). Vision goes through contact sheets (`pipeline/video-inspect.md`).
+
+## Brief rules (fixed for every video; the prompt adds only the specifics)
+
+Prompts follow `templates/editing-prompt.md` (topic, path, speed-up cap, notes/special assets, `# Script`, `## 60-second cut`). Everything below applies without being repeated in the prompt; the prompt's notes win where they are more specific.
+
+- **Quality bar.** `CLAUDE.md` → Quality bar, with no exceptions. The video should feel like a premium explainer, not a slideshow.
+- **Footage and layout.** Talking head is portrait phone video unless the prompt says otherwise. Every beat is HEAD, FULL or SPLIT (`brand.md` Layout, `components/specs/layout-states.md`); the script's state tags are the plan, and switch points may move by a beat or two (`CLAUDE.md`, Creative direction). In SPLIT the graphic sits on top and the face is docked below.
+- **Script into the project.** Save the prompt's `# Script` as `projects/<name>/script.md` in the style of `templates/script-tutorial.md` or `templates/script-project-demo.md` (≤ 2:59: `templates/script-reel.md`), with a Glossary.
+- **Caption prep (Prep).** Record in the `script.md` Glossary: caption spellings (names, APIs and code terms exactly as written), number formatting (spoken numbers → digits, ₹, %, separators) and the orange-highlight words. Take them from the prompt's notes; where it gives none, derive them from the script and list them in the handoff. Captions follow the actual words (`CLAUDE.md`, Workflow).
+- **Never cut any script line**, including one-word lines, the greeting, the recap and the sign-off. Only retakes, fillers and dead pauses go.
+- **HARD RULE: length (final ≤ 2:59, or the prompt's limit).** In this order, and stop at the first step that fits:
+  1. Cut retakes: keep the last complete, clean take of each paragraph (`/cut-video`, `pipeline/take-selection.md`).
+  2. Tighten pauses to 0.2–0.3 s and remove fillers and restarts. Keep the deliberate pauses the script or prompt marks (e.g. after "Namoshkar!", before "Bye bye, sayonara!").
+  3. Still over: pitch-preserved speed-up from 1.05x, rising in 0.05 steps, up to the prompt's cap. Use the sync-safe chain (`setpts=PTS/k,fps=30` + `atempo=k`, `pipeline/qa.md`).
+  4. Still over at the cap: **stop and ask me.** Never cut a line.
+- **Checkpoints.**
+  1. Stages, one session each (`pipeline/stages.md`): Prep (voice gate → Whisper → handoff) · Cut (take selection + rough cut; report measured length and speed-up factor; **stop for my OK**) · Compose (storyboard, build, render) · Deliver.
+  2. Storyboard: a scene table with measured length per beat, plus the "Creative take" list (idea, beat, why). Then **3 approval stills** (the prompt names them; otherwise the hook frame and the two strongest beats); wait for my OK on any bigger change.
+  3. Build scene by scene, render through `gpu-run`, run video-inspect (`--thorough` on the final) and QA (`pipeline/qa.md`).
+  4. Deliver: per `CLAUDE.md` → Deliverables (long-form: 16:9 + 9:16 main and trailer; ≤ 2:59: 9:16 only); trailer = the prompt's `## 60-second cut` if given, else the default (`pipeline/trailer.md`); SRT for each; thumbnail + ChatGPT kit; `<name>_social.json`; carousel twin for every 9:16 delivery.
+  5. Save components (`CLAUDE.md`, Components → Deliver) and apply any series-file update the prompt asks for.
+  6. Project log every turn (`pipeline/project-log.md`).
 
 **Stage 1 · Prep** (steps 1–9; execute in this order)
 
