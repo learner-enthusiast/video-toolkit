@@ -40,7 +40,7 @@ Follow this sequence exactly. **No Whisper transcription of source talking-head 
 
 ## Starting a stage
 
-- Before doing anything else, read `projects/<name>/log.md` (at least the latest handoff and every open issue), then the project files the stage depends on (`script.md`, `work/cutlist.md`, the EDL, `timeline.json`… as relevant), plus `CLAUDE.md`, `brand.md` and this stage's `pipeline/` files.
+- Before doing anything else, read only the latest `### Handoff` block and the open issues in `log.md` (`grep -n '### Handoff' log.md`, then read from the last match), not the whole file. Then read the project files the stage depends on (`script.md`, `work/cutlist.md`, the EDL, `timeline.json`… as relevant), `brand.md` and this stage's `pipeline/` files. `CLAUDE.md` is already loaded; never Read it again.
 - If the previous handoff has an unresolved open issue that blocks this stage, raise it with me first.
 - Stage 3 never starts without my OK on the rough cut recorded in `log.md`.
 

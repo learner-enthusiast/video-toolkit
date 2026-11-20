@@ -77,10 +77,10 @@ Flags and VLM captions are leads, not verdicts. Judge them against this file and
 - Never modify `raw/` or `assets/`. Work on copies in `work/`.
 - For each paragraph, keep my LAST complete, clean take. Captions follow my actual words, not the script.
 - Playlists: a video may belong to a series. Episodes live in `projects/<playlist>/<NN>-<topic>/` (same structure as any project) and obey the tracked rules file `series/<playlist>.md` on top of this file and `brand.md`. See `README.md` (Playlists).
-- Work in stages, one session each: Prep, Cut, Compose, Deliver (`pipeline/stages.md`). Start every stage by reading `log.md` and the project files. End it with a handoff in `log.md`: decisions and reasons, rejected options, open issues, files produced, next steps. Use `/compact` only as a fallback.
+- Work in stages, one session each: Prep, Cut, Compose, Deliver (`pipeline/stages.md`). Start every stage: read only the latest `### Handoff` block and the open issues in `log.md` (`grep -n '### Handoff' log.md`, then read from the last match), not the whole file, then the project files the stage needs. End it with a handoff in `log.md`: decisions and reasons, rejected options, open issues, files produced, next steps. Use `/compact` only as a fallback.
 - Stop at the rough cut (end of Cut) and wait for my OK before composing.
 - Logs go to `work/logs/`, never into the chat. Report a summary.
-- At the end of every turn on a project, append an entry to `projects/<name>/log.md`: date and time, my prompt verbatim, what changed, how long it took, and token usage (`pipeline/project-log.md`). Append only.
+- Every turn on a project gets a `projects/<name>/log.md` entry (`pipeline/project-log.md`). Hooks save my prompt to `work/prompts/`, write the entry header and add time and tokens; you write only **Changes / Decisions / Not done / Handoff** under that header. Never re-type the prompt, never compute tokens. Append only.
 - When a video teaches us something (a better setting, a gotcha), update the relevant toolkit `.md`, not just the project.
 
 ## Quality bar
