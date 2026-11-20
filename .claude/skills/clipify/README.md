@@ -12,7 +12,7 @@ Point it at any video file and it will:
 
 No cloud APIs. Runs entirely on your machine. No OpenCV. ~20s of work for a 20s clip on Apple Silicon.
 
-In this repository, run dialogue/hybrid transcription only after each talking-head source passes `pipeline/stages.md` and `pipeline/voice-cleaning.md`; inspect distinct reports, confirm WPE and DeepFilterNet 3, and listen to each original/cleaned pair. Candidate scans, caption timestamps, and clip audio must derive from the verified cleaned WAV. Stop on a model failure or unavailable listening and request explicit approval before proceeding.
+In this repository: **Before any Whisper/ASR on talking-head audio, pass the gate in `pipeline/voice-cleaning.md`. No exceptions without my explicit approval.** Candidate scans, caption timestamps and clip audio must derive from the verified cleaned WAV.
 
 ## Why this exists
 

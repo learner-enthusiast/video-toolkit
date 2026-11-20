@@ -36,17 +36,9 @@ Prompts follow `templates/editing-prompt.md` (topic, path, speed-up cap, notes/s
   5. Save components (`CLAUDE.md`, Components → Deliver) and apply any series-file update the prompt asks for.
   6. Project log every turn (`pipeline/project-log.md`).
 
-**Stage 1 · Prep** (steps 1–9; execute in this order)
+**Stage 1 · Prep** (steps 1–9)
 
-1. **Inspect and probe original footage:** read `pipeline/probe-and-trim.md`; probe every original source and report resolution, rotation, fps, duration, and audio streams. Never modify `raw/` or `assets/`.
-2. **Identify recordings:** inventory every relevant talking-head recording/audio stream and assign each a unique stable ID.
-3. **Read the gate and preflight:** read `pipeline/voice-cleaning.md`, then run `vt-python tools/voice_preflight.py`. On `NOT READY`, stop and show me the `FAIL` lines and fixes; install nothing without my OK.
-4. **Clean every recording:** for each source, run `vt-python tools/clean_audio.py "projects/<name>/raw/<recording>" "projects/<name>/work/audio/cleaned/<recording-id>.wav" --preset studio --mode quality --report "projects/<name>/work/audio/reports/<recording-id>-clean-report.json"`. Keep each source, output and report distinct; never overwrite raw footage or an earlier result. A non-zero exit fails the gate: read the `*.failed.json` and stop.
-5. **Inspect each report:** `status: succeeded` with the same `run_id` as `<wav>.run-status.json`; source/output identity; duration delta; before/after LUFS and true peak; clipping flags; `warnings` (`pipeline/voice-cleaning.md`, Required report checks).
-6. **Confirm both model stages per report:** require `mode: quality`, `stages.wpe: processed` (`dereverberation.applied: true`), `stages.deepfilternet3: processed` with model `DeepFilterNet3` and its device, and `production_gate.automated_checks_passed: true`. On any failure, stop Prep and report it; no substitute mode or original-audio ASR without my explicit approval.
-7. **Listen to every original/cleaned pair at matched loudness:** check echo, hiss, clarity, natural voice identity, clipping/distortion/artifacts and sync. If listening is unavailable, disclose this and request my approval before transcription, unless the approved-setup exemption in `pipeline/voice-cleaning.md` applies (approved setup, passing report and tone check; log it).
-8. **Transcribe only after all recordings pass steps 5–7:** perform the GPU preflight in `pipeline/gpu.md` if needed, then follow `pipeline/transcribe.md` using each verified cleaned WAV. Do not transcribe a raw source, proxy audio extraction, or unverified cleaned file.
-9. **Continue remaining Prep:** review each transcript and its timestamps, copy the verified WAV to `work/audio/clean.wav` if one canonical voice path is needed, finish other Prep artifacts, then record the per-recording table (source → cleaned WAV → report/run_id → stage statuses → listening result → transcript) in the handoff. `/coding-video` may not proceed to cut selection with an unverified voice recording.
+1–9. Probe every original source (`pipeline/probe-and-trim.md`: resolution, rotation, fps, duration, audio streams; never modify `raw/` or `assets/`), then **Before any Whisper/ASR on talking-head audio, pass the gate in `pipeline/voice-cleaning.md`. No exceptions without my explicit approval.** It defines steps 2–9 (inventory, preflight, cleaning with `vt-python tools/clean_audio.py "projects/<name>/raw/<recording>" "projects/<name>/work/audio/cleaned/<recording-id>.wav" --preset studio --mode quality --report "projects/<name>/work/audio/reports/<recording-id>-clean-report.json"`, report checks, listening, Whisper via `pipeline/transcribe.md`, transcript review, the per-recording handoff table). `/coding-video` may not proceed to cut selection with an unverified voice recording.
 
 **Stage 2 · Cut** (steps 10–11)
 

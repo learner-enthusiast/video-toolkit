@@ -2,6 +2,16 @@
 
 Every talking-head source recording must pass this gate before any Whisper transcription or editing. It runs as Stage 1 (Prep) steps 2–7 in `pipeline/stages.md`, and every production entry point (`/coding-video`, `/reel`, `/cut-video`, `/clipify`, `/add-zooms`) runs it or reuses its verified result. A documentation reference alone does not satisfy it. Implementation details live in `pipeline/clean-audio.md`.
 
+## Order (Stage 1 · Prep)
+
+1. Probe the originals (`pipeline/probe-and-trim.md`); never modify `raw/` or `assets/`.
+2. Inventory every talking-head recording/audio stream; give each a stable ID and record its source and intended cleaned path.
+3. Preflight (below). 4. Clean each recording once (below). 5. Inspect every report and 6. confirm the required stages (Required report checks). 7. Listening gate (or the approved-setup exemption).
+8. Only then transcribe, from each verified cleaned WAV (`pipeline/transcribe.md`; GPU preflight from `pipeline/gpu.md` right before Whisper if it hasn't passed). Never a raw source, proxy/video audio extraction or unverified cleaned file, for any ASR: full transcripts, candidate scans, caption timestamps, cut windows.
+9. Review each transcript and its word timestamps, then write the per-recording table (Handoff, below). Cut (stage 2) may not start on a recording missing from that table; no reel candidate search or edit may use a transcription that bypassed this gate.
+
+Applies to `/coding-video`, `/reel`, `/cut-video`, `/add-zooms` and `/clipify` dialogue/hybrid modes (action mode runs no Whisper; a Hybrid's dialogue portion is gated). Skills invoked inside a production reuse the Prep-verified WAVs; they run the gate themselves only when invoked standalone. Cleaning runs and Whisper are heavy jobs (`pipeline/delegation.md`); report inspection, listening and the gate decision stay with Claude, and Whisper is not launched until Claude has recorded that every source passed.
+
 ## Preflight first
 
 Before cleaning anything, run `vt-python tools/voice_preflight.py` (about 5 s, read-only). It checks FFmpeg, the WPE libraries, the DeepFilterNet 3 launcher and environment, the versions pinned in `tools/deepfilternet.lock.txt`, CUDA and the cached model. `READY` (exit 0): go on. `NOT READY` (exit 1): stop Prep, show the user the `FAIL` lines and their `fix:` commands, and install or rebuild nothing without approval. Don't debug a failed cleaning run when the preflight would have caught it. `WARN` lines (e.g. no CUDA) don't block; note them in the log.
@@ -38,7 +48,7 @@ A non-zero exit means the gate failed: read the `*.run-<run_id>.failed.json` nex
 - `output_measurements`: integrated LUFS about −16 (±1), true peak ≤ −1.0 dBTP; `input_clipping_suspected` and `output_clipping_suspected` false.
 - `warnings` is empty, or each warning is explained in the handoff.
 
-Stop if the cleaner fails, if a stage is `failed`, `disabled` or `not_attempted`, or if a report is missing, unparsable, mismatched or fails any check above. Report the recording ID, failed stage and error. Do not change modes, use another pipeline, transcribe original audio, reinstall dependencies or edit the cleaner's settings without the user's explicit approval. `balanced` and `performance` never pass this gate.
+Stop if the cleaner fails, if a stage is `failed`, `disabled` or `not_attempted`, or if a report is missing, unparsable, mismatched or fails any check above. Report the recording ID, failed stage, report/error and the next blocking action. Do not change modes, bypass the cleaner, route around the gate through another skill, use another pipeline, transcribe original audio, reinstall dependencies or edit the cleaner's settings without the user's explicit approval. `balanced` and `performance` never pass this gate.
 
 ## Listening gate
 
@@ -68,7 +78,7 @@ Listen to the original and the cleaned recording at matched loudness: the cleane
 
 If the output sounds worse, investigate: lower the blend in a `--config` override or try the `natural` preset, and re-run in quality mode. Don't accept it just because the command succeeded.
 
-If the environment cannot play audio for you to listen to (the usual case for Claude Code), say so plainly. List the checks that could not be done, give the user both file paths and the matched-loudness scratch copy, and wait for explicit approval before transcription. A report, waveform, spectrogram or metric does not replace listening.
+If the environment cannot play audio for you to listen to (the usual case for Claude Code), say so plainly. List the checks that could not be done, give the user both file paths and the matched-loudness scratch copy, and wait for explicit approval before transcription. A report, waveform, spectrogram, metric or successful run does not replace listening. Resume transcription only after the required stages pass and listening is done, or the user explicitly approves a documented exception.
 
 ## Presets and comparisons
 
