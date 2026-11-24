@@ -3,7 +3,7 @@ code: components/code/BarCompare/BarCompare.tsx
 preview: components/code/BarCompare/preview.png
 props: "w, rows [{label,value,tone,at}], max"
 variants: "shared scale, ink vs orange"
-last_used: system-design-of-ai/11-max-tokens-and-truncation
+last_used: system-design-of-ai/09-prompt-caching
 ---
 # BarCompare
 

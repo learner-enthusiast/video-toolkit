@@ -4,10 +4,10 @@
 
 | Stage | Steps (`/coding-video` numbering) | Ends with |
 |---|---|---|
-| 1 · Prep | Inspect/probe originals, identify talking-head recordings, mandatory voice-cleaning gate, then transcribe (1–9) | handoff |
+| 1 · Prep | Inspect/probe originals, identify talking-head recordings, mandatory voice-cleaning gate, then transcribe, then web captures from the script's list (`pipeline/web-capture.md`) (1–9) | handoff |
 | 2 · Cut | take selection, rough cut (10–11) | handoff + **CHECKPOINT: wait for my OK** |
 | 3 · Compose | storyboard with Creative take, composition, sound (`pipeline/sound.md`: sound map, cues, offline mix), render (12–13) | handoff |
-| 4 · Deliver | subtitles, trailer (reels ≤ 2:59: 9:16 only, no 16:9 render, QA or stills; long-form: 16:9 + 9:16), QA, thumbnail, social copy, carousel (reels: `pipeline/carousel.md`, two approval stops), **save components** to `components/code/` (`CLAUDE.md`, Components), report (14–20) | handoff + final report |
+| 4 · Deliver | subtitles, trailer (reels ≤ 2:59: 9:16 only, no 16:9 render, QA or stills; long-form: 16:9 + 9:16), QA, thumbnail, social copy, carousel (reels: `pipeline/carousel.md`, two approval stops), **save components** to `components/code/` (`CLAUDE.md`, Components), report (14–20), then the extra text posts (21, `pipeline/text-posts.md`, two approval stops; nothing above waits for them) | handoff + final report |
 
 In Compose, be a creative co-director: script cues are the baseline, not a limit; improve them within the rules in `CLAUDE.md` (Creative direction), and list every creative change in `log.md`.
 

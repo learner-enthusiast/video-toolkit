@@ -27,7 +27,8 @@ Prompts follow `templates/editing-prompt.md` (topic, path, speed-up cap, notes/s
 - **Footage and layout.** Talking head is portrait phone video unless the prompt says otherwise. Every beat is HEAD, FULL or SPLIT (`brand.md` Layout, `components/specs/layout-states.md`); the script's state tags are the plan, and switch points may move by a beat or two (`CLAUDE.md`, Creative direction). In SPLIT the graphic sits on top and the face is docked below.
 - **Script into the project.** Save the prompt's `# Script` as `projects/<name>/script.md` in the style of `templates/script-reel.md`, with a Glossary.
 - **Caption prep (Prep).** Record in the `script.md` Glossary: caption spellings (names, APIs and code terms exactly as written), number formatting (spoken numbers → digits, ₹, %, separators) and the orange-highlight words. Take them from the prompt's notes; where it gives none, derive them from the script and list them in the handoff. Captions follow the actual words (`CLAUDE.md`, Workflow).
-- **Never cut any script line**, including one-word lines, the greeting, the recap and the sign-off. Only retakes, fillers and dead pauses go.
+- **Web captures (Prep).** Take every capture in the script's `## Web captures` list yourself with Playwright (`pipeline/web-capture.md`): framed for its beat (mobile viewport for FULL beats), cleaned, focus boxes saved. Never ask me for public pages.
+, including one-word lines, the greeting, the recap and the sign-off. Only retakes, fillers and dead pauses go.
 - **HARD RULE: length (final ≤ 2:59, or the prompt's limit).** In this order, and stop at the first step that fits:
   1. Cut retakes: keep the last complete, clean take of each paragraph (`/cut-video`, `pipeline/take-selection.md`).
   2. Tighten pauses to 0.2–0.3 s and remove fillers and restarts. Keep the deliberate pauses the script or prompt marks (e.g. after "Namoshkar!", before "Bye bye, sayonara!"). A 30–60 s reel uses the tighter pauses under Length below.
@@ -56,6 +57,7 @@ Prompts follow `templates/editing-prompt.md` (topic, path, speed-up cap, notes/s
 - **9:16 only.** A reel never builds, previews, stills, QAs or renders anything in 16:9: no landscape layout, composition, trailer or thumbnail (`CLAUDE.md`, Deliverables).
 - **Trailer.** Always make exactly one short cut, rendered in 9:16 only: `out/<name>_trailer_9x16.mp4` (`pipeline/trailer.md`). If the prompt defines a short cut, that is the trailer; otherwise the default 15–20 s trailer. Never both.
 - **Carousel twin.** After the final render's QA, run `/carousel <name>` (`pipeline/carousel.md`): 6–8 slides in `out/carousel/`, with its outline and slide-1 approval stops.
-- **Social copy.** Always write `out/<name>_social.json` per `pipeline/social-copy.md`. YouTube chapters don't apply to a reel; use the `shorts_title` and a short description instead.
+- **Text posts (extra).** Last, after the video deliverables are done and reported, run `/text-posts <name>` (`pipeline/text-posts.md`): the LinkedIn hook photo, the full LinkedIn post, the X post and the X Article in `out/text-posts/`, with its draft and photo approval stops. The video's LinkedIn/X captions in the social JSON stay as they are.
+ Always write `out/<name>_social.json` per `pipeline/social-copy.md`. YouTube chapters don't apply to a reel; use the `shorts_title` and a short description instead.
 
 Stop at the rough cut for my OK, as always.

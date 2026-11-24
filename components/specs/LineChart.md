@@ -3,7 +3,7 @@ code: components/code/LineChart/LineChart.tsx
 preview: components/code/LineChart/preview.png
 props: "w, h, a[], b[], markIdx, drawAt, spikeAt, dotAt, labels {a,b,mark,alert,x}, at, out"
 variants: "two series, B spikes orange after a marker, alert dot"
-last_used: system-design-of-ai/11-max-tokens-and-truncation
+last_used: system-design-of-ai/12-tokenizers
 ---
 # LineChart
 

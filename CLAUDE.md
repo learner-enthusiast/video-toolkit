@@ -69,7 +69,12 @@ Flags and VLM captions are leads, not verdicts. Judge them against this file and
 
 ## Installs
 - CLIs and models are global or user-wide (apt, `npm i -g`, pipx or one shared user venv; models stay in `~/.cache`).
-- Libraries (Remotion, simple-icons) are per project, inside `work/`.
+- Libraries (Remotion, simple-icons) are per project, inside `work/`. Exception: Playwright and its Chromium are global (`npm i -g playwright`, browsers in `~/.cache/ms-playwright`).
+
+## Web captures
+- You have Playwright (MCP tools or the global CLI) and web access: take every web screenshot and screen clip a video needs yourself, per `pipeline/web-capture.md`. Don't ask me for them. I only supply what's private or behind my login, in `assets/`.
+- Capture for the frame (layout state and on-screen size, scale 2), clean the page (no banners, pop-ups, sticky bars), never alter its content, keep date and source on evidence shots, and save each element's focus box so zooms and highlights land exactly on it.
+- If a script cue names a page or a fact ("the Redis docs say…", "this headline") and no URL is given, find the original source yourself, capture it, and log the URL in `work/captures/captures.md`.
 
 ## Workflow
 - Never modify `raw/` or `assets/`. Work on copies in `work/`.
@@ -94,8 +99,9 @@ Flags and VLM captions are leads, not verdicts. Judge them against this file and
 - Deliver at -16 LUFS with A/V sync verified at the start, middle and end.
 
 ## Deliverables
-- **Reels (final length ≤ 2:59) are 9:16 only, start to finish:** the main video in 9:16 (1080x1920), exactly one trailer in 9:16 (a short cut defined in the prompt IS the trailer; otherwise the default from `pipeline/trailer.md`; never both), an SRT for each, a 9:16 cover/thumbnail (1080x1920) in `out/thumbnail/` plus the ChatGPT kit (`pipeline/thumbnail.md`), `<name>_social.json` (`pipeline/social-copy.md`) and the carousel twin. No 16:9 renders, stills, QA or layouts for a reel. Don't wait to be asked.
-- Long-form (> 3:00) keeps 16:9 + 9:16 as before: every long-form video ships with the main video, exactly one trailer cut rendered in landscape 16:9 and portrait 9:16 (a short cut defined in the prompt IS the trailer; otherwise the default from `pipeline/trailer.md`; never both), an SRT for each, thumbnails in `out/thumbnail/` along with a ChatGPT kit (up to 3 static assets plus a ready prompt and a template for my own) (`pipeline/thumbnail.md`), and `<name>_social.json` with ready-to-paste titles, posts and hashtags for LinkedIn, X, Instagram, Facebook, Threads and YouTube (`pipeline/social-copy.md`). Don't wait to be asked.
+- **Reels (final length ≤ 2:59) are 9:16 only, start to finish:** the main video in 9:16 (1080x1920), exactly one trailer in 9:16 (a short cut defined in the prompt IS the trailer; otherwise the default from `pipeline/trailer.md`; never both), an SRT for each, a 9:16 cover/thumbnail (1080x1920) in `out/thumbnail/` plus the ChatGPT kit (`pipeline/thumbnail.md`), `<name>_social.json` (`pipeline/social-copy.md`), the carousel twin and the text posts (`pipeline/text-posts.md`). No 16:9 renders, stills, QA or layouts for a reel. Don't wait to be asked.
+- Long-form (> 3:00) keeps 16:9 + 9:16 as before: every long-form video ships with the main video, exactly one trailer cut rendered in landscape 16:9 and portrait 9:16 (a short cut defined in the prompt IS the trailer; otherwise the default from `pipeline/trailer.md`; never both), an SRT for each, thumbnails in `out/thumbnail/` along with a ChatGPT kit (up to 3 static assets plus a ready prompt and a template for my own) (`pipeline/thumbnail.md`), and `<name>_social.json` with ready-to-paste titles, posts and hashtags for LinkedIn, X, Instagram, Facebook, Threads and YouTube (`pipeline/social-copy.md`), and the text posts (`pipeline/text-posts.md`). Don't wait to be asked.
 - Every 9:16 reel delivery also produces a carousel twin in `projects/<name>/out/carousel/`, built from that project's `script.md` (`pipeline/carousel.md`). `/carousel <project>` can also be run on its own for older projects.
-- Keep X posts within 280 chars unless I say I have X Premium.
+- Every video (reel and long-form) also gets its text posts in `projects/<name>/out/text-posts/`: the LinkedIn hook photo (content, never my face) with the full LinkedIn post, and the X post, all ready to paste as they are (`/text-posts`, `pipeline/text-posts.md`). These are **extras**: I still post the video on LinkedIn and X with its captions from `<name>_social.json`. Nothing in the video pipeline changes or waits for them.
+- X Premium: **yes**. The video's X caption stays ≤ 280 chars with a `post_long` version (`pipeline/social-copy.md`); the extra X text post may run past 280 chars, and every video also gets an X Article (`pipeline/text-posts.md`).
 - All final files go in `projects/<name>/out/`. Intermediates stay in `work/`.

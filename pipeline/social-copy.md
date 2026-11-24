@@ -9,7 +9,9 @@
 
 **Platform rules**
 - **LinkedIn:** professional, first-person. A hook line, 3–6 short lines of value, a CTA. Under 1,300 chars so it reads well before "see more". 3–5 hashtags at the end.
-- **X:** short. The whole post including hashtags ≤ 280 chars, with 1–2 hashtags. Only if I say I have X Premium, also write a longer `post_long` (up to ~1,000 chars).
+- **X:** short. The whole post including hashtags ≤ 280 chars, with 1–2 hashtags. I have X Premium (`CLAUDE.md`), so also write a longer `post_long` (up to ~1,000 chars).
+
+These are the captions for posting the **video** on each platform, unchanged. The extra standalone text posts for LinkedIn and X (`pipeline/text-posts.md`) are separate files and never replace these.
 - **Instagram:** hook in the first line (it's cut at ~125 chars), short caption, a CTA. 5–10 hashtags in a separate field. Total ≤ 2,200 chars.
 - **Facebook:** conversational, 1–3 short paragraphs, 2–4 hashtags.
 - **Threads:** casual, ≤ 500 chars including hashtags, 1–3 hashtags.

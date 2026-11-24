@@ -28,3 +28,8 @@ Format: **ID** · `[mm:ss–mm:ss | HEAD, FULL or SPLIT]` · spoken text → vis
 **C1** · "<one-line recap: the payoff of the hook>" → TALK, warm, captions only
 **C2** · "Bye bye, sayonara!" with a wave → HEAD
 **End card** (5 s) → EndCard with links from `brand.md`
+
+## Web captures (Claude takes these with Playwright)
+| # | URL (or "find the source") | Capture (element / full page / clip) | For beat | Focus on |
+|---|---|---|---|---|
+| 01 | <https://…> | <element: the pricing table> | <B2> | <the "per 1M tokens" row> |

@@ -3,7 +3,7 @@ code: components/code/CodeCard/CodeCard.tsx
 preview: components/code/CodeCard/preview.png
 props: "lines, at, width, size, cps, hl [{line,at,off?,from?,to?}], logo, logos, tags, adds [{line,at}], drops [{line,at}]"
 variants: "with/without logo(s), line vs range highlight, tags, diff (adds/drops)"
-last_used: system-design-of-ai/11-max-tokens-and-truncation
+last_used: system-design-of-ai/09-prompt-caching
 ---
 # CodeCard
 

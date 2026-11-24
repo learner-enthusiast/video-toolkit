@@ -3,7 +3,7 @@ code: components/code/Stamp/Stamp.tsx
 preview: components/code/Stamp/preview.png
 props: "x, y, at, out, text, tone (orange|dim), rotate, size"
 variants: "tone x2"
-last_used: system-design-of-ai/11-max-tokens-and-truncation
+last_used: system-design-of-ai/09-prompt-caching
 ---
 # Stamp
 

@@ -14,6 +14,7 @@ description: Check which video tools are installed, ask before installing the mi
    - Cached models: faster-whisper large-v3, wav2vec2 alignment model
    - Delegation CLIs (`pipeline/delegation.md`): `copilot --version` and `gh auth status`; `codex --version` and `codex login status`; `cursor-agent --version` and `cursor-agent status`. Each must be installed **and** logged in; also report the Copilot usage reading (`gh api /copilot_internal/user`) and the cursor-agent canary result. Missing ones: ask, then install globally
    - `rembg` (optional, used for thumbnails)
+   - Playwright for web captures (`pipeline/web-capture.md`): `npx -y playwright --version` resolves to the global install (`npm ls -g playwright`), Chromium is in `~/.cache/ms-playwright`, and `claude mcp list` shows whether the Playwright MCP server is connected. Missing: `npm i -g playwright` and `npx playwright install chromium`; print `sudo npx playwright install-deps chromium` for me to run if system libraries are missing
    - `img2pdf` on PATH (for `/carousel` PDFs; install with `pipx install img2pdf`)
    - `praatio` in the shared venv, and `~/bin/mfa` with the `english_mfa` acoustic model and dictionary (for `/cut-video`)
    - The Remotion skills: `.claude/skills/remotion-best-practices/SKILL.md` resolves (they're gitignored, so a fresh clone lacks them)

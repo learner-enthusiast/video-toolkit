@@ -3,7 +3,7 @@ code: components/code/ChatBubble/ChatBubble.tsx
 preview: components/code/ChatBubble/preview.png
 props: "role, text, at, typeTo, out, w, size, dark, dim, children, style"
 variants: "user · assistant, typed or static, trailing mark slot"
-last_used: system-design-of-ai/11-max-tokens-and-truncation
+last_used: system-design-of-ai/09-prompt-caching
 ---
 # ChatBubble
 

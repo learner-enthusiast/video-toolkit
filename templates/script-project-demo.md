@@ -29,3 +29,8 @@ Format: **ID** [TRAILER] · `[mm:ss–mm:ss | HEAD, FULL or SPLIT]` · spoken te
 
 ## Trailer order (if any)
 `O1 → P1 → F? → H2 → C1 → C2 → end card`
+
+## Web captures (Claude takes these with Playwright)
+| # | URL (or "find the source") | Capture (element / full page / clip) | For beat | Focus on |
+|---|---|---|---|---|
+| 01 | <https://…> | <element: the pricing table> | <B2> | <the "per 1M tokens" row> |

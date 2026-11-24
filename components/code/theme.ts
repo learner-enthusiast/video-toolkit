@@ -1,6 +1,6 @@
 // Design tokens from /brand.md. A brand change is one edit in this file.
 // Components never hard-code a colour, font, radius, border or shadow: they import from here.
-export {inter, serif, mono} from './fonts';
+export {inter, serif, mono, deva, bengali} from './fonts';
 
 export const C = {
   bg: '#F7F4EE', // page + grid card background

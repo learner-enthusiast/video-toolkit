@@ -43,6 +43,12 @@ import {DeadlineLane} from '../DeadlineLane/DeadlineLane';
 
 import {PhoneMockup} from '../PhoneMockup/PhoneMockup';
 import {TokenStream} from '../TokenStream/TokenStream';
+import {TokenBlocks} from '../TokenBlocks/TokenBlocks';
+import {PromptStack} from '../PromptStack/PromptStack';
+import {PrefixMatch} from '../PrefixMatch/PrefixMatch';
+import {KycCounter} from '../KycCounter/KycCounter';
+import {BillCard} from '../BillCard/BillCard';
+import {TokenDictionary} from '../TokenDictionary/TokenDictionary';
 import {ExamSheet, RoughSheet} from '../ExamSheet/ExamSheet';
 import {BarCompare} from '../BarCompare/BarCompare';
 import {FlowLanes} from '../FlowDiagram/FlowDiagram';
@@ -138,6 +144,13 @@ const previews: Record<string, React.FC> = {
   FlowDiagram: () => <Stage><At x={36} y={80}><FlowLanes aAt={0} failAt={10} bAt={14} retryAt={40} at={0} /></At></Stage>,
   LineChart: () => <Stage><At x={36} y={120}><LineChart w={900} h={740} drawAt={0} spikeAt={20} dotAt={44} at={0} /></At></Stage>,
   ChatBubble: () => <Stage><div style={{position: 'absolute', left: 300, right: 40, top: 200}}><ChatBubble role="user" text="Five days in Goa." at={0} size={46} /></div><div style={{position: 'absolute', left: 40, right: 200, top: 420}}><ChatBubble role="bot" text="Here's a day-by-day plan." at={6} size={46} /></div></Stage>,
+  // sample data = real Llama 3 output (llama3-tokenizer-js 1.2.0)
+  TokenBlocks: () => <Stage><At x={110} y={160}><TokenBlocks w={800} at={0} stagger={3} size={40} label="English" counter="ink" pieces={[{text: 'Your'}, {text: ' order'}, {text: ' reaches'}, {text: ' you'}, {text: ' by'}, {text: ' Friday'}]} highlight={[5]} charCount={{value: 31, at: 20}} /></At><At x={110} y={520}><TokenBlocks w={800} at={10} stagger={3} size={48} font="deva" label="Hindi" counter="orange" pieces={[{text: 'श'}, {text: 'ुक'}, {text: '्रव'}, {text: 'ार'}, {text: '', byte: true}, {text: '', byte: true}, {text: 'र'}, {text: '्ड'}, {text: 'र'}]} charCount={{value: 13, at: 30}} /></At></Stage>,
+  TokenDictionary: () => <Stage><At x={54} y={20}><TokenDictionary at={0} entriesAt={4} entries={['Friday', 'order', 'refund', 'delivery', 'reach', 'your', 'will', 'price']} ids={[35720, 1382, 69583, 33490, 23430, 22479, 14724, 6692]} words={[{text: 'order', found: true, pieces: [{text: 'order'}]}, {text: 'ऑर्डर', found: false, font: 'deva', pieces: [{text: '', byte: true}, {text: '', byte: true}, {text: 'र'}, {text: '्ड'}, {text: 'र'}]}, {text: 'refund', found: true, pieces: [{text: 'refund'}]}, {text: 'रिफंड', found: false, font: 'deva', pieces: [{text: 'र'}, {text: 'िफ'}, {text: 'ंड'}]}]} lookAt={[8, 20, 32, 44]} footnote="vocabulary from training text, mostly English · grey = byte" footAt={10} /></At></Stage>,
+  PromptStack: () => <Stage><At x={60} y={250}><PromptStack w={800} at={0} clauseAt={0} qAt={4} detailsAt={2} reorderAt={10} lockAt={40} changesAt={40} sysCount="3,000" toolsCount="2,000" tools={['search_policy', 'claim_status', 'find_hospital']} clause="clauses: 4.2 · 7.1 · 9" q="Is my knee surgery covered?" /></At></Stage>,
+  PrefixMatch: () => <Stage><At x={160} y={380}><PrefixMatch at={0} step={3} size={28} rows={[['You', 'are', 'the', 'claims', 'assistant', '…'], ['You', 'are', 'the', 'claims', 'bot', '…']]} /></At></Stage>,
+  KycCounter: () => <Stage><At x={50} y={160}><KycCounter mode="every" visits={[0, 30]} /></At></Stage>,
+  BillCard: () => <Stage><At x={150} y={330}><BillCard w={740} logo="openai.svg" tag="example" strike="₹35.6 lakh" amount="₹3.6 lakh" line="same 5,000 tokens · cached" /></At></Stage>,
 };
 
 export const Root: React.FC = () => (

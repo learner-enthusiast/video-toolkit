@@ -43,6 +43,7 @@
 
 - The next stage reads this first, so it must stand alone: exact files, timestamps and values, no "as discussed".
 
+- A text-posts run (`/text-posts`) is a normal entry titled `· Text posts`: the approved hooks, the photo approval (or "self-judged" and why), files in `out/text-posts/`, character counts, QA fixes.
 - A carousel run (`/carousel`) is a normal entry titled `· Carousel`: slide count, the outline/look approvals (or "self-judged" and why), files in `out/carousel/`, QA fixes.
 - Times are local (IST). "Took" is from the prompt hook to the last assistant message.
 - Changes name files relative to the project and say what changed in each, not just "edited".

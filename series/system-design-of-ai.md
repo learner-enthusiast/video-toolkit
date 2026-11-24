@@ -16,7 +16,7 @@ Tracked rules for every episode in `projects/system-design-of-ai/<NN>-<topic>/` 
 - #01–#04 (legacy): told with Taarak Mehta Ka Ooltah Chashmah characters as role-players, only as simple, generic illustrated avatars with name labels in the brand style; no show stills, clips, logos or actor likeness, ever.
 
 **Length and hook**
-- Open with "Namoshkar!" (~1.5 s with the pause), then the hook line (boldest claim, result or problem), landing within the first 3 seconds. A 2–5 word text hook is on screen from frame 0.
+- Open with the hook line (boldest claim, result or problem) from frame 0, then "Namoshkar!" (~1 s hold + ~0.5 s pause). A 2–5 word text hook is on screen from frame 0. If "Namoshkar!" was recorded first, move that take to right after the hook (rule since 2026-11-24, #9).
 - Close with a one-line recap (the payoff of the hook), then "Bye bye, sayonara!" with a wave, before the end card.
 - 9:16 short; final length ≤ 2:59.
 
@@ -44,6 +44,7 @@ Tracked rules for every episode in `projects/system-design-of-ai/<NN>-<topic>/` 
 | 06 | `projects/system-design-of-ai/06-cancellation/` | Cancellation (abort the LLM stream when the client leaves). Exception: no characters; plain explanation. |
 | 07 | `projects/system-design-of-ai/07-provider-failover/` | Provider failover (retries, circuit breaker, fallback chain across LLM providers). Exception: No Taarak Mehta characters and no character avatars; told in plain second person ('you're a junior dev at an instant-loan app'). |
 | 08 | `projects/system-design-of-ai/08-long-running-requests/` | Long-running requests. Exception: no Taarak Mehta characters and no avatars; told in plain second person ("you're a junior dev at an investing app"), with one phone-call analogy running through the whole episode. |
-| 09 | `projects/system-design-of-ai/09-prompt-caching/` | Prompt caching |
+| 09 | `projects/system-design-of-ai/09-prompt-caching/` | Prompt caching. Exception: no characters; told as "you", a junior dev at an insurance company; KYC analogy. |
 | 10 | `projects/system-design-of-ai/10-batch-inference/` | Batch inference. Exception: No Taarak Mehta characters and no character avatars; told in plain second person ('you're the junior dev at a stock trading app'). |
 | 11 | `projects/system-design-of-ai/11-max-tokens-and-truncation/` | max_tokens and truncation. Exception: no Taarak Mehta characters; second person (junior dev at a travel startup); real incident only as an anonymous IncidentCard. |
+| 12 | `projects/system-design-of-ai/12-tokenizers/` | Tokenizers. Exception: no Taarak Mehta characters; told in second person ('you're the junior dev at an online electronics store adding Hindi'); real sources only as name + logo + source cards. |
