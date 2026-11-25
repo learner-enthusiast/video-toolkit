@@ -12,7 +12,7 @@
 
 **Rules**
 - 9:16: the cutout's head must start below the headline and accent visual (about y ≥ 800 of 1920), or the face covers the text. Check at 180x320.
-- Cut out with rembg `birefnet-portrait`: much cleaner ears and shoulders than `u2net_human_seg` on busy phone backgrounds.
+- Keep my microphone and boom arm, fully recognisable (`pipeline/thumbnail.md`): cut out with rembg `birefnet-general` (`birefnet-portrait` drops the mic), union a separate mic-region mask when parts are missing, and let the arm run off the canvas edge.
 - Place the cutout from its alpha bounding box (hair-top y × scale), not from another video's numbers: how far I sit from the phone changes it. On `bloom-filter` the copied placement put my head at y≈500 over the accent; hair top at y≈830 fixed it.
 - Show one idea; it must read at 320x180.
 - Keep text out of the bottom-right corner (the duration badge).
