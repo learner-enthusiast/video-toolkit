@@ -15,7 +15,9 @@ Creates:
 - `tsconfig.json` with `preserveSymlinks`
 - Symlinks `public/icons` → repo `icons/`, `src/shared` → `components/code/`
 - `src/theme.ts` stub (fill from `brand.md`)
-- `src/lib/layout.tsx` stub pointing at `layout-states.md`
+- `src/lib/layout.ts` — rect/constants stub (`components/specs/layout-states.md`)
+- `src/Root.tsx` + `src/index.ts` — minimal Remotion registration
+- `package.json` with scripts and Remotion version from `components/code/REMOTION_VERSION`
 - `public/data/.gitkeep`
 
 Does not copy scenes or timeline; `pipeline/composition.md` still owns storyboard and data build scripts.
