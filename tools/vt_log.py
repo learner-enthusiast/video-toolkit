@@ -180,6 +180,13 @@ def summarize(entries: list[dict]) -> dict:
     unknown_stage = sum(1 for e in entries if e.get("stage") == "unknown")
 
     timings = [e["took_seconds"] for e in entries if e.get("took_seconds") is not None]
+    timing_by_stage: dict[str, list[int]] = {}
+    stage_counts: dict[str, int] = {}
+    for e in entries:
+        st = e["stage"]
+        stage_counts[st] = stage_counts.get(st, 0) + 1
+        if e.get("took_seconds") is not None:
+            timing_by_stage.setdefault(st, []).append(e["took_seconds"])
 
     for e in entries:
         st = e["stage"]
@@ -203,9 +210,15 @@ def summarize(entries: list[dict]) -> dict:
                 dst2 = sm.setdefault(model, _zero())
                 _add(dst2, t)
 
+    stage_timing = {
+        st: timing_stats(vals)
+        for st, vals in timing_by_stage.items()
+        if vals
+    }
     return {
         "entries": len(entries),
         "unknown_stage_entries": unknown_stage,
+        "stage_sample_counts": stage_counts,
         "totals": {"main": tot_main, "subagents": tot_sub},
         "by_stage": {"main": by_stage, "subagents": by_stage_sub},
         "by_model": {"main": by_model_main or None, "subagents": by_model_sub or None},
@@ -214,6 +227,8 @@ def summarize(entries: list[dict]) -> dict:
             "subagents": by_stage_model_sub or None,
         },
         "timing": timing_stats(timings),
+        "timing_by_stage": stage_timing,
+        "timing_note": "Summed prompt-turn **Took** durations; not total wall-clock production time.",
         "note": "Measured hook usage only; cache_read is not fresh input. Context byte estimates in token-budget.md are separate.",
     }
 
@@ -245,6 +260,45 @@ def _diff_by_stage(a: dict | None, b: dict | None, *, skip_unknown: bool = True)
             out[f"only_baseline:{st}"] = a[st]
         else:
             out[st] = _diff_bucket(a[st], b[st])
+    return out
+
+
+def _pct_stage_delta(
+    base_stages: dict | None, cand_stages: dict | None, deltas: dict | None
+) -> dict:
+    base_stages = base_stages or {}
+    cand_stages = cand_stages or {}
+    deltas = deltas or {}
+    out = {}
+    for st, delta in deltas.items():
+        if not isinstance(delta, dict) or st.startswith("only_"):
+            continue
+        out[st] = {
+            k: _pct_delta(base_stages.get(st, _zero()).get(k, 0), cand_stages.get(st, _zero()).get(k, 0))
+            for k in _zero()
+        }
+    return out
+
+
+def _stage_timing_compare(base: dict, cand: dict) -> dict:
+    bs = (base.get("timing_by_stage") or {})
+    cs = (cand.get("timing_by_stage") or {})
+    out = {}
+    for st in sorted(set(bs) | set(cs)):
+        if st == "unknown":
+            continue
+        if st not in bs:
+            out[f"only_candidate:{st}"] = cs[st]
+        elif st not in cs:
+            out[f"only_baseline:{st}"] = bs[st]
+        else:
+            bsum = bs[st].get("total_seconds")
+            csum = cs[st].get("total_seconds")
+            out[st] = {
+                "baseline": bs[st],
+                "candidate": cs[st],
+                "delta_total_seconds": (csum - bsum) if bsum is not None and csum is not None else None,
+            }
     return out
 
 
@@ -284,6 +338,14 @@ def compare_logs(base_path: str, cand_path: str) -> dict:
         delta_tm = cand_tm - base_tm
     b_models, b_sub = _model_sets(base)
     c_models, c_sub = _model_sets(cand)
+    by_stage_main = _diff_by_stage(
+        (base.get("by_stage") or {}).get("main"),
+        (cand.get("by_stage") or {}).get("main"),
+    )
+    by_stage_sub = _diff_by_stage(
+        (base.get("by_stage") or {}).get("subagents"),
+        (cand.get("by_stage") or {}).get("subagents"),
+    )
     return {
         "baseline": base_path,
         "candidate": cand_path,
@@ -308,12 +370,32 @@ def compare_logs(base_path: str, cand_path: str) -> dict:
             )
             for k in _zero()
         },
+        "delta_subagents_pct": {
+            k: _pct_delta(
+                (base.get("totals") or {}).get("subagents", _zero()).get(k, 0),
+                (cand.get("totals") or {}).get("subagents", _zero()).get(k, 0),
+            )
+            for k in _zero()
+        },
         "baseline_timing": base.get("timing"),
         "candidate_timing": cand.get("timing"),
+        "timing_by_stage_compare": _stage_timing_compare(base, cand),
         "delta_total_seconds": delta_tm,
-        "by_stage_delta_main": _diff_by_stage(
+        "stage_sample_counts": {
+            "baseline": base.get("stage_sample_counts"),
+            "candidate": cand.get("stage_sample_counts"),
+        },
+        "by_stage_delta_main": by_stage_main,
+        "by_stage_delta_subagents": by_stage_sub,
+        "by_stage_delta_main_pct": _pct_stage_delta(
             (base.get("by_stage") or {}).get("main"),
             (cand.get("by_stage") or {}).get("main"),
+            by_stage_main,
+        ),
+        "by_stage_delta_subagents_pct": _pct_stage_delta(
+            (base.get("by_stage") or {}).get("subagents"),
+            (cand.get("by_stage") or {}).get("subagents"),
+            by_stage_sub,
         ),
         "by_model_delta_main": _diff_models(
             (base.get("by_model") or {}).get("main"),
@@ -334,7 +416,11 @@ def compare_logs(base_path: str, cand_path: str) -> dict:
             (base.get("by_stage_model") or {}).get("main"),
             (cand.get("by_stage_model") or {}).get("main"),
         ),
-        "note": "Stages unknown excluded from by_stage_delta_main. Model deltas only in comparable_models.",
+        "by_stage_model_delta_subagents": _diff_stage_model(
+            (base.get("by_stage_model") or {}).get("subagents"),
+            (cand.get("by_stage_model") or {}).get("subagents"),
+        ),
+        "note": "Stages unknown excluded from stage deltas. Model deltas only in comparable_models.",
     }
 
 

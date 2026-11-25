@@ -89,6 +89,32 @@ class VtLogTest(unittest.TestCase):
             os.remove(p1)
             os.remove(p2)
 
+    def test_compare_subagent_stage_and_timing(self):
+        base = (
+            "**Finished** 12:00:00 · **Took** 40 s\n**Stage:** prep\n"
+            "**Tokens:** input 10 · cache write 0 · cache read 0 · output 1 "
+            "(main session; subagents: input 3 · cache write 0 · cache read 0 · output 1)\n"
+        )
+        cand = (
+            "**Finished** 12:01:00 · **Took** 20 s\n**Stage:** prep\n"
+            "**Tokens:** input 5 · cache write 0 · cache read 0 · output 1 "
+            "(main session; subagents: input 1 · cache write 0 · cache read 0 · output 1)\n"
+        )
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f1:
+            f1.write(base)
+            p1 = f1.name
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f2:
+            f2.write(cand)
+            p2 = f2.name
+        try:
+            cmp = vt_log.compare_logs(p1, p2)
+            self.assertIn("prep", cmp["by_stage_delta_subagents"])
+            self.assertEqual(cmp["by_stage_delta_subagents"]["prep"]["input"], -2)
+            self.assertIn("prep", cmp["timing_by_stage_compare"])
+        finally:
+            os.remove(p1)
+            os.remove(p2)
+
     def test_compare_delta(self):
         base = (
             "**Finished** 12:00:00 · **Took** 60 s\n**Stage:** prep\n"

@@ -21,6 +21,9 @@ CACHE_VERSION = 2
 MANIFEST = "work/cache/asset-manifest.json"
 SCRIPT_SELF = os.path.abspath(__file__)
 
+# Test instrumentation: increment on each input file hash (see tests).
+_INPUT_HASH_CALLS = 0
+
 
 def sha256_file(path: str) -> str:
     h = hashlib.sha256()
@@ -34,6 +37,66 @@ def implementation_hash() -> str:
     return sha256_file(SCRIPT_SELF)[:16]
 
 
+class MissingScriptFingerprintError(ValueError):
+    pass
+
+
+def _hash_input_file(path: str) -> tuple[str | None, int | None, int | None]:
+    global _INPUT_HASH_CALLS
+    if not os.path.isfile(path):
+        return None, None, None
+    _INPUT_HASH_CALLS += 1
+    st = os.stat(path)
+    digest = sha256_file(path)
+    return digest, st.st_size, st.st_mtime_ns
+
+
+def build_operation_fingerprint(
+    op: str,
+    inp: str,
+    params: dict | None,
+    *,
+    script_path: str | None = None,
+    tool_version: str | None = None,
+) -> dict:
+    """Compute all fingerprint fields once per command."""
+    if script_path and not os.path.isfile(script_path):
+        raise MissingScriptFingerprintError(f"script not found: {script_path}")
+    inp_abs = os.path.abspath(inp)
+    inp_hash, inp_size, inp_mtime = _hash_input_file(inp) if os.path.isfile(inp) else (None, None, None)
+    impl = implementation_hash()
+    script_hash = None
+    if script_path and os.path.isfile(script_path):
+        script_hash = sha256_file(script_path)[:16]
+    return {
+        "op": op,
+        "input": inp_abs,
+        "input_sha256": inp_hash,
+        "input_size": inp_size,
+        "input_mtime_ns": inp_mtime,
+        "params": params,
+        "tool_version": tool_version or "unknown",
+        "implementation": impl,
+        "script_hash": script_hash,
+    }
+
+
+def cache_key_from_fingerprint(fp: dict) -> str:
+    inp_tag = fp["input_sha256"] if fp.get("input_sha256") else fp["input"]
+    parts = [
+        f"v{CACHE_VERSION}",
+        fp["implementation"],
+        fp["op"],
+        inp_tag,
+        fp["tool_version"],
+    ]
+    if fp.get("script_hash"):
+        parts.append(fp["script_hash"])
+    if fp.get("params") is not None:
+        parts.append(hashlib.sha256(json.dumps(fp["params"], sort_keys=True).encode()).hexdigest()[:16])
+    return hashlib.sha256("|".join(parts).encode()).hexdigest()[:24]
+
+
 def cache_key(
     op: str,
     inp: str,
@@ -41,19 +104,12 @@ def cache_key(
     *,
     script_path: str | None = None,
     tool_version: str | None = None,
+    fingerprint: dict | None = None,
 ) -> str:
-    parts = [
-        f"v{CACHE_VERSION}",
-        implementation_hash(),
-        op,
-        sha256_file(inp) if os.path.isfile(inp) else inp,
-        tool_version or "unknown",
-    ]
-    if script_path and os.path.isfile(script_path):
-        parts.append(sha256_file(script_path)[:16])
-    if params:
-        parts.append(hashlib.sha256(json.dumps(params, sort_keys=True).encode()).hexdigest()[:16])
-    return hashlib.sha256("|".join(parts).encode()).hexdigest()[:24]
+    fp = fingerprint or build_operation_fingerprint(
+        op, inp, params, script_path=script_path, tool_version=tool_version
+    )
+    return cache_key_from_fingerprint(fp)
 
 
 def manifest_path(project: str) -> str:
@@ -132,30 +188,13 @@ def bundle_root(project: str, key: str) -> str:
     return os.path.join(project, "work", "cache", "bundles", key)
 
 
-def _expect_fingerprint(op: str, inp: str, params, script_path, tool_version) -> dict:
-    expect_input = os.path.abspath(inp)
-    if os.path.isfile(inp):
-        expect_input_hash = sha256_file(inp)
-    else:
-        expect_input_hash = None
-    return {
-        "op": op,
-        "input": expect_input,
-        "input_hash": expect_input_hash,
-        "params": params,
-        "tool_version": tool_version or "unknown",
-        "implementation": implementation_hash(),
-        "script_hash": sha256_file(script_path)[:16] if script_path and os.path.isfile(script_path) else None,
-    }
-
-
 def _entry_matches_operation(ent: dict, expect: dict) -> str | None:
     if ent.get("op") != expect["op"]:
         return "op_mismatch"
     if ent.get("input") != expect["input"]:
         return "input_mismatch"
-    if expect["input_hash"]:
-        if ent.get("input_sha256") and ent["input_sha256"] != expect["input_hash"]:
+    if expect.get("input_sha256"):
+        if ent.get("input_sha256") and ent["input_sha256"] != expect["input_sha256"]:
             return "input_hash_mismatch"
     stored_ver = ent.get("tool_version") or "unknown"
     if stored_ver != expect["tool_version"]:
@@ -258,13 +297,16 @@ def _atomic_install_output(project: str, key: str, src_file: str, dest_name: str
 
 def cmd_lookup(args):
     params = json.loads(args.params) if args.params else None
-    key = cache_key(
-        args.op,
-        args.input,
-        params,
-        script_path=args.script,
-        tool_version=args.tool_version,
-    )
+    try:
+        fp = build_operation_fingerprint(
+            args.op, args.input, params, script_path=args.script, tool_version=args.tool_version
+        )
+    except MissingScriptFingerprintError as exc:
+        out = {"hit": False, "key": None, "reason": str(exc), "entry": None}
+        json.dump(out, sys.stdout, indent=2)
+        sys.stdout.write("\n")
+        sys.exit(1)
+    key = cache_key_from_fingerprint(fp)
     man, man_err = _read_manifest_file(args.project)
     if man_err:
         out = {"hit": False, "key": key, "reason": man_err, "entry": None}
@@ -272,7 +314,7 @@ def cmd_lookup(args):
         sys.stdout.write("\n")
         sys.exit(1)
     ent = man["entries"].get(key)
-    op_expect = _expect_fingerprint(args.op, args.input, params, args.script, args.tool_version)
+    op_expect = fp
     out = {"hit": False, "key": key, "reason": "miss", "entry": ent}
     if ent:
         ok, reason = verify_entry(args.project, ent, key, operation=op_expect)
@@ -287,35 +329,38 @@ def cmd_lookup(args):
 
 def cmd_store(args):
     params = json.loads(args.params) if args.params else None
-    key = cache_key(
-        args.op,
-        args.input,
-        params,
-        script_path=args.script,
-        tool_version=args.tool_version,
-    )
+    try:
+        fp = build_operation_fingerprint(
+            args.op, args.input, params, script_path=args.script, tool_version=args.tool_version
+        )
+    except MissingScriptFingerprintError as exc:
+        sys.exit(str(exc))
+    key = cache_key_from_fingerprint(fp)
     if not os.path.isfile(args.output):
         sys.exit("output file missing")
     out_size = os.path.getsize(args.output)
     if out_size < 1:
         sys.exit("output file empty")
+    if fp.get("input_size") is not None and os.path.isfile(args.input):
+        st = os.stat(args.input)
+        if st.st_size != fp["input_size"] or st.st_mtime_ns != fp["input_mtime_ns"]:
+            sys.exit("input changed during operation")
     out_hash = sha256_file(args.output)
-    inp_hash = sha256_file(args.input) if os.path.isfile(args.input) else None
     target = _atomic_install_output(args.project, key, args.output, os.path.basename(args.output))
     rel = os.path.relpath(target, args.project).replace("\\", "/")
     entry = {
-        "op": args.op,
+        "op": fp["op"],
         "path": rel,
-        "input": os.path.abspath(args.input),
-        "input_sha256": inp_hash,
-        "params": params,
-        "tool_version": args.tool_version or "unknown",
+        "input": fp["input"],
+        "input_sha256": fp.get("input_sha256"),
+        "params": fp.get("params"),
+        "tool_version": fp["tool_version"],
         "schema": CACHE_VERSION,
         "cache_key": key,
         "size": out_size,
         "sha256": out_hash,
-        "implementation": implementation_hash(),
-        "script_hash": sha256_file(args.script)[:16] if args.script and os.path.isfile(args.script) else None,
+        "implementation": fp["implementation"],
+        "script_hash": fp.get("script_hash"),
     }
 
     def _add(man: dict) -> None:
@@ -328,9 +373,12 @@ def cmd_store(args):
 def cmd_probe_ffprobe(args):
     """Store ffprobe JSON for a media file if cache miss."""
     params = {"tool": "ffprobe", "entries": args.entries or "format,duration:stream=codec_type"}
-    key = cache_key("ffprobe", args.input, params, tool_version=args.tool_version or "unknown")
+    fp = build_operation_fingerprint(
+        "ffprobe", args.input, params, script_path=None, tool_version=args.tool_version or "unknown"
+    )
+    key = cache_key_from_fingerprint(fp)
     man, man_err = _read_manifest_file(args.project)
-    op_expect = _expect_fingerprint("ffprobe", args.input, params, None, args.tool_version or "unknown")
+    op_expect = fp
     if not man_err:
         ent = man["entries"].get(key)
         if ent and not args.force:
@@ -363,15 +411,15 @@ def cmd_probe_ffprobe(args):
     entry = {
         "op": "ffprobe",
         "path": rel,
-        "input": os.path.abspath(args.input),
-        "input_sha256": sha256_file(args.input) if os.path.isfile(args.input) else None,
+        "input": fp["input"],
+        "input_sha256": fp.get("input_sha256"),
         "params": params,
-        "tool_version": args.tool_version or "unknown",
+        "tool_version": fp["tool_version"],
         "schema": CACHE_VERSION,
         "cache_key": key,
         "size": os.path.getsize(target),
         "sha256": sha256_file(target),
-        "implementation": implementation_hash(),
+        "implementation": fp["implementation"],
         "script_hash": None,
     }
 

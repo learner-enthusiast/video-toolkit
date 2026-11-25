@@ -24,6 +24,7 @@ if _TOOLS_DIR not in sys.path:
     sys.path.insert(0, os.path.dirname(_TOOLS_DIR))
 
 from tools.project_log_lock import project_log_lock  # noqa: E402
+from tools.hooks import transcript_ckpt as tck  # noqa: E402
 
 IST = dt.timezone(dt.timedelta(hours=5, minutes=30), "IST")
 PROJECT_MARKERS = ("log.md", "raw", "script.md", "work")
@@ -170,52 +171,25 @@ def cmd_prompt(data, root):
         json.dump(st, f)
 
 
-def usage_since(paths, since, main_only=None, seen=None):
-    """Sum assistant usage (deduped by message id) for entries at/after `since`.
-    Pass a shared `seen` set to dedupe across several calls."""
-    seen = set() if seen is None else seen
-    n0 = len(seen)
-    tot = dict(input=0, cache_write=0, cache_read=0, output=0)
-    by_model: dict[str, dict] = {}
-    last = None
-    for p in paths:
-        try:
-            fh = open(p, "rb")
-        except OSError:
-            continue
-        with fh:
-            for raw in fh:
-                if b'"assistant"' not in raw:
-                    continue
-                try:
-                    e = json.loads(raw)
-                except ValueError:
-                    continue
-                if e.get("type") != "assistant" or (e.get("timestamp") or "") < since:
-                    continue
-                if main_only is not None and bool(e.get("isSidechain")) == main_only:
-                    continue
-                m = e.get("message") or {}
-                mid = m.get("id") or e.get("uuid")
-                if mid in seen:
-                    continue
-                seen.add(mid)
-                u = m.get("usage") or {}
-                model = m.get("model") or "unknown"
-                mt = by_model.setdefault(
-                    model, dict(input=0, cache_write=0, cache_read=0, output=0)
-                )
-                for key, src in (
-                    ("input", "input_tokens"),
-                    ("cache_write", "cache_creation_input_tokens"),
-                    ("cache_read", "cache_read_input_tokens"),
-                    ("output", "output_tokens"),
-                ):
-                    v = u.get(src) or 0
-                    tot[key] += v
-                    mt[key] += v
-                last = max(last or "", e["timestamp"])
-    return tot, last, len(seen) - n0, by_model
+def usage_since(paths, since, main_only=None, seen=None, **kwargs):
+    """Incremental transcript scan with full-scan fallback (see transcript_ckpt)."""
+    inc = os.environ.get("PROJLOG_INCREMENTAL", "1") != "0"
+    checkpoint = kwargs.get("checkpoint")
+    if checkpoint is None and kwargs.get("root") and kwargs.get("session_id"):
+        checkpoint = tck.load_checkpoint(kwargs["root"], kwargs["session_id"])
+    return tck.usage_since(
+        paths,
+        since,
+        main_only,
+        seen,
+        checkpoint=checkpoint if inc else None,
+        incremental=inc,
+        session_id=kwargs.get("session_id"),
+        stats=kwargs.get("stats"),
+    )
+
+
+usage_since_full = tck.usage_since_full
 
 
 def fmt(t):
@@ -305,14 +279,18 @@ def cmd_tokens(data, root):
         time.sleep(1.0)  # let Claude Code flush the last assistant message
     tp = data.get("transcript_path") or ""
     since = st["started_utc"]
-    main, last, n_main, main_models = usage_since([tp], since, main_only=True) if tp else (None, None, 0, {})
+    ckpt = tck.load_checkpoint(root, sid)
+    if ckpt.pop("_invalid", None):
+        ckpt["files"] = {}
+    scan_kw = dict(root=root, session_id=sid, checkpoint=ckpt)
+    main, last, n_main, main_models = usage_since([tp], since, main_only=True, **scan_kw) if tp else (None, None, 0, {})
     sub_paths = []
     if tp:
         sub_paths = glob.glob(os.path.join(tp[:-len(".jsonl")] if tp.endswith(".jsonl") else tp, "subagents", "*.jsonl"))
-    sub_seen = set()  # one id set across subagents/*.jsonl and main-transcript sidechain entries
-    sub, slast, n_sub, sub_models = usage_since(sub_paths, since, seen=sub_seen)
+    sub_seen = set()
+    sub, slast, n_sub, sub_models = usage_since(sub_paths, since, seen=sub_seen, **scan_kw)
     side, sdlast, n_side, side_models = (
-        usage_since([tp], since, main_only=False, seen=sub_seen) if tp else (None, None, 0, {})
+        usage_since([tp], since, main_only=False, seen=sub_seen, **scan_kw) if tp else (None, None, 0, {})
     )
     for k in sub:
         sub[k] += side[k] if side else 0
@@ -342,6 +320,14 @@ def cmd_tokens(data, root):
     )
     with log_lock(root, project):
         insert_footer(os.path.join(root, project, "log.md"), st["prompt_ref"], footer)
+        try:
+            tck.save_checkpoint(root, sid, ckpt)
+        except Exception as exc:
+            log_err(root, project, f"checkpoint save failed: {exc}")
+    if os.environ.get("PROJLOG_VERIFY") == "1" and tp and n_main:
+        ref, _, _, _ = tck.usage_since_full([tp], since, main_only=True)
+        if ref != main:
+            log_err(root, project, f"incremental verify mismatch main tokens: {ref} vs {main}")
     drop_state(sp, started_key)
 
 

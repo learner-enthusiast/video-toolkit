@@ -320,6 +320,41 @@ class InspectCacheTest(unittest.TestCase):
             with open(os.path.join(dest, "keep.txt")) as f:
                 self.assertEqual(f.read(), "stay")
 
+    def test_manifest_entries_array_recovered_on_store(self, _p=None):
+        with tempfile.TemporaryDirectory() as td:
+            proj = os.path.join(td, "p")
+            os.makedirs(proj)
+            mp = ic.manifest_path(proj)
+            os.makedirs(os.path.dirname(mp))
+            with open(mp, "w") as f:
+                json.dump({"schema": ic.CACHE_SCHEMA, "entries": []}, f)
+            video = os.path.join(proj, "v.mp4")
+            with open(video, "wb") as f:
+                f.write(b"v")
+            insp = os.path.join(proj, "work", "inspect", "v")
+            os.makedirs(insp)
+            with open(os.path.join(insp, "report.json"), "w") as f:
+                json.dump({}, f)
+            with mock.patch.object(ic, "probe_meta", return_value=FAKE_PROBE.copy()):
+                with mock.patch("sys.stdout", io.StringIO()):
+                    ic.cmd_store(
+                        SimpleNamespace(
+                            project=proj,
+                            video=video,
+                            mode="default",
+                            start=None,
+                            end=None,
+                            inspect_script=None,
+                            ocr_script=None,
+                            config_hash="",
+                            model_id="",
+                            inspect_dir=insp,
+                        )
+                    )
+            self.assertTrue(os.path.isfile(mp + ".corrupt"))
+            man = ic.load_manifest(proj)
+            self.assertIsInstance(man.get("entries"), dict)
+
     @_patch_probe()
     def test_final_lookup_and_restore_refused(self, _p):
         with tempfile.TemporaryDirectory() as td:

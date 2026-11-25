@@ -285,8 +285,42 @@ def sync_handoff(project: str) -> dict:
 
 def cmd_init(args):
     with project_log_lock(args.project):
-        save_state(args.project, default_state(args.project))
-    print(state_path(args.project))
+        st, err = try_load_state(args.project)
+        if err == "NO_STATE":
+            save_state(args.project, default_state(args.project))
+            print(
+                json.dumps(
+                    {"status": "created", "path": state_path(args.project)},
+                    indent=2,
+                )
+            )
+            return
+        if err in ("INVALID_STATE_JSON", "INVALID_STATE_SCHEMA"):
+            print(
+                json.dumps(
+                    {
+                        "status": "refused",
+                        "error": err,
+                        "recovery": "vt-python tools/project_state.py sync-handoff",
+                        "path": state_path(args.project),
+                    },
+                    indent=2,
+                )
+            )
+            sys.exit(1)
+        if err:
+            print(json.dumps({"status": "refused", "error": err}, indent=2))
+            sys.exit(1)
+        print(
+            json.dumps(
+                {
+                    "status": "already_initialized",
+                    "path": state_path(args.project),
+                    "stage": st.get("stage"),
+                },
+                indent=2,
+            )
+        )
 
 
 def cmd_show(args):
