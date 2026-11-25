@@ -15,6 +15,8 @@ import sys
 import tempfile
 import uuid
 
+from tools import path_safety as ps
+
 CACHE_SCHEMA = 3
 MANIFEST = "work/inspect/.cache-manifest.json"
 REQUIRED_FOR_FULL = ("report.json",)
@@ -113,10 +115,14 @@ def _read_manifest_file(project: str) -> dict:
     except json.JSONDecodeError:
         return {"schema": CACHE_SCHEMA, "entries": {}, "_corrupt_previous": True}
     if not isinstance(data, dict):
-        return {"schema": CACHE_SCHEMA, "entries": {}}
+        return {"schema": CACHE_SCHEMA, "entries": {}, "_manifest_error": "invalid_manifest"}
     if data.get("schema") != CACHE_SCHEMA:
         return {"schema": CACHE_SCHEMA, "entries": {}}
-    data.setdefault("entries", {})
+    entries = data.get("entries")
+    if entries is None:
+        data["entries"] = {}
+    elif not isinstance(entries, dict):
+        return {"schema": CACHE_SCHEMA, "entries": {}, "_manifest_error": "invalid_entries"}
     return data
 
 
@@ -154,45 +160,91 @@ def bundle_dir(project: str, key: str) -> str:
     return os.path.join(project, "work", "inspect", ".cache", key)
 
 
-def normalize_relpath(rel: str) -> str | None:
-    if not rel or os.path.isabs(rel):
-        return None
-    norm = os.path.normpath(rel).replace("\\", "/")
-    if norm in (".", "") or norm.startswith("../") or "/../" in f"/{norm}/":
-        return None
-    return norm
-
-
-def resolve_in_bundle(bundle_root: str, rel: str) -> str | None:
-    nrel = normalize_relpath(rel)
-    if not nrel:
-        return None
-    root = os.path.realpath(bundle_root)
-    candidate = os.path.realpath(os.path.join(bundle_root, nrel))
-    if candidate == root:
-        return None
-    if not candidate.startswith(root + os.sep):
-        return None
-    return candidate
+normalize_relpath = ps.normalize_relpath
+resolve_in_bundle = ps.resolve_contained
 
 
 def iter_bundle_artifact_paths(bundle_root: str) -> list[str]:
-    """Relative paths of all non-metadata files (follows symlinks for listing)."""
+    """Relative paths of non-metadata files; symlinks are rejected."""
     found: list[str] = []
-    for dirpath, _, files in os.walk(bundle_root):
+    for dirpath, dirnames, files in os.walk(bundle_root, followlinks=False):
+        dirnames[:] = [
+            d
+            for d in dirnames
+            if not os.path.islink(os.path.join(dirpath, d))
+            and d not in METADATA_FILES
+        ]
         for fn in files:
             if fn in METADATA_FILES:
                 continue
             ap = os.path.join(dirpath, fn)
+            if os.path.islink(ap):
+                raise ValueError(f"symlink_forbidden:{fn}")
             rel = os.path.relpath(ap, bundle_root).replace("\\", "/")
             if not normalize_relpath(rel):
                 raise ValueError(f"unsafe_path:{rel}")
-            if os.path.islink(ap):
-                if resolve_in_bundle(bundle_root, rel) is None:
-                    raise ValueError(f"symlink_escape:{rel}")
             found.append(rel)
     found.sort()
     return found
+
+
+def _expected_bundle_relpath(key: str) -> str:
+    return os.path.normpath(os.path.join("work", "inspect", ".cache", key)).replace("\\", "/")
+
+
+def validate_cache_entry(project: str, key: str, ent: dict | None) -> str | None:
+    if not ent or not isinstance(ent, dict):
+        return "miss"
+    rel = ent.get("bundle_dir")
+    if not isinstance(rel, str):
+        return "invalid_entry"
+    exp = _expected_bundle_relpath(key)
+    if os.path.normpath(rel).replace("\\", "/") != exp:
+        return "bundle_dir_mismatch"
+    if ent.get("fingerprint") and ent["fingerprint"] != key:
+        return "fingerprint_mismatch"
+    bpath = os.path.join(project, rel)
+    if not os.path.isdir(bpath):
+        return "missing_bundle"
+    bmeta = os.path.join(bpath, "bundle.json")
+    if os.path.isfile(bmeta):
+        try:
+            with open(bmeta) as f:
+                meta = json.load(f)
+            if meta.get("key") != key:
+                return "bundle_meta_mismatch"
+            if ent.get("mode") and meta.get("mode") != ent.get("mode"):
+                return "bundle_mode_mismatch"
+        except (json.JSONDecodeError, OSError):
+            return "corrupt_bundle_meta"
+    return None
+
+
+def _required_listed_in_integrity(bundle_path: str, thorough: bool) -> str | None:
+    reqs, err = parse_report_requirements(bundle_path, thorough)
+    if err:
+        return err
+    ipath = os.path.join(bundle_path, "integrity.json")
+    if not os.path.isfile(ipath):
+        return "missing_integrity_manifest"
+    try:
+        with open(ipath) as f:
+            data = json.load(f)
+        listed = {
+            normalize_relpath(str(r.get("path")))
+            for r in (data.get("artifacts") or [])
+            if isinstance(r, dict)
+        }
+        listed.discard(None)
+    except (json.JSONDecodeError, OSError):
+        return "corrupt_integrity_manifest"
+    for req in reqs:
+        if req == "sheet_*.jpg":
+            continue
+        n = normalize_relpath(req)
+        if n and n not in listed:
+            return f"required_not_in_manifest:{n}"
+    return None
 
 
 def artifact_manifest(bundle_path: str) -> list[dict]:
@@ -303,7 +355,7 @@ def verify_integrity(
             return False, "empty_integrity_manifest"
         return True, "ok"
 
-    listed_paths = set()
+    listed_paths: list[str] = []
     for row in listed:
         if not isinstance(row, dict):
             return False, "corrupt_integrity_manifest"
@@ -311,7 +363,7 @@ def verify_integrity(
         nrel = normalize_relpath(str(rel)) if rel else None
         if not nrel:
             return False, "unsafe_path"
-        listed_paths.add(nrel)
+        listed_paths.append(nrel)
         resolved = resolve_in_bundle(bundle_path, nrel)
         if not resolved or not os.path.isfile(resolved):
             return False, f"missing_file:{nrel}"
@@ -320,11 +372,13 @@ def verify_integrity(
         if sha256_file(resolved) != row.get("sha256"):
             return False, f"checksum_mismatch:{nrel}"
 
+    if len(listed_paths) != len(set(listed_paths)):
+        return False, "duplicate_manifest_paths"
     on_disk = set(iter_bundle_artifact_paths(bundle_path))
-    extra = on_disk - listed_paths
+    extra = on_disk - set(listed_paths)
     if extra:
         return False, f"unlisted_artifact:{sorted(extra)[0]}"
-    missing = listed_paths - on_disk
+    missing = set(listed_paths) - on_disk
     if missing:
         return False, f"missing_file:{sorted(missing)[0]}"
     return True, "ok"
@@ -346,15 +400,17 @@ def validate_bundle(
             if not glob.glob(os.path.join(path, "sheet_*.jpg")):
                 missing.append(req)
             continue
-        if not os.path.isfile(os.path.join(path, req)) and not os.path.isfile(
-            resolve_in_bundle(path, req) or ""
-        ):
+        resolved = resolve_in_bundle(path, req)
+        if not resolved or not os.path.isfile(resolved):
             missing.append(req)
     for meta in ("bundle.json", "integrity.json"):
         if not os.path.isfile(os.path.join(path, meta)):
             missing.append(meta)
     if missing:
         return missing, "incomplete_bundle"
+    manifest_gap = _required_listed_in_integrity(path, thorough)
+    if manifest_gap:
+        return [], manifest_gap
     ok, reason = verify_integrity(
         path, expected_key=cache_key, expected_mode=mode if thorough else mode
     )
@@ -430,11 +486,22 @@ def cmd_lookup(args):
 
     project = args.project
     man = load_manifest(project)
+    if man.get("_manifest_error"):
+        out = {"cache_key": key, "hit": False, "reason": man["_manifest_error"], "entry": None}
+        json.dump(out, sys.stdout, indent=2)
+        sys.stdout.write("\n")
+        sys.exit(1)
     ent = man.get("entries", {}).get(key)
     thorough_required = args.mode == "thorough"
     reason = "miss"
     hit = False
     if ent:
+        entry_err = validate_cache_entry(project, key, ent)
+        if entry_err and entry_err != "miss":
+            out = {"cache_key": key, "hit": False, "reason": entry_err, "entry": ent}
+            json.dump(out, sys.stdout, indent=2)
+            sys.stdout.write("\n")
+            sys.exit(1)
         bpath = os.path.join(project, ent["bundle_dir"])
         missing, integrity_reason = validate_bundle(
             bpath,

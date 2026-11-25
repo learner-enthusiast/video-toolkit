@@ -66,6 +66,39 @@ def load_state(project: str) -> dict:
     return st
 
 
+def validate_state_structure(st) -> str | None:
+    if not isinstance(st, dict):
+        return "INVALID_STATE_SCHEMA"
+    if st.get("schema_version") != SCHEMA_VERSION:
+        return "INVALID_STATE_SCHEMA"
+    approvals = st.get("approvals")
+    if not isinstance(approvals, dict):
+        return "INVALID_STATE_SCHEMA"
+    for k in APPROVALS:
+        if k not in approvals or not isinstance(approvals[k], bool):
+            return "INVALID_STATE_SCHEMA"
+    stage = st.get("stage")
+    if stage is not None and stage not in STAGES:
+        return "INVALID_STATE_SCHEMA"
+    return None
+
+
+def quarantine_state_file(project: str) -> None:
+    p = state_path(project)
+    if not os.path.isfile(p):
+        return
+    base = p + ".corrupt"
+    target = base
+    n = 0
+    while os.path.isfile(target):
+        n += 1
+        target = f"{base}-{n}"
+    try:
+        os.replace(p, target)
+    except OSError:
+        pass
+
+
 def try_load_state(project: str) -> tuple[dict | None, str | None]:
     """Return (state, error_code) — error_code set when JSON is unreadable."""
     p = state_path(project)
@@ -73,11 +106,15 @@ def try_load_state(project: str) -> tuple[dict | None, str | None]:
         return None, "NO_STATE"
     try:
         with open(p) as f:
-            return json.load(f), None
+            st = json.load(f)
     except json.JSONDecodeError:
         return None, "INVALID_STATE_JSON"
     except OSError:
         return None, "INVALID_STATE_JSON"
+    schema_err = validate_state_structure(st)
+    if schema_err:
+        return None, schema_err
+    return st, None
 
 
 def save_state(project: str, state: dict) -> None:
@@ -202,12 +239,8 @@ def _sync_handoff_body(project: str) -> dict:
     state, err = try_load_state(project)
     if err or state is None:
         state = default_state(project)
-        if err == "INVALID_STATE_JSON" and os.path.isfile(state_path(project)):
-            corrupt = state_path(project) + ".corrupt"
-            try:
-                os.replace(state_path(project), corrupt)
-            except OSError:
-                pass
+        if err in ("INVALID_STATE_JSON", "INVALID_STATE_SCHEMA") and os.path.isfile(state_path(project)):
+            quarantine_state_file(project)
     elif state.get("schema_version") != SCHEMA_VERSION:
         preserved = {k: state[k] for k in ("project", "project_path", "master_language") if k in state}
         state = default_state(project)
@@ -241,7 +274,8 @@ def sync_handoff(project: str) -> dict:
 
 
 def cmd_init(args):
-    save_state(args.project, default_state(args.project))
+    with project_log_lock(args.project):
+        save_state(args.project, default_state(args.project))
     print(state_path(args.project))
 
 
@@ -250,10 +284,14 @@ def cmd_show(args):
 
 
 def cmd_set_stage(args):
-    st = load_state(args.project)
-    st["stage"] = args.stage
-    st["status"] = "in_progress"
-    save_state(args.project, st)
+    with project_log_lock(args.project):
+        state, err = try_load_state(args.project)
+        st = state if state else default_state(args.project)
+        if err in ("INVALID_STATE_JSON", "INVALID_STATE_SCHEMA") and os.path.isfile(state_path(args.project)):
+            quarantine_state_file(args.project)
+        st["stage"] = args.stage
+        st["status"] = "in_progress"
+        save_state(args.project, st)
 
 
 def append_log_line(project: str, line: str) -> None:

@@ -239,6 +239,20 @@ def ffmpeg_full_decode(path: str) -> None:
     )
 
 
+def validate_render_cli_args(
+    *,
+    lufs_required: bool,
+    lufs_target,
+    true_peak_required: bool,
+    true_peak_max,
+) -> str | None:
+    if lufs_required and lufs_target is None:
+        return "--lufs-required requires --lufs-target"
+    if true_peak_required and true_peak_max is None:
+        return "--true-peak-required requires --true-peak-max"
+    return None
+
+
 def _loudness_requested(expect: dict) -> bool:
     return bool(
         expect.get("lufs_target") is not None
@@ -248,25 +262,70 @@ def _loudness_requested(expect: dict) -> bool:
     )
 
 
+def _safe_float(value) -> float | None:
+    try:
+        f = float(value)
+    except (TypeError, ValueError):
+        return None
+    if f != f:  # NaN
+        return None
+    return f
+
+
+def _extract_json_objects(text: str) -> list[dict]:
+    """Extract balanced `{...}` JSON objects from FFmpeg diagnostic output."""
+    objects: list[dict] = []
+    i = 0
+    n = len(text)
+    while i < n:
+        if text[i] != "{":
+            i += 1
+            continue
+        depth = 0
+        in_str = False
+        esc = False
+        start = i
+        j = i
+        while j < n:
+            c = text[j]
+            if in_str:
+                if esc:
+                    esc = False
+                elif c == "\\":
+                    esc = True
+                elif c == '"':
+                    in_str = False
+            else:
+                if c == '"':
+                    in_str = True
+                elif c == "{":
+                    depth += 1
+                elif c == "}":
+                    depth -= 1
+                    if depth == 0:
+                        chunk = text[start : j + 1]
+                        try:
+                            obj = json.loads(chunk)
+                            if isinstance(obj, dict):
+                                objects.append(obj)
+                        except json.JSONDecodeError:
+                            pass
+                        i = j + 1
+                        break
+            j += 1
+        else:
+            break
+    return objects
+
+
 def _parse_loudnorm_json(stderr: str) -> tuple[float | None, float | None]:
-    lufs = peak = None
-    for line in reversed(stderr.splitlines()):
-        s = line.strip()
-        if not s.startswith("{"):
+    for data in reversed(_extract_json_objects(stderr)):
+        if "input_i" not in data:
             continue
-        try:
-            data = json.loads(s)
-        except json.JSONDecodeError:
-            continue
-        if "input_i" in data:
-            lufs = float(data["input_i"])
-            if "input_tp" in data:
-                peak = float(data["input_tp"])
-            return lufs, peak
-    im = re.search(r"I:\s*(-?\d+\.\d+)\s*LUFS", stderr)
-    if im:
-        lufs = float(im.group(1))
-    return lufs, peak
+        lufs = _safe_float(data.get("input_i"))
+        peak = _safe_float(data.get("input_tp")) if "input_tp" in data else None
+        return lufs, peak
+    return None, None
 
 
 def measure_loudness(path: str, expect: dict) -> tuple[list, float | None, float | None]:
@@ -297,11 +356,16 @@ def measure_loudness(path: str, expect: dict) -> tuple[list, float | None, float
         else:
             errs.append(_err("LOUDNESS_SKIPPED", "ffmpeg loudnorm unavailable", severity="warning"))
         return errs, None, None
+    if proc.returncode != 0:
+        msg = (proc.stderr or proc.stdout or "")[:200]
+        sev = "error" if expect.get("lufs_required") or expect.get("true_peak_required") else "warning"
+        errs.append(_err("LOUDNESS_FAILED", f"ffmpeg loudnorm exit {proc.returncode}: {msg}", severity=sev, file=path))
+        return errs, None, None
     lufs, peak = _parse_loudnorm_json(proc.stderr)
     if expect.get("lufs_target") is not None:
         if lufs is None:
             sev = "error" if expect.get("lufs_required") else "warning"
-            errs.append(_err("LOUDNESS_UNMEASURED", "Could not parse ebur128 integrated loudness", severity=sev, file=path))
+            errs.append(_err("LOUDNESS_UNMEASURED", "Could not parse loudnorm integrated loudness", severity=sev, file=path))
         else:
             target = expect["lufs_target"]
             if abs(lufs - target) > expect.get("lufs_tolerance", 0.5):
@@ -316,7 +380,7 @@ def measure_loudness(path: str, expect: dict) -> tuple[list, float | None, float
     if expect.get("true_peak_max") is not None:
         if peak is None:
             sev = "error" if expect.get("true_peak_required") else "warning"
-            errs.append(_err("TRUE_PEAK_UNMEASURED", "Could not parse ebur128 true peak", severity=sev, file=path))
+            errs.append(_err("TRUE_PEAK_UNMEASURED", "Could not parse loudnorm input_tp", severity=sev, file=path))
         elif peak > expect["true_peak_max"]:
             errs.append(
                 _err(
@@ -493,6 +557,14 @@ def main():
     ap.add_argument("--channels", type=int)
     ap.add_argument("--no-audio-required", action="store_true")
     args = ap.parse_args()
+    cli_err = validate_render_cli_args(
+        lufs_required=args.lufs_required,
+        lufs_target=args.lufs_target,
+        true_peak_required=args.true_peak_required,
+        true_peak_max=args.true_peak_max,
+    )
+    if cli_err:
+        sys.exit(cli_err)
 
     errors = []
     checks_run = {}

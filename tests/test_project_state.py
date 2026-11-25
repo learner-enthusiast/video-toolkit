@@ -100,6 +100,17 @@ class ProjectStateTest(unittest.TestCase):
             auth = authoritative_approvals(proj)
             self.assertTrue(auth["approvals"]["rough_cut"]["approved"])
 
+    def test_sync_recovers_invalid_schema_array(self):
+        with tempfile.TemporaryDirectory() as td:
+            proj = os.path.join(td, "p")
+            os.makedirs(proj)
+            with open(os.path.join(proj, "log.md"), "w") as f:
+                f.write("**Approval:** rough_cut=approved\n")
+            with open(os.path.join(proj, "project-state.json"), "w") as f:
+                f.write("[1,2,3]")
+            st = sync_handoff(proj)
+            self.assertTrue(st["approvals"]["rough_cut"])
+
     def test_sync_recovers_corrupt_state(self):
         with tempfile.TemporaryDirectory() as td:
             proj = os.path.join(td, "p")

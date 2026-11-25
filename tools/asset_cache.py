@@ -7,10 +7,15 @@ import fcntl
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
 import tempfile
+
+from tools import path_safety as ps
+
+_SHA256_RE = re.compile(r"^[a-f0-9]{64}$")
 
 CACHE_VERSION = 2
 MANIFEST = "work/cache/asset-manifest.json"
@@ -66,6 +71,8 @@ def _read_manifest_file(project: str) -> tuple[dict, str | None]:
         return {"version": CACHE_VERSION, "entries": {}}, "corrupt_manifest"
     if not isinstance(data, dict) or "entries" not in data:
         return {"version": CACHE_VERSION, "entries": {}}, "invalid_manifest"
+    if not isinstance(data.get("entries"), dict):
+        return {"version": CACHE_VERSION, "entries": {}}, "invalid_entries"
     if data.get("version") != CACHE_VERSION:
         return {"version": CACHE_VERSION, "entries": {}}, "schema_mismatch"
     return data, None
@@ -107,21 +114,66 @@ def bundle_root(project: str, key: str) -> str:
 
 
 def verify_entry(project: str, ent: dict, key: str | None = None) -> tuple[bool, str]:
-    if ent.get("schema") and ent["schema"] != CACHE_VERSION:
+    required = ("path", "sha256", "size", "cache_key", "op", "schema")
+    for field in required:
+        if field not in ent:
+            return False, f"missing_field:{field}"
+    if ent["schema"] != CACHE_VERSION:
         return False, "schema_mismatch"
-    if key and ent.get("cache_key") and ent["cache_key"] != key:
+    if key is not None and ent["cache_key"] != key:
         return False, "fingerprint_mismatch"
-    path = os.path.join(project, ent["path"])
-    if not os.path.isfile(path):
+    if not _SHA256_RE.match(str(ent["sha256"])):
+        return False, "invalid_checksum_format"
+    if not isinstance(ent["size"], int) or ent["size"] < 1:
+        return False, "invalid_size"
+    resolved = ps.safe_project_relpath(project, ent["path"])
+    if not resolved or not os.path.isfile(resolved):
         return False, "missing_file"
-    size = os.path.getsize(path)
-    if size != ent.get("size"):
+    if os.path.islink(resolved):
+        return False, "symlink_forbidden"
+    size = os.path.getsize(resolved)
+    if size != ent["size"]:
         return False, "size_mismatch"
-    if ent.get("sha256") and sha256_file(path) != ent["sha256"]:
+    if sha256_file(resolved) != ent["sha256"]:
         return False, "checksum_mismatch"
-    if size < 1:
-        return False, "empty_output"
     return True, "hit"
+
+
+def _key_lock_path(project: str, key: str) -> str:
+    return bundle_root(project, key) + ".lock"
+
+
+def _atomic_install_output(project: str, key: str, src_file: str, dest_name: str) -> str:
+    dest_dir = bundle_root(project, key)
+    os.makedirs(dest_dir, exist_ok=True)
+    target = os.path.join(dest_dir, dest_name)
+    lock = _key_lock_path(project, key)
+    fd, tmp = tempfile.mkstemp(dir=dest_dir, prefix=".out-")
+    try:
+        with open(lock, "a") as lf:
+            fcntl.flock(lf, fcntl.LOCK_EX)
+            try:
+                with os.fdopen(fd, "wb") as fout:
+                    with open(src_file, "rb") as fin:
+                        shutil.copyfileobj(fin, fout)
+                    fout.flush()
+                    os.fsync(fout.fileno())
+                fd = None
+                if os.path.getsize(tmp) < 1:
+                    raise ValueError("empty output")
+                os.replace(tmp, target)
+            finally:
+                fcntl.flock(lf, fcntl.LOCK_UN)
+    except Exception:
+        if fd is not None:
+            try:
+                os.close(fd)
+            except OSError:
+                pass
+        if os.path.isfile(tmp):
+            os.remove(tmp)
+        raise
+    return target
 
 
 def cmd_lookup(args):
@@ -167,12 +219,7 @@ def cmd_store(args):
     if out_size < 1:
         sys.exit("output file empty")
     out_hash = sha256_file(args.output)
-    dest = bundle_root(args.project, key)
-    os.makedirs(dest, exist_ok=True)
-    target = os.path.join(dest, os.path.basename(args.output))
-    tmp = target + ".tmp"
-    shutil.copy2(args.output, tmp)
-    os.replace(tmp, target)
+    target = _atomic_install_output(args.project, key, args.output, os.path.basename(args.output))
     rel = os.path.relpath(target, args.project)
     entry = {
         "op": args.op,
@@ -217,15 +264,16 @@ def cmd_probe_ffprobe(args):
         json.loads(out)
     except json.JSONDecodeError:
         sys.exit("ffprobe returned invalid JSON")
-    dest = bundle_root(args.project, key)
-    os.makedirs(dest, exist_ok=True)
-    target = os.path.join(dest, "probe.json")
-    tmp = target + ".tmp"
-    with open(tmp, "w") as f:
-        f.write(out)
-        f.flush()
-        os.fsync(f.fileno())
-    os.replace(tmp, target)
+    tmp_probe = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".json")
+    try:
+        tmp_probe.write(out)
+        tmp_probe.flush()
+        os.fsync(tmp_probe.fileno())
+        tmp_probe.close()
+        target = _atomic_install_output(args.project, key, tmp_probe.name, "probe.json")
+    finally:
+        if os.path.isfile(tmp_probe.name):
+            os.remove(tmp_probe.name)
     rel = os.path.relpath(target, args.project)
     entry = {
         "op": "ffprobe",

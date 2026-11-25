@@ -1,6 +1,11 @@
 # Token budget
 
-**Why:** Claude Code re-sends the whole context every turn, so a file read at turn 1 is paid again on every later turn, and model-written boilerplate costs output tokens. Keep always-read files small and let hooks write the log boilerplate. Measured on branch `token-diet` (2026-11-20); ~tokens = bytes / 4.
+**Why:** Claude Code re-sends the whole context every turn, so a file read at turn 1 is paid again on every later turn, and model-written boilerplate costs output tokens. Keep always-read files small and let hooks write the log boilerplate.
+
+**Two kinds of numbers:**
+
+1. **Estimated context savings** (below): `bytes / 4` on always-read files — useful for scoping, **not** measured production spend.
+2. **Measured usage:** hook `**Tokens:**` lines + `vt-python tools/vt_log.py summary|compare` (`docs/optimization/benchmark-protocol.md`).
 
 ## Rules that keep it small
 - `CLAUDE.md` is auto-loaded: never Read it again. Skills say "read only what the current stage needs".
