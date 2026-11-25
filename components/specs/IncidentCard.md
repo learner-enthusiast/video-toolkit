@@ -3,7 +3,7 @@ code: components/code/IncidentCard/IncidentCard.tsx
 preview: components/code/IncidentCard/preview.png
 props: "w, tag, rows [{text,at}], stat {value,unit,at,from?,to?}, source {text,at,logo?}, children, at, out"
 variants: "static stat or count-up (from/to), optional source logo, child slot"
-last_used: system-design-of-ai/06-cancellation
+last_used: system-design-of-ai/11-max-tokens-and-truncation
 ---
 # IncidentCard
 

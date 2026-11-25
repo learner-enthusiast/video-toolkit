@@ -3,7 +3,7 @@ code: components/code/TicketCard/TicketCard.tsx
 preview: components/code/TicketCard/preview.png
 props: "id, title, meta?, kicker?, at, w?, size?, done? (frame for the DONE stamp)"
 variants: "open ticket, small context ticket (scaled + dimmed by the scene), done (stamp)"
-last_used: Graphify
+last_used: system-design-of-ai/12-tokenizers
 ---
 # TicketCard
 

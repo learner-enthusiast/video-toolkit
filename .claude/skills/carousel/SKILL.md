@@ -26,7 +26,7 @@ Merge script sections to fit the count; a 13-section script still makes ≤ 8 sl
 1. **Outline.** Write `work/carousel/outline.md`: per slide, its type, the exact on-slide text with a word count (≤ ~25), the highlight word(s), and a visual note. Add the draft `caption.txt` and alt text at the end. **Stop and ask me to approve it.**
 2. **Look.** Build the renderer (`components/specs/Carousel.md`) and render slide 1 only to `work/carousel/stills/01.png`. Open it and check it yourself first, then **stop and ask me to approve the look.**
 3. **Render.** Render every slide to `out/carousel/01.png … 0N.png` in one bundle (`renderStill` in a loop). Build `carousel.pdf` with `img2pdf` (lossless, page = 1080x1350), and write `caption.txt` and `alt-text.txt`.
-4. **QA:** `pipeline/carousel.md` → QA. Open every PNG yourself. Fix and re-render any slide that fails, then re-check it.
+4. **QA:** `pipeline/carousel.md` → QA, every PNG looked at by the vision subagent (`pipeline/video-inspect.md`, Vision subagent). Fix and re-render any slide that fails, then re-check it.
 5. **Log** the run in `log.md` (`pipeline/project-log.md`) and report the files plus anything not done as specified.
 
 Rendering is a heavy job (detached Haiku runner); PDF assembly and file shuffling are low-stakes (delegation order in `pipeline/delegation.md`). The slide code, layout and every visual judgment stay with Opus.

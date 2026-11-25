@@ -3,7 +3,7 @@ code: components/code/DefinitionChip/DefinitionChip.tsx
 preview: components/code/DefinitionChip/preview.png
 props: "term, def, at, out, size"
 variants: "light only"
-last_used: system-design-of-ai/06-cancellation
+last_used: system-design-of-ai/12-tokenizers
 ---
 # DefinitionChip
 

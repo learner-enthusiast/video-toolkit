@@ -55,7 +55,7 @@ There is no fixed default layout. Every moment of a video is in exactly one of t
 **Icons and names**
 - **Always use the official logo** whenever I mention a company, product or technology that has one (PostgreSQL, Redis, GraphQL, Facebook, Instagram, Threads, Apple for "iPhone"…), shown when it's said. Never a text-written stand-in (a styled word, a coloured pill with the name) in place of a real logo.
 - Logos are the one exception to the brand palette: keep their official colours, gradients and shapes. Never recolour, redraw, stretch or crop them (`object-fit: contain`).
-- Use the official file (brand/press page, SVG preferred, Wikimedia Commons copy of the official mark, or one I supply), saved in the shared `icons/logos/` library with its source and license in `icons/icons.md` (read it first; reuse before downloading). Never saved inside a project folder.
+- Use the official file (brand/press page, SVG preferred, Wikimedia Commons copy of the official mark, or one I supply), saved in the shared `icons/logos/` library with its source and license in `icons/icons.md` (look it up first with `grep -i '<brand>' icons/icons.md` (never Read it whole); reuse before downloading). Never saved inside a project folder.
 - On off-white scenes the logo sits directly on the card. On dark scenes, or where its colours vanish against the background, put it on a small white tile: 2 px `#1A1A1A` border, the brand radius, ~20 px padding. A logo in focus gets an orange ring, and the others dim.
 - Only concepts with no official logo (REST, "Orders API", CDN) use a text label or a generic line icon. No emojis.
 

@@ -1,6 +1,6 @@
 # Delegation
 
-**Goal:** Claude makes every decision. Low-stakes work goes to outside CLIs so the main session doesn't spend its (expensive, whole-session) turns on it. Haiku is the last resort.
+**Goal:** The primary session (Sonnet by default, `pipeline/model-routing.md`) makes every decision. Low-stakes work goes to scripts or outside CLIs so production turns are not spent on mechanical work. Haiku (`claude-haiku-5-5`) is the delegation-chain last resort and the heavy-job runner — not the default production model.
 
 ## 1. What may be delegated
 
@@ -11,14 +11,14 @@
 - SRT formatting/line-wrapping, social copy JSON scaffolding, `log.md` updates
 - boilerplate for a component whose spec is already final (Claude reviews every line before use)
 
-**Never delegated (Claude keeps these):** script, cut decisions, storyboard, creative take, layout states, `brand.md` decisions, final component visuals, render settings, QA, and anything visible on screen that hasn't been reviewed. Vision is never delegated for a final judgment (`pipeline/video-inspect.md`).
+**Never delegated (Claude keeps these):** script, cut decisions, storyboard, creative take, layout states, `brand.md` decisions, final component visuals, render settings, QA, the voice-cleaning gate decision (reading the cleaning reports, listening, passing a recording), and anything visible on screen that hasn't been reviewed. Vision is never delegated for a final judgment (`pipeline/video-inspect.md`).
 
 ## Two kinds of delegated work
 
 | Kind | Examples | Who runs it |
 |---|---|---|
 | Low-stakes tasks | scaffolding, renames, ffprobe reads, proxies, logo downloads + `SOURCES.md`, SRT wrapping, social JSON scaffold, `log.md`, boilerplate from a final spec | CLI chain: Copilot → Codex → cursor-agent (canary) → Haiku |
-| Heavy jobs | final renders, Whisper, final encodes, video-inspect runs, installs | Haiku runner (section 6); Claude only observes |
+| Heavy jobs | voice-cleaning runs (`tools/clean_audio.py`, exact command from `pipeline/voice-cleaning.md`), final renders, Whisper, final encodes, video-inspect runs, installs | Haiku runner (section 6); Claude only observes |
 
 Heavy jobs never go through the CLI chain: command timeouts, sandboxes and quota limits can kill a long GPU job midway.
 
@@ -102,7 +102,7 @@ Haiku runner ─ launches each job DETACHED (setsid/nohup) ─ watches logs
    ▼
 work/jobs/<NN>-<job>.status  (done/failed, duration, output path, last 20 log lines)
    ▼
-Claude ─ reads .status ─ verifies output (ffprobe streams/duration, size) ─ next step
+Claude ─ reads .status or `vt-python tools/job_report.py <status>` ─ verifies output (ffprobe streams/duration, size) ─ next step
 ```
 
 - Claude hands Haiku an **exact** batch: full commands, every GPU job wrapped in `gpu-run`, all flags, input/output paths and a timeout per job.
@@ -143,4 +143,9 @@ Report (nothing else): for each job the .status path, state, exit, seconds; and 
 - Stopping a polling runner kills jobs it launched unless they were started with `setsid`; that is why every job is detached.
 - Any non-zero exit, unexpected warning, or number outside spec (duration off by > 1 frame, wrong fps/resolution, LUFS off target, suspiciously small file): Claude reads the log, debugs, and sends a corrected batch.
 - **Haiku fallback for low-stakes tasks** (when the chain is exhausted) uses the same runner and report format, with output in `work/logs/<step>.log`.
+- The Haiku runner can't wait: foreground `sleep` is blocked in subagents, so a runner told to poll returns "still running" and the job's end is never reported (`system-design-of-ai/07-provider-failover`, Whisper job). Make the runner launch-only (`setsid nohup … & sleep 2; pgrep … && echo LAUNCHED`), and have Claude watch the `.status` file with a background `until [ -f …status ]` loop started from a neutral cwd (`cd /tmp`). A watcher whose cwd is the project and whose command line names the job is caught by the `pgrep -f`/cwd kill sweep below.
 - Never stop jobs with `pkill -f <pattern>`: the pattern also matches the shell running the pkill (exit 144, the rest of the command never runs), and another session's identical script (`qa_inspect.sh` from `Graphify`) ran beside ours on `system-design-of-ai/06-cancellation`. List with `pgrep -f`, check `readlink /proc/<pid>/cwd`, and `kill` only this project's PIDs.
+
+**Logo downloads (low-stakes, but verify the picture).** On `system-design-of-ai/07-provider-failover` both CLIs returned "verified SVG" files that were docs-template placeholders: Copilot's `litellm.svg` was Docusaurus's default dinosaur (`static/img/logo.svg`, fills `#3ECC5F`), and Codex's `portkey.svg` was a Mintlify "Starter Kit" wordmark (`mintlify/logo/light.svg`, contains `<!-- mintlify wordmark` and `<text>Starter Kit`). A file-type check passes both. Before accepting a delegated logo, grep it for `docusaurus|mintlify|<text` and the template greens, and look at it in a still. Good sources: the product's own README `<img>` (Portkey: `cfassets.portkey.ai/logo/dew-color.svg`), the docs site's navbar/favicon `brand/` folder (LiteLLM: `docs.litellm.ai/img/brand/litellm-favicon.svg`). Company GitHub avatars can be a different brand (BerriAI = grapes, not LiteLLM) or tiny (Portkey 76 px).
+
+**Copilot needs the toolkit root as its cwd for icon tasks.** On `system-design-of-ai/10-batch-inference` a logo task launched from `projects/<name>/` hung on "Denied, no one to approve shell path (../../../icons)": non-interactive Copilot can't approve writes outside its cwd. Launch icon/library tasks with `cd` to the toolkit root and repo-relative paths (`icons/logos/…`), and grep the log for `Denied` when a run stalls.

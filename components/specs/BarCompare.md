@@ -1,3 +1,10 @@
+---
+code: components/code/BarCompare/BarCompare.tsx
+preview: components/code/BarCompare/preview.png
+props: "w, rows [{label,value,tone,at}], max"
+variants: "shared scale, ink vs orange"
+last_used: system-design-of-ai/09-prompt-caching
+---
 # BarCompare
 
 **Purpose:** before/after comparison ("4.0s → 1.5s", "full table scan vs. indexed lookup").
@@ -16,3 +23,10 @@
 **Gotchas**
 - Scale bars to a shared max so the comparison is honest.
 - Pair it with `Stamp` for the punchline (e.g. "−62.5% load time").
+
+## Code
+
+Saved: `components/code/BarCompare/BarCompare.tsx` (preview: `preview.png`). Import it, set props; extend with a new prop rather than copying. Brand values come from `components/code/theme.ts`.
+
+- Code props: w, rows [{label,value,tone,at}], max.
+- First built and rendered in `system-design-of-ai/11-max-tokens-and-truncation`.

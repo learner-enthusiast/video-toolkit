@@ -1,6 +1,6 @@
 # Component code library
 
-Approved Remotion code, one folder per component, linked to its spec in `../specs/<Name>.md`. Registry: `../index.md`.
+Approved Remotion code, one folder per component, linked to its spec in `../specs/<Name>.md`. Registry: `../index.md` (✓ marks) and `../index-full.md` (rows; grep, never read whole).
 
 - `theme.ts` (tokens from `/brand.md`), `fonts.ts`, `anim.ts` (spring / ease-in-out helpers), `glyphs.tsx` (shared small drawings, `Logo`).
 - `REMOTION_VERSION`: the Remotion version these components were rendered on.

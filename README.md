@@ -4,10 +4,10 @@ Instructions only, with no code. These Markdown files tell Claude how to build l
 
 **Start a new video**
 1. Open Claude Code in this folder and run `/setup` once per machine (manual steps: `setup.md`).
-2. Run `/new-video <name>`, then drop footage into `projects/<name>/raw/` and screenshots/clips into `assets/`.
+2. Run `/new-video <name>`, then drop footage into `projects/<name>/raw/` and private screenshots/clips into `assets/`. Public web pages don't need screenshots from you: list them in the script's `## Web captures` and Claude takes them with Playwright (`pipeline/web-capture.md`).
 3. Fill `projects/<name>/script.md` from a file in `templates/`, or have `/scriptwriting` draft or tighten it (it researches the topic, writes the hook and opener/closer, and times it to ≤ 3 min).
 4. Run `/coding-video <name>` or `/reel <name>`. Claude stops at the rough cut for your OK.
-5. Collect everything from `projects/<name>/out/`: the main video, one trailer cut (a short cut you define in the prompt, else the default trailer; never both; reels ≤ 2:59 render everything in 9:16 only, long-form > 3:00 renders the trailer in landscape and portrait), SRTs, `thumbnail/` (rendered thumbnails plus a ChatGPT prompt and up to 3 assets to make your own), `<name>_social.json` with copy-paste posts and hashtags for every platform, and for reels `carousel/` (6–8 Instagram slides, a PDF, caption and alt text; `/carousel <name>` also works on older projects).
+5. Collect everything from `projects/<name>/out/`: the main video, one trailer cut (a short cut you define in the prompt, else the default trailer; never both; reels ≤ 2:59 render everything in 9:16 only, long-form > 3:00 renders the trailer in landscape and portrait), SRTs, `thumbnail/` (rendered thumbnails plus a ChatGPT prompt and up to 3 assets to make your own), `<name>_social.json` with copy-paste posts and hashtags for every platform, for reels `carousel/` (6–8 Instagram slides, a PDF, caption and alt text; `/carousel <name>` also works on older projects), and for every video `text-posts/` (the LinkedIn hook photo, the full LinkedIn post and the X post, ready to paste; `/text-posts <name>` also works on older projects).
 
 **Layout.** Every beat is HEAD (face fills the frame), FULL (graphic fills the frame) or SPLIT (graphic on top, face below). There is no default; the script's `[mm:ss–mm:ss | STATE]` cues are the plan, and Claude may improve them as a creative co-director within the rules in `CLAUDE.md`.
 
@@ -17,4 +17,4 @@ Videos can belong to a series. Run `/new-video <topic>` and answer "Which playli
 
 `projects/<name>/log.md` keeps a dated history of every prompt, what Claude changed, how long it took, and the tokens used.
 
-`CLAUDE.md` holds the standing rules, `brand.md` the look, `icons/` (logos, with `icons/icons.md`), `components/` (`index.md`, `specs/`, `code/`) and `pipeline/` the building blocks. Start at `components/index.md` (one-page lookup by intent, with a table of every spec); open only the specs a video uses.
+`CLAUDE.md` holds the standing rules, `brand.md` the look, `icons/` (logos, with `icons/icons.md`), `components/` (`index.md`, `specs/`, `code/`) and `pipeline/` the building blocks. Start at `components/index.md` (one-page lookup by intent, ✓ = saved code); get single rows of the full table with `grep -i '^| \[<Name>\]' components/index-full.md` and open only the specs a video uses.

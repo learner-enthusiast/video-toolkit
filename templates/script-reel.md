@@ -22,5 +22,10 @@ Format: **ID** · `[mm:ss–mm:ss | HEAD, FULL or SPLIT]` · spoken text → vis
 **Spoken:** "<one-line recap: the payoff of the hook>" → <cue>, then "Bye bye, sayonara!" with a wave (HEAD)
 **End card** (≤ 2 s, optional) → EndCard
 
-## Assets
+## Assets (mine)
 - `assets/<file>`: <what it shows>
+
+## Web captures (Claude takes these with Playwright)
+| # | URL (or "find the source") | Capture (element / full page / clip) | For beat | Focus on |
+|---|---|---|---|---|
+| 01 | <https://…> | <element: the pricing table> | <B2> | <the "per 1M tokens" row> |

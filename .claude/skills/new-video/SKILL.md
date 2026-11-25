@@ -19,6 +19,7 @@ argument-hint: <name>
    - `projects/<name>/out/` for the deliverables
    - `projects/<name>/script.md`
    - `projects/<name>/log.md`, headed `# <name> log`, with this scaffolding as its first entry (see `pipeline/project-log.md`)
+   - Run `vt-python tools/project_state.py init projects/<name>/` after the folder exists
 4. Ask which kind of video: tutorial, project demo, or reel. Copy the matching file from `templates/` into `script.md`, and copy `templates/shotlist.md` into `work/shotlist.md`. Cues in the script use `[mm:ss–mm:ss | HEAD]`, `[… | FULL]` or `[… | SPLIT]` (`brand.md` Layout). Choose components from `components/index.md` first. Set the script's **Aspect** from the target length: ≤ 2:59 is a reel, 9:16 only (main, trailer and cover; no 16:9 anything); > 3:00 is long-form, 16:9 main with a 16:9 + 9:16 trailer. Then offer to draft or tighten `script.md` with `/scriptwriting`.
 5. Copy `.env` into the project only if I ask. It is gitignored either way.
 6. Tell me where to drop the files and which skill to run next (`/coding-video` or `/reel`).

@@ -3,7 +3,7 @@ code: components/code/MathStrip/MathStrip.tsx
 preview: components/code/MathStrip/preview.png
 props: "terms [{text, at, op?}], size, style; also exports inr()"
 variants: "none"
-last_used: system-design-of-ai/05-model-routing
+last_used: system-design-of-ai/09-prompt-caching
 ---
 # MathStrip
 

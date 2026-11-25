@@ -5,7 +5,7 @@
 **Props:** `src`, `rect` (the screen card), `keys` (list of `{at, focus: [x, y, w, h] in image px}`), `out`.
 
 **Do**
-- Look at the image yourself and find the regions named in the cue (form fields, source list, button). Write their pixel boxes into `keys`.
+- If the image is a web capture, take the boxes from its `work/captures/<file>.boxes.json` (DOM boxes saved at capture, `pipeline/web-capture.md`). Otherwise look at the image yourself and find the regions named in the cue (form fields, source list, button). Write their pixel boxes into `keys`.
 - Each key frames its focus box inside the card with some padding. Move between keys with ease-in-out over 20–40 frames.
 - Between keys, keep a gentle drift (1–3% zoom or pan). Nothing stays static for more than 3 s.
 - Show it inside a `Card`-style frame with the brand radius and shadow.

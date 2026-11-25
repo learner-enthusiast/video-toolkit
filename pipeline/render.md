@@ -19,6 +19,7 @@
 - Loudness of the final file is about -16 LUFS (`ebur128`).
 
 **Gotchas**
+- Stop a render by PID (`pgrep -f 'remotion render'`, then `kill <pid>`), never `pkill -f <script name>` from the same shell: the pattern also matches your own command line and kills it (`sdai-12`).
 - Check the voice WAV's start offset against the timeline. A mis-laid voice track once started 2.5–4 s late, and only the A/V check in `qa.md` caught it.
 - Keep masters until I approve the finals, so re-encoding never means re-rendering.
 - A looped still input (`-loop 1 -i mask.png`) never ends, so `-shortest` alone doesn't stop a `-filter_complex` encode: one ran for 1 h and wrote 1.4 GB. Add `shortest=1` to every framesync filter (`overlay`, `alphamerge`) and `-frames:v <source frames>` as a hard cap.

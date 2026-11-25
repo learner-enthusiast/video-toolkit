@@ -1,9 +1,11 @@
 # Video inspect
 
-**Goal:** see a video's content and measure its defects for a few thousand tokens, instead of reading frames one by one. Local tools scan every frame and write a compact text report; Opus reads the report and opens only the frames that matter. Every image read stays in the session context for every later turn.
+**Goal:** see a video's content and measure its defects for a few thousand tokens, instead of reading frames one by one. Local tools scan every frame and write a compact text report; Opus reads the report, and an Opus vision subagent looks at the images that matter. Every image read stays in the session context for every later turn, so images never enter the main session (exceptions below).
 
 **Inputs:** a video path, optional `--start/--end` (seconds), optional `--thorough` (final pre-publish check).
 **Output:** `work/inspect/<deliverable>/` (`<deliverable>` = the file's stem): `report.json`, `contact_sheet.jpg`, `keyframes/` (one per scene, plus every flagged frame), and `sheet_NN.jpg` for beat QA.
+
+**Cache (unchanged video):** Before a full run, `vt-python tools/inspect_cache.py lookup projects/<name> <video> --mode thorough` (`pipeline/job-results.md`). Restore only when the key matches; invalidate when bytes, mode, or the inspect script version changes. Intermediate QA may reuse cached `report.json`; final pre-publish QA still requires a fresh `--thorough` run or an explicit cache miss.
 
 **Transcript provenance gate:** this Whisper pass is a QA transcript only. For talking-head production footage, it may run only on a deliverable whose audio comes from the Prep-verified cleaned recording (`pipeline/stages.md`, `pipeline/voice-cleaning.md`); it must never be used to bootstrap Prep or to transcribe raw/unverified source audio. If provenance is unknown, omit the transcript stage and report why.
 
@@ -39,12 +41,20 @@
 
 **Contact sheets for QA**
 - One frame from the middle of every beat (or every 5 s for a cut without beats), scaled to 480 px wide, with its output timestamp burned in at the bottom-left. Tile them 4x3 (12 frames per sheet) into `work/inspect/<deliverable>/sheet_NN.jpg`.
-- Opus looks at sheets, not single frames. Pull a full-size frame only to settle something a sheet or a flag raises (text near the margin, face under an overlay, caption legibility).
+- The vision subagent looks at sheets, not single frames. It pulls a full-size frame only to settle something a sheet or a flag raises (text near the margin, face under an overlay, caption legibility).
 - For QA and the face/margin checks, the beat frames come from `pipeline/qa.md`; this file only defines how they're laid out.
 
 **Who looks**
 - A delegated helper (order in `pipeline/delegation.md`) may **pre-screen** sheets during a stage and list the timestamps worth a look. A pre-screen never passes anything.
-- **Final visual QA before deliverables is done by Opus, looking at every contact sheet itself** (and one keyframe per scene in `--thorough`), plus the report's flags and intervals. Every flag, freeze, silence or black interval is either explained (an intended hold, the end card) or fixed.
+- **Final visual QA before deliverables is done by Opus in the vision subagent below, looking at every contact sheet** (and one keyframe per scene in `--thorough`), plus the report's flags and intervals. Every flag, freeze, silence or black interval is either explained (an intended hold, the end card) or fixed.
+
+## Vision subagent (images stay out of the main session)
+Every look at stills, contact sheets, keyframes, flagged frames or carousel slides runs in a subagent; the main session reads its text report, never the images.
+- **Model:** the same as the main session (Opus: Agent tool, `model: "opus"`). Never a cheaper model for judging (the fresh-eyes restate test in `pipeline/qa.md` is the one exception).
+- **Its prompt:** the image paths; `report.json` `summary` + `flags` when there is one; the beat list (storyboard rows or script beats with times and layout state); and the instruction to read and follow `brand.md`, `CLAUDE.md` (Quality bar, Inspecting a video, Creative direction) and the checklist that applies (`pipeline/qa.md` Frames, `pipeline/composition.md` Checks, or `pipeline/carousel.md` QA). Those rules win over its own taste.
+- **It returns text only:** one line per issue, `timestamp · what · severity (blocker / fix / nit) · proposed fix`, then the OK beats listed briefly (`0:00–0:12 OK`). Flags it can't settle say "ambiguous" with the frame path.
+- **Main session:** reads the report, decides fixes, re-runs the subagent on the fixed frames. A pre-screen or report is still a lead; a pass means the Opus subagent looked at every sheet.
+- **Exceptions that stay in the main session:** the **3 approval stills** (and the carousel slide-1 look) that I must see, and opening one specific frame when a subagent report is ambiguous.
 - Look at sheets in the stage that needs them, then hand off; don't carry sheets from an earlier stage (`pipeline/stages.md`).
 
 **Checks**
@@ -66,5 +76,6 @@
 - `text_over_face` with tiny OCR strings like `ATX3`, `AYAD`, `AT23` is the red wall sticker behind me (and the signature at the end), not overlay text. Treat it as a false positive.
 - `caption_desync` pairs a caption's first word with the nearest same word within 2 s, so a short word ("a", "the") can match an earlier occurrence and report +1.7 s (`jwt-explained` "a JWKS"). Check the timeline word time before acting. `misspelling` fires on intentional strings (a JWT token, `wordlist.txt`): treat code/token text as false positives.
 - PySceneDetect finds very few scenes on a reel whose cuts are spring morphs (9 scenes in 2:51), so keyframes alone miss most beats: always look at the 48-tile contact sheet as well.
-- Once captions are CTC-aligned (`pipeline/transcribe.md`), `caption_desync` at +0.5…+0.7 s is Whisper's early-start bias, not a late caption: on `jwt-explained` (thorough, 6 fps band) all 19 flags had the caption within 1–3 frames of the CTC onset. Check flagged words against the CTC word times before changing anything; consider comparing to CTC-corrected starts in the script itself. Same on `sdai-03` (51 flags, +0.6…+1.4 s): frame grabs at the timeline word start showed the karaoke word already lit; the +1 s+ ones were footer chips under the card ("LLM call ×4", "Same meaning → close together") read as captions. A fast check: grab the caption band at the timeline start of 2–3 flagged words and look.
+- Once captions are CTC-aligned (`pipeline/transcribe.md`), `caption_desync` at +0.5…+0.7 s is Whisper's early-start bias, not a late caption: on `jwt-explained` (thorough, 6 fps band) all 19 flags had the caption within 1–3 frames of the CTC onset. Check flagged words against the CTC word times before changing anything; consider comparing to CTC-corrected starts in the script itself. Same on `sdai-03` (51 flags, +0.6…+1.4 s): frame grabs at the timeline word start showed the karaoke word already lit; the +1 s+ ones were footer chips under the card ("LLM call ×4", "Same meaning → close together") read as captions. A fast check: grab the caption band at the timeline start of 2–3 flagged words and look. Again: `caption_desync` reported a median +0.7 s on `system-design-of-ai/08-long-running-requests` (44 flags) while the captions actually led speech by 0.03 s at every clean energy onset (20 ms envelope of `audio/voice.wav`). Check a handful of flagged starts against the envelope before touching the timeline; the flag also fires on FULL-card footers (FootCap text), which aren't captions.
 - Back-to-back inspect runs in one shell loop can OOM at the next run's Whisper load while the previous process is still freeing VRAM. Wait for an empty `--query-compute-apps` between runs.
+- `--thorough` grabs 1 s keyframes up to the end; a frame at t = duration (153.00 s of a 153.033 s file) comes back empty and crashed face detection (`cv2.cvtColor … !_src.empty()`) on `system-design-of-ai/10-batch-inference`. The keyframe loop must stop at `DUR − 0.1` (fixed in that project's `scripts/video_inspect.py`; copy it forward).

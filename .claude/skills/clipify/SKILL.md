@@ -56,13 +56,13 @@ Working dir: `projects/<name>/work/clipify/` (mkdir at start, leave artifacts fo
 
 ### Step 0 — Gate dialogue/hybrid transcription on voice cleaning
 
-Before Step 1A (or the dialogue portion of Hybrid), inspect/probe the original footage, identify each talking-head source recording, and read `pipeline/voice-cleaning.md`. Run `vt-python tools/clean_audio.py` separately per recording in `studio`/`quality` mode. Write unique outputs/reports under `projects/<name>/work/clipify/audio/cleaned/<recording-id>.wav` and `projects/<name>/work/clipify/audio/reports/<recording-id>-clean-report.json`. Inspect every report and require WPE `applied: true` and DeepFilterNet3 `status: processed`; listen to each original/clean pair for quality and sync. If either stage fails, stop and report; never switch modes or transcribe original audio without explicit approval. If listening is unavailable, disclose it and request approval before Whisper. Use only the verified cleaned WAV for all ASR, including the full-source candidate scan and clip-level caption timestamps. Keep each recording's files separate. Action mode's transient detector does not invoke Whisper; if Hybrid contains talking-head dialogue, gate that portion before its Whisper pass.
+Before Step 1A (or the dialogue portion of Hybrid): **Before any Whisper/ASR on talking-head audio, pass the gate in `pipeline/voice-cleaning.md`. No exceptions without my explicit approval.** If the Prep handoff in `log.md` already maps this recording to a cleaned WAV whose gate passed, use that WAV (`projects/<name>/work/audio/cleaned/<recording-id>.wav`); otherwise (standalone use) run the gate yourself. Use only the verified cleaned WAV for all ASR, including the full-source candidate scan and clip-level caption timestamps, and for the clip's delivered audio. Keep each recording's files separate. Action mode's transient detector does not invoke Whisper; if Hybrid contains talking-head dialogue, gate that portion before its Whisper pass.
 
 ### Step 1A — Find dialogue moments (dialogue mode)
 
 ```bash
 mkdir -p projects/<name>/work/clipify
-ffmpeg -y -i projects/<name>/work/clipify/audio/cleaned/<recording-id>.wav -ac 1 -ar 16000 projects/<name>/work/clipify/audio.wav
+ffmpeg -y -i projects/<name>/work/audio/cleaned/<recording-id>.wav -ac 1 -ar 16000 projects/<name>/work/clipify/audio.wav
 gpu-run whisper-ctranslate2 --device cuda --compute_type float16 projects/<name>/work/clipify/audio.wav --model tiny.en --word_timestamps True --output_format json --output_dir projects/<name>/work/clipify --language en
 ```
 
@@ -78,22 +78,7 @@ For each candidate, propose: `[start, end, why-it's-funny, suggested title]`. Ai
 
 ### Step 1B — Find each strike (action mode)
 
-Replace Whisper with audio-transient detection. The detector finds sharp impacts (axe-on-wood, fist-on-pad, drumhead, ball-on-bat, wood landing on a pile) by computing spectral flux on the 1–6 kHz band — the broadband impulse an impact creates that ambient/wind doesn't.
-
-```bash
-ffmpeg -y -hwaccel cuda -i "$VIDEO" -vn -ac 1 -ar 16000 projects/<name>/work/clipify/audio.wav
-vt-python <skill-dir>/scripts/detect_transients.py projects/<name>/work/clipify/audio.wav \
-  --min-flux 30 --min-gap 0.6 > projects/<name>/work/clipify/strikes.json
-```
-
-Tuning:
-
-- `--min-flux 30` is the sane default. Real impacts register 50–300; ambient/wind sits at 5–15. Too many false positives → raise to 40–50. Too few hits → drop to 20.
-- `--min-gap 0.6` (seconds) is the closest two strikes can be. Fast drumming may need 0.2; chopping is fine at 0.6–1.0.
-- `--band 1000:6000` covers wood/metal/glass impacts. Heavy thuds (kick drum, body shots) live lower (`--band 200:2000`); whistles/clinks/snare cracks higher (`--band 4000:10000`).
-- For multi-clip sources (a folder of phone clips), run the detector on each clip and pick a varied set across angles. Aim for 50–65 strikes for a 45–60s montage at ~0.9s per shot.
-
-Each "shot" should start ~0.4s before the strike (showing wind-up) and end ~0.5s after (strike + brief follow-through). That's ~0.9s per beat.
+Action/hybrid mode only: read `references/action-mode.md` (transient detection, tuning, shot timing).
 
 ### Step 1.5 — Verify each candidate is in frame
 
@@ -107,7 +92,7 @@ for T in $STRIKE_TIMES; do
 done
 ```
 
-Read each verify image and drop the candidate if:
+Have the verify images checked by the vision subagent (`pipeline/video-inspect.md`, Vision subagent; one batch, text report back) and drop the candidate if:
 
 - The subject is bent down, off-frame, or behind an obstacle
 - A thumb is on the lens (yes, this happens — and you only catch it visually)
@@ -181,42 +166,11 @@ Skip the question if there's only one face (single-talker clip). For single-talk
 
 #### Step 4b — Split-screen (both faces always visible)
 
-Two stacked tiles, 1080×960 each. The active speaker's tile is on top — overlay flips at speaker changes.
-
-```
-[0:v]split=2[a0][a1];
-[a0]crop=Wcrop:Hcrop:LX_tile:LY_tile,scale=1080:960,split=2[lt0][lt1];
-[a1]crop=Wcrop:Hcrop:RX_tile:RY_tile,scale=1080:960,split=2[rt0][rt1];
-[lt0][rt0]vstack[layoutL];
-[rt1][lt1]vstack[layoutR];
-[layoutL][layoutR]overlay=0:0:enable='<RIGHT_SPEAKER_ENABLE>'[v]
-```
-
-Build `<RIGHT_SPEAKER_ENABLE>` from `segments.json` as `between(t,a,b)+between(t,a,b)+...` over the right-speaker segments. Tile crops should target ~720×640 around each face (1.125:1 to match 1080×960).
-
-Render this layout video-only (`-an`), then mux the matching clip segment from the verified cleaned WAV. Never carry audio from `clip.mp4` or `$VIDEO` into the edited output.
+Only when split-screen is chosen: read `references/split-screen.md` (filtergraph, tile crops, audio from the verified cleaned WAV).
 
 ### Step 4c — Time-warping reveals (optional)
 
-When the user wants a slow scenic / pan / reveal shot tightened ("cut this in half") without losing the arc, speed-ramp instead of trimming. Trimming forces you to drop part of the arc; speed-ramping preserves all the beats at higher tempo.
-
-```bash
-# 2x speed: render video only. If speech is present, time-warp a segment from the verified cleaned WAV with atempo=2.0 and mux it; never retain source-video audio.
-ffmpeg -y -ss "$START" -i "$CLIP" -t "$ORIG_DUR" \
-  -vf "setpts=PTS/2,scale=1080:1920:flags=lanczos,fps=30" \
-  -an \
-  -c:v h264_nvenc -preset p5 -rc vbr -cq 21 -b:v 0 -pix_fmt yuv420p \
-  projects/<name>/work/clipify/clip_2x.mp4
-```
-
-Rules of thumb:
-
-- **1.5x** — human movement that should feel "slightly brisk" without looking sped up
-- **2x** — punchier reveal; still reads as natural
-- **3x–4x** — time-lapse vibe (chain `atempo=2.0,atempo=2.0` for 4x; `atempo` accepts only 0.5–2.0 per filter instance)
-- Drop `-af atempo` and mute the segment if the audio is just ambient/wind and the chipmunking would be distracting
-
-Useful when the rest of the cut is rhythmic (chop montage, chat back-and-forth) and the reveal would otherwise feel like a dead spot.
+Only when asked to tighten a slow reveal without trimming: read `references/time-warp.md` (speed-ramp commands and rules of thumb; never retain source-video audio).
 
 ### Step 5 — Add subtitles
 
@@ -232,22 +186,24 @@ Else use the preset:
 
 ```bash
 # Trim the verified cleaned source audio to the selected source interval, then transcribe that cleaned clip.
-ffmpeg -y -ss "$START" -i projects/<name>/work/clipify/audio/cleaned/<recording-id>.wav -t "$DURATION" -ac 1 -ar 16000 projects/<name>/work/clipify/clip_audio.wav
+ffmpeg -y -ss "$START" -i projects/<name>/work/audio/cleaned/<recording-id>.wav -t "$DURATION" -ac 1 -ar 16000 projects/<name>/work/clipify/clip_audio.wav
 gpu-run whisper-ctranslate2 --device cuda --compute_type float16 projects/<name>/work/clipify/clip_audio.wav --model tiny.en --word_timestamps True --output_format json --output_dir projects/<name>/work/clipify --language en
+# Delivered audio: the same interval from the verified cleaned WAV at 48 kHz (clip_audio.wav is a 16 kHz ASR copy only).
+ffmpeg -y -ss "$START" -i projects/<name>/work/audio/cleaned/<recording-id>.wav -t "$DURATION" -c:a pcm_s24le projects/<name>/work/clipify/clip_voice.wav
 vt-python <skill-dir>/scripts/build_ass.py projects/<name>/work/clipify/clip_panned.json projects/<name>/work/clipify/captions.ass opus
 ```
 
 Burn captions:
 
 ```bash
-ffmpeg -y -i projects/<name>/work/clipify/clip_panned.mp4 -i projects/<name>/work/clipify/clip_audio.wav \
+ffmpeg -y -i projects/<name>/work/clipify/clip_panned.mp4 -i projects/<name>/work/clipify/clip_voice.wav \
   -vf "subtitles=projects/<name>/work/clipify/captions.ass" -map 0:v -map 1:a \
   -c:v h264_nvenc -preset p5 -rc vbr -cq 20 -b:v 0 -c:a aac -b:a 192k "$OUTPUT.mp4"
 ```
 
 ### Step 6 — Deliver
 
-- Save each output to `<source_dir>/clipify_out/` (mkdir if missing)
+- Inside a project, save each output to `projects/<name>/work/clipify/out/` (never into `raw/` or `assets/`; chosen clips are finished by `/reel` into `out/`). Outside a project, use `<source_dir>/clipify_out/` (mkdir if missing)
 - Print one line per clip: name, duration, what was funny, output path
 - Open the first output with `xdg-open <path>` so the user can check it
 - Offer to iterate (different style, different ROI, swap to split-screen, retime captions)

@@ -3,7 +3,7 @@ code: components/code/TradeScale/TradeScale.tsx
 preview: components/code/TradeScale/preview.png
 props: "x, y, at, angle, left, right, leftAt, rightAt, half, label"
 variants: "none"
-last_used: system-design-of-ai/05-model-routing
+last_used: system-design-of-ai/05-model-routing, system-design-of-ai/07-provider-failover
 ---
 # TradeScale
 

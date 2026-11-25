@@ -81,3 +81,16 @@ export const HandsetGlyph: React.FC<{size?: number; color?: string}> = ({size = 
     <path d="M13 6c-3 0-6 3-6 6 1 17 13 29 30 30 3 0 6-3 6-6v-6l-9-4-5 5c-5-2-9-6-11-11l5-5-4-9z" fill={color} stroke={C.border} strokeWidth={2.4} strokeLinejoin="round" />
   </svg>
 );
+
+/** dim "failed" badge: white circle, grey ✕ ("bad" is grey, never red) */
+export const XMark: React.FC<{size?: number; color?: string}> = ({size = 40, color = C.dim}) => (
+  <div style={{width: size, height: size, borderRadius: 999, background: C.white, border: `3px solid ${color}`, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+    <svg width={size * 0.55} height={size * 0.55} viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19" stroke={color} strokeWidth={3.6} strokeLinecap="round" /></svg>
+  </div>
+);
+/** static "good" badge: orange circle with a white tick */
+export const TickMark: React.FC<{size?: number}> = ({size = 44}) => (
+  <div style={{width: size, height: size, borderRadius: 999, background: C.orange, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+    <svg width={size * 0.6} height={size * 0.6} viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5" stroke={C.white} strokeWidth={3.6} fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+  </div>
+);

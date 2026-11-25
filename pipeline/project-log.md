@@ -2,17 +2,21 @@
 
 **Goal:** `projects/<name>/log.md` records every prompt I give on this video and what Claude did about it, so the project's history is readable later.
 
-**When**
-- At the end of every turn that touched the project, append one entry. Never edit or delete old entries.
-- Log turns that only answer a question too, with "No changes".
+**Who writes what**
+- **Hooks (automatic, `.claude/settings.json`, scripts in `tools/hooks/`):**
+  - `UserPromptSubmit` (`log_prompt.sh`): finds the project from a `projects/<…>/` path in the prompt (else `.current-project` at the repo root, which it updates whenever a prompt names a project; no project → nothing). Saves the prompt verbatim to `work/prompts/<YYYY-MM-DD_HHMMSS>.md` and appends the entry header to `log.md`.
+  - `Stop` (`log_tokens.sh`): appends `**Finished** · **Took**` and `**Tokens:**` (main session + subagents) under that entry, before its handoff block if there is one.
+  - Errors go to `work/logs/hooks.log` (or `.hook-state/hooks.log`); the hooks never print into the conversation and never fail a turn.
+- **Claude:** writes only **Changes / Decisions / Not done** (and the handoff at a stage end) under the hook's header. Never re-type the prompt, never compute tokens or times. Log turns that only answer a question too, with "No changes". Never edit or delete old entries.
+- If a prompt names a project that doesn't exist yet, the `Stop` hook writes the header once the turn has created it (it then sits below Claude's notes). If the named path is wrong, nothing is logged (see `.hook-state/hooks.log`): write a normal header yourself with `**Prompt:** (not saved by the hook: <reason>)`.
 
-**Entry format**
+**Entry format** (lines marked *hook* are written for you)
 
 ```markdown
-## 2026-10-27 10:43 IST · <short title>
+## 2026-10-27 10:43 IST · <first 60 chars of the prompt>          ← hook
 
-**Prompt:** (verbatim; trim only pasted logs or huge blocks, and say so)
-> ...
+**Prompt:** work/prompts/2026-10-27_104305.md                     ← hook
+**Started** 10:43:05                                              ← hook
 
 **Changes**
 - `work/cutlist.md`: dropped take 2 of paragraph 3 (stumble at 00:41)
@@ -21,8 +25,8 @@
 **Decisions:** anything chosen for me, with a one-line reason.
 **Not done / blocked:** what failed or was skipped, and why.
 
-**Started** 10:43:05 · **Finished** 10:51:40 · **Took** 8 m 35 s
-**Tokens:** input 1,204 · cache write 18,845 · cache read 412,330 · output 9,876 (main session; subagents: ~42,000)
+**Finished** 10:51:40 · **Took** 8 m 35 s                          ← hook
+**Tokens:** input 1,204 · cache write 18,845 · cache read 412,330 · output 9,876 (main session; subagents: …)  ← hook
 ```
 
 **Stage handoff** (`pipeline/stages.md`)
@@ -39,13 +43,15 @@
 
 - The next stage reads this first, so it must stand alone: exact files, timestamps and values, no "as discussed".
 
+- A text-posts run (`/text-posts`) is a normal entry titled `· Text posts`: the approved hooks, the photo approval (or "self-judged" and why), files in `out/text-posts/`, character counts, QA fixes.
 - A carousel run (`/carousel`) is a normal entry titled `· Carousel`: slide count, the outline/look approvals (or "self-judged" and why), files in `out/carousel/`, QA fixes.
-- Times are local, with the timezone. "Took" is from the prompt's timestamp to the last reply.
+- Times are local (IST). "Took" is from the prompt hook to the last assistant message.
 - Changes name files relative to the project and say what changed in each, not just "edited".
 - Never put API keys, `.env` values or full command logs in the log. Link to `work/logs/<file>` instead.
 
-**Tokens**
-- Claude can't see its own usage directly, but Claude Code's session transcript records it per message: `~/.claude/projects/<cwd with / replaced by ->/<session-id>.jsonl`. Sum the turn with:
+**Tokens** (computed by `tools/hooks/projlog.py`, not by Claude)
+- Source: Claude Code's session transcript `~/.claude/projects/<cwd with / replaced by ->/<session-id>.jsonl`, assistant messages from the prompt's timestamp on, deduplicated by message id; subagents from `<session-id>/subagents/*.jsonl` (and sidechain entries) over the same window, totalled separately.
+- The same sum by hand, for a check:
 
 ```bash
 jq -sc '
@@ -59,6 +65,5 @@ jq -sc '
     output:($a|map(.message.usage.output_tokens)|add)}' "$TRANSCRIPT"
 ```
 
-- Run it as the last step of the turn, so the final reply is the only part not counted. Write "(approx.)" after the numbers.
-- Subagent usage: if subagent transcripts exist (in the session's folder next to the `.jsonl`), sum them the same way and give the total separately. If they can't be found, write "subagents: not measured".
-- If the transcript can't be read, write "Tokens: not available" with the reason. Never guess numbers.
+- The `Stop` hook runs after the final reply, so the whole turn is counted. If the transcript can't be read it writes "Tokens: not available" with the reason; it never guesses.
+- **Per-project roll-up:** `vt-python tools/vt_log.py summary projects/<name>/log.md` (optional; sums `**Tokens:**` lines only).

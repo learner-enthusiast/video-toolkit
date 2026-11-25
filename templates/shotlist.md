@@ -17,6 +17,9 @@ Fill it in before recording. Claude reads it to know what exists and where.
 |---|---|---|---|
 | <shot.png> | <page> | <region> | <yes/no> |
 
+## Web captures (Claude takes them, `pipeline/web-capture.md`)
+Listed in `script.md` → `## Web captures`. Don't screenshot public pages yourself; only private or logged-in screens go in `assets/` above.
+
 ## Recording checklist
 - Phone at eye level, light in front, plain background, lav or close mic.
 - 3 s of silence at the start (noise profile), and a clap for sync if using two devices.
