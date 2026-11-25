@@ -29,7 +29,7 @@
 **Tokens:** input 1,204 · cache write 18,845 · cache read 412,330 · output 9,876 (main session; subagents: …)  ← hook
 ```
 
-**Approvals (authoritative in this file)** — record explicit user OK before Compose or deliverable sign-off (`vt-python tools/project_state.py record-approval projects/<name> rough_cut approved`). Do not use deprecated `set-approval` (it only touched the JSON mirror).
+**Approvals (authoritative in this file)** — record explicit user OK before Compose or deliverable sign-off (`vt-python tools/project_state.py record-approval projects/<name> rough_cut approved`). Do not use deprecated `set-approval` (it only touched the JSON mirror). Hooks and `record-approval` share the canonical lock `log.md.lock` beside this file.
 
 ```markdown
 **Approval:** rough_cut=approved

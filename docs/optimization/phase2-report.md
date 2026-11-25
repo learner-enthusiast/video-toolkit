@@ -1,5 +1,7 @@
 # Phase 2 — token-efficiency hardening report
 
+> **Historical snapshot** (pre–reliability pass on `main` @ `29e202c`). Current: `post-hardening-status.md`.
+
 **Branch:** `token-diet-phase2` (based on `main` @ `2de339a`)  
 **Date:** 2026-11-25
 
