@@ -47,5 +47,29 @@ class VtLogTest(unittest.TestCase):
             os.remove(path)
 
 
+    def test_compare_delta(self):
+        base = (
+            "**Finished** 12:00:00 · **Took** 60 s\n**Stage:** prep\n"
+            "**Tokens:** input 100 · cache write 0 · cache read 0 · output 10 (main session; subagents: none)\n"
+        )
+        cand = (
+            "**Finished** 12:01:00 · **Took** 30 s\n**Stage:** prep\n"
+            "**Tokens:** input 50 · cache write 0 · cache read 0 · output 5 (main session; subagents: none)\n"
+        )
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f1:
+            f1.write(base)
+            p1 = f1.name
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f2:
+            f2.write(cand)
+            p2 = f2.name
+        try:
+            cmp = vt_log.compare_logs(p1, p2)
+            self.assertEqual(cmp["delta_main"]["input"], -50)
+            self.assertEqual(cmp["candidate_timing"]["total_seconds"], 30)
+        finally:
+            os.remove(p1)
+            os.remove(p2)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -10,12 +10,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: FFmpeg (CPU-safe audio tests)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: pip
+          cache-dependency-path: .github/workflows/ci-requirements.txt
+      - name: Test virtualenv
+        run: |
+          python3 -m venv .ci-venv
+          .ci-venv/bin/pip install -r .github/workflows/ci-requirements.txt
       - name: Syntax check
-        run: python3 -m compileall -q tools tests
+        run: .ci-venv/bin/python -m compileall -q tools tests
       - name: Model routing config
-        run: python3 tools/model_verify.py --validate-only
+        run: .ci-venv/bin/python tools/model_verify.py --validate-only
       - name: Unit tests
-        run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+        run: .ci-venv/bin/python -m unittest discover -s tests -p 'test_*.py' -v

@@ -1,56 +1,64 @@
 # Post-hardening status (reliability pass)
 
-> **Scope:** `main` after PR #2 (`29e202c`), plus branch `hardening-cache-observability` (this pass).  
-> Historical phase reports (`phase2-report.md`, `phase2-audit.md`, `final-report.md`, `hardening-final-report.md`) are snapshots at their stated merges — not rewritten.
+**Historical baseline (audit):** `main` @ `63da97529d024442b9275396694b9913d22449ff` (post–PR #3).  
+**This pass:** branch [`reliability-final-pass`](https://github.com/learner-enthusiast/video-toolkit/pull/4), tip @ `4fc7e91`.  
+Older reports in this folder are **historical** unless dated after this pass.
 
-## CI
+## Pull request and CI
 
-- Workflow: `.github/workflows/ci.yml` (Python compile, `model_verify --validate-only`, `unittest`).
-- No GPU, FFmpeg, Ollama, or paid APIs required for unit tests.
-- `test_clean_audio` skips when NumPy/SciPy/SoundFile are absent (local full suite: use project `vt-python` venv).
+| Item | Value |
+|------|--------|
+| PR | [#4](https://github.com/learner-enthusiast/video-toolkit/pull/4) |
+| Required check name | **`test`** (workflow `ci`) |
+| Latest green run | [45665941160](https://github.com/learner-enthusiast/video-toolkit/actions/runs/45665941160) |
+| Tests | **73** run, **73** passed, **0** skipped |
+| Local (no scipy/ffmpeg) | 57 run, 1 skipped (`test_clean_audio` needs venv deps) |
 
-## Inspection cache (`tools/inspect_cache.py`)
+Steps: `compileall`, `model_verify --validate-only`, full `unittest` inside `.ci-venv` + `ci-requirements.txt` (`numpy`, `scipy`, `soundfile`); `apt install ffmpeg` for audio cleaning tests. No GPU, model weights, or paid APIs in CI.
 
-- Thorough bundles: requirements derived from `report.json` (scene `kf`, beat `sheet_*.jpg`, flag frames).
-- `integrity.json` lists every artifact; lookup rejects unlisted extras, path traversal, symlink escape.
-- Manifest updates: lock → read → modify → atomic replace.
-- Bundle install: stage → rename with per-bundle lock; prior bundle kept on failure.
-- Final QA: `lookup --for-final` / `restore --for-final` → `final_qa_requires_fresh_run` always.
+## Fixes delivered (vs audited `main`)
 
-## Project log lock (`tools/project_log_lock.py`)
+1. **Loudness / true peak** — balanced-brace `loudnorm` JSON parser; `input_i` / `input_tp` only; FFmpeg rc check; CLI rejects required thresholds without criteria.
+2. **Inspection cache** — `path_safety`; containment before existence checks; symlink rejection; integrity manifest cross-check; manifest schema validation.
+3. **Asset cache** — strict `verify_entry`; unique staging + per-key locks; manifest `entries` must be a dict.
+4. **Project state** — shared `log.md.lock` on init/set-stage/approval/sync-handoff; schema validator + quarantine recovery.
+5. **Token/time** — `vt_log.py` `compare`, `**Took**` in summaries; `benchmark-protocol.md`; `token-budget.md` separates context estimates vs measured hook usage.
+6. **CI** — CPU-safe `test_clean_audio` on every PR.
 
-- Canonical lock: `<project>/log.md.lock`
-- Shared by `tools/hooks/projlog.py` and `tools/project_state.py` (`record-approval`, header/footer RMW).
+## Skipped tests (intentional)
 
-## Project state (`tools/project_state.py`)
+| Test | Reason |
+|------|--------|
+| `test_clean_audio` (entire module) | Skipped only when `numpy`/`scipy`/`soundfile` missing (developer machine without venv). Not skipped in CI. |
+| `test_loudnorm_integration` | Skipped when `ffmpeg` absent locally; runs on CI. |
 
-- `project-state.json` written atomically; corrupt/missing JSON rebuilt from `log.md` on `sync-handoff`.
-- `record-approval` appends `**Approval:**` then syncs mirror (warns if sync fails after log write).
+## Cache integrity — guarantees and limits
 
-## Asset cache (`tools/asset_cache.py`)
+- **Guarantee:** Relative paths validated platform-independently; resolved paths must stay inside bundle/asset roots; symlinks rejected; report artifacts must match integrity manifest; corrupt/wrong-type manifests → safe miss or explicit failure; final-mode inspect restore still refused (existing tests preserved).
+- **Limit:** Cache reuse for non-final inspect still depends on correct report parsing; lock ordering is documented in code but not stress-tested on all platforms.
 
-- Manifest transactions under lock; corrupt manifest → safe miss reason.
-- Output `cache_key` + checksum verified on lookup; ffprobe output staged atomically.
+## State recovery
 
-## Token accounting
+- `log.md` remains authoritative for approvals; corrupt/invalid JSON quarantined (`project-state.json.corrupt`, numbered backups); rebuild via sync-handoff; set-stage validates allowed stages; no approval inference from stage.
 
-- Prompt hook stores stage from `project-state.json` snapshot → `**Stage:**` in log footer.
-- Models split: `; models main: … | sub: …` (legacy `; models:` still parsed).
-- `vt-python tools/vt_log.py summary` → `by_stage`, `by_model`, `by_stage_model` (main vs subagents separate).
+## Loudness / true peak measurement
 
-## Render validation (`tools/validate/vt_validate.py`)
+- Measurement runs only when expectations are configured; required failures propagate; optional → warning; unmeasured when parse/ffmpeg fails.
 
-- Loudness/true-peak FFmpeg pass only when expectations request it.
-- True peak from `loudnorm` JSON `input_tp` when available.
-- FPS: `r_frame_rate`, fallback `avg_frame_rate` with documented tolerance.
+## Token / time measurement
 
-## Remaining / deferred
+- **Available:** per-log `summary` / `breakdown` / `compare` on real `**Tokens**` and `**Took**` hook fields.
+- **Baseline benchmark:** protocol only (`docs/optimization/benchmark-protocol.md`); no fabricated before/after numbers in this pass (insufficient paired historical logs).
 
-- Final render / incremental Remotion caching (no complete invalidation model).
-- Hindi localization pipeline.
-- Full A/V lip-sync automation without reference alignment.
-- `test_clean_audio` in CI without optional scientific stack install.
+## Branch protection
 
-## Production quality
+- **Status:** `main` **not protected** (`gh api …/branches/main/protection` → 404).
+- **Action:** repo admin — see [`.github/BRANCH_PROTECTION.md`](../.github/BRANCH_PROTECTION.md); require check **`test`**.
 
-No production gates weakened in this pass (approvals, fresh final inspect, Opus QA, voice pipeline unchanged).
+## Production quality (unchanged)
+
+- Fresh final visual QA; no cached final inspect; Opus/creative-tier vision QA; rough-cut gate; WPE + DeepFilterNet 3 audio path; no adaptive transcription by default; no final-render cache.
+
+## Deferred / not in this PR
+
+- Hindi localization; final-render caching; enabling branch protection without admin token; full matrix of hook concurrency tests; measured A/B token benchmark commit; Opus-tier automated diff review (model unavailable on current plan).

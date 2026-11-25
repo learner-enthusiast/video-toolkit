@@ -23,6 +23,10 @@ MODEL_PART = re.compile(
     r"(\S+)\s+in\s+([\d,]+)\s+cw\s+([\d,]+)\s+cr\s+([\d,]+)\s+out\s+([\d,]+)",
     re.I,
 )
+TOOK_RE = re.compile(
+    r"\*\*Took\*\*\s*(?:(\d+)\s*m\s+(\d+)\s*s|(\d+)\s*s)",
+    re.I,
+)
 
 
 def _ints(*parts):
@@ -75,6 +79,17 @@ def _stage_for_entry(text: str, token_start: int) -> str:
     return "unknown"
 
 
+def _took_seconds(text: str, pos: int) -> int | None:
+    block = text[max(0, pos - 400) : pos]
+    matches = list(TOOK_RE.finditer(block))
+    if not matches:
+        return None
+    m = matches[-1]
+    if m.group(1) is not None:
+        return int(m.group(1)) * 60 + int(m.group(2))
+    return int(m.group(3))
+
+
 def parse_token_lines(log_path: str) -> list[dict]:
     if not log_path or not __import__("os").path.isfile(log_path):
         return []
@@ -95,6 +110,7 @@ def parse_token_lines(log_path: str) -> list[dict]:
         entries.append(
             {
                 "stage": stage,
+                "took_seconds": _took_seconds(text, m.start()),
                 "main": main,
                 "subagents": sub,
                 "models_main": main_models,
@@ -115,6 +131,18 @@ def summarize(entries: list[dict]) -> dict:
     by_model_sub: dict[str, dict] = {}
     by_stage_model_main: dict[str, dict[str, dict]] = {}
     by_stage_model_sub: dict[str, dict[str, dict]] = {}
+
+    timings = [e["took_seconds"] for e in entries if e.get("took_seconds") is not None]
+    timing_stats = None
+    if timings:
+        timings.sort()
+        mid = timings[len(timings) // 2]
+        timing_stats = {
+            "samples": len(timings),
+            "total_seconds": sum(timings),
+            "median_seconds": mid,
+            "p90_seconds": timings[int(len(timings) * 0.9) - 1] if len(timings) > 1 else mid,
+        }
 
     for e in entries:
         st = e["stage"]
@@ -147,8 +175,55 @@ def summarize(entries: list[dict]) -> dict:
             "main": by_stage_model_main or None,
             "subagents": by_stage_model_sub or None,
         },
-        "note": "Categories kept separate; cache_read is not fresh input cost",
+        "timing": timing_stats,
+        "note": "Measured hook usage only; cache_read is not fresh input. Context byte estimates in token-budget.md are separate.",
     }
+
+
+def _diff_bucket(a: dict | None, b: dict | None) -> dict:
+    a = a or _zero()
+    b = b or _zero()
+    return {k: b[k] - a[k] for k in a}
+
+
+def compare_logs(base_path: str, cand_path: str) -> dict:
+    base = summarize(parse_token_lines(base_path))
+    cand = summarize(parse_token_lines(cand_path))
+    return {
+        "baseline": base_path,
+        "candidate": cand_path,
+        "baseline_totals": base.get("totals"),
+        "candidate_totals": cand.get("totals"),
+        "delta_main": _diff_bucket(
+            (base.get("totals") or {}).get("main"),
+            (cand.get("totals") or {}).get("main"),
+        ),
+        "delta_subagents": _diff_bucket(
+            (base.get("totals") or {}).get("subagents"),
+            (cand.get("totals") or {}).get("subagents"),
+        ),
+        "baseline_timing": base.get("timing"),
+        "candidate_timing": cand.get("timing"),
+        "by_stage_delta_main": _diff_by_stage(
+            (base.get("by_stage") or {}).get("main"),
+            (cand.get("by_stage") or {}).get("main"),
+        ),
+        "note": "Stages present in only one log are flagged with only_* keys.",
+    }
+
+
+def _diff_by_stage(a: dict | None, b: dict | None) -> dict:
+    a = a or {}
+    b = b or {}
+    out = {}
+    for st in sorted(set(a) | set(b)):
+        if st not in a:
+            out[f"only_candidate:{st}"] = b[st]
+        elif st not in b:
+            out[f"only_baseline:{st}"] = a[st]
+        else:
+            out[st] = _diff_bucket(a[st], b[st])
+    return out
 
 
 def cmd_summary(args):
@@ -171,6 +246,15 @@ def main():
     s = sub.add_parser("breakdown")
     s.add_argument("log_md")
     s.set_defaults(func=cmd_breakdown)
+
+    def cmd_compare(args):
+        json.dump(compare_logs(args.baseline, args.candidate), sys.stdout, indent=2)
+        sys.stdout.write("\n")
+
+    s = sub.add_parser("compare")
+    s.add_argument("baseline")
+    s.add_argument("candidate")
+    s.set_defaults(func=cmd_compare)
     args = ap.parse_args()
     args.func(args)
 
