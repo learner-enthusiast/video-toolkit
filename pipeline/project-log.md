@@ -66,3 +66,4 @@ jq -sc '
 ```
 
 - The `Stop` hook runs after the final reply, so the whole turn is counted. If the transcript can't be read it writes "Tokens: not available" with the reason; it never guesses.
+- **Per-project roll-up:** `vt-python tools/vt_log.py summary projects/<name>/log.md` (optional; sums `**Tokens:**` lines only).

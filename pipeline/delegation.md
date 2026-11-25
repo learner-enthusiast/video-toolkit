@@ -1,6 +1,6 @@
 # Delegation
 
-**Goal:** Claude makes every decision. Low-stakes work goes to outside CLIs so the main session doesn't spend its (expensive, whole-session) turns on it. Haiku is the last resort.
+**Goal:** The primary session (Sonnet by default, `pipeline/model-routing.md`) makes every decision. Low-stakes work goes to scripts or outside CLIs so production turns are not spent on mechanical work. Haiku (`claude-haiku-5-5`) is the delegation-chain last resort and the heavy-job runner — not the default production model.
 
 ## 1. What may be delegated
 
@@ -102,7 +102,7 @@ Haiku runner ─ launches each job DETACHED (setsid/nohup) ─ watches logs
    ▼
 work/jobs/<NN>-<job>.status  (done/failed, duration, output path, last 20 log lines)
    ▼
-Claude ─ reads .status ─ verifies output (ffprobe streams/duration, size) ─ next step
+Claude ─ reads .status or `vt-python tools/job_report.py <status>` ─ verifies output (ffprobe streams/duration, size) ─ next step
 ```
 
 - Claude hands Haiku an **exact** batch: full commands, every GPU job wrapped in `gpu-run`, all flags, input/output paths and a timeout per job.

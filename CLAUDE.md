@@ -22,6 +22,11 @@ Per-video code is built inside `projects/<name>/work/`, never in the toolkit. Th
 - Never fall back to the CPU silently. Fix the cause, or stop and tell me. See `pipeline/gpu.md`.
 - Exception: when the GPU is busy with another heavy job (a render, Whisper), run small side jobs (stills, thumbnails, rembg, contact sheets) on the CPU instead of waiting (Remotion: no `gpu-run`, `--gl=swangle`). Say so in the log and report. Never move the main render, transcription or final encodes to the CPU.
 
+## Model routing
+- Default production: **Sonnet** (`pipeline/model-routing.md`, `config/model-routing.json`). **Opus** at creative checkpoints and final visual QA; **Haiku** for bounded worker tasks and the heavy-job runner only.
+- Deterministic checks first: `vt-python tools/validate/vt_validate.py`, ffprobe, reports on disk (`pipeline/job-results.md`). Never spend Opus on work a script can verify.
+- Start each stage from `project-state.json` + latest `### Handoff` (`pipeline/context-handoffs.md`). `log.md` wins on conflict.
+
 ## Delegation
 - You orchestrate. Two kinds of delegated work (`pipeline/delegation.md`): **low-stakes tasks** (scaffolding, renames, ffprobe reads, proxies, logo downloads into `icons/` + `icons/icons.md` rows, SRT wrapping, social JSON scaffold, `log.md`, boilerplate from a final spec) and **heavy jobs** (final renders, Whisper, final encodes, video-inspect runs, installs).
 - **Never delegate:** script, cuts, storyboard, creative take, layout states, sound map, `brand.md`, final component visuals, render settings, QA, anything on screen that hasn't been reviewed.

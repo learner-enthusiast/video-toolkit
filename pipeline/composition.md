@@ -3,7 +3,7 @@
 **Goal:** a Remotion project for this video only, built from the approved EDL, with only the components it needs.
 
 **Setup**
-- Create a fresh Remotion project in `projects/<name>/work/remotion/` (`npx create-video@latest`, blank TypeScript template). Install libraries here, per project.
+- Scaffold with `vt-python tools/scaffold_remotion.py projects/<name> --aspect 9:16` (reel) or `--aspect 16:9` (long-form), then `npm i` inside `work/remotion/`. Or create manually with `npx create-video@latest` if the scaffold is insufficient.
 - Add the official Remotion skills before writing code: `npx skills add remotion-dev/skills`. Follow them for APIs (`OffthreadVideo`, `Sequence`, `spring`, fonts, `staticFile`).
 - Add `@remotion/google-fonts` and `simple-icons` (plus a v13 alias if an icon is missing from the latest release).
 - Copy media into `public/` (clips, screenshots, clean voice WAV). Never reference `raw/` or `assets/` directly.

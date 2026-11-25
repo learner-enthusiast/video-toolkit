@@ -23,13 +23,13 @@ In Compose, be a creative co-director: script cues are the baseline, not a limit
 
 ## Starting a stage
 
-- Before doing anything else, read only the latest `### Handoff` block and the open issues in `log.md` (`grep -n '### Handoff' log.md`, then read from the last match), not the whole file. Then read the project files the stage depends on (`script.md`, `work/cutlist.md`, the EDL, `timeline.json`… as relevant), `brand.md` and this stage's `pipeline/` files. `CLAUDE.md` is already loaded; never Read it again.
+- Before doing anything else, read `projects/<name>/project-state.json` (`vt-python tools/project_state.py show projects/<name>`) and only the latest `### Handoff` block and open issues in `log.md` (`grep -n '### Handoff' log.md`, then read from the last match), not the whole file. Then read the project files the stage depends on (`script.md`, `work/cutlist.md`, the EDL, `timeline.json`… as relevant), `brand.md` and this stage's `pipeline/` files. `CLAUDE.md` is already loaded; never Read it again.
 - If the previous handoff has an unresolved open issue that blocks this stage, raise it with me first.
 - Stage 3 never starts without my OK on the rough cut recorded in `log.md`.
 
 ## Ending a stage
 
-- Write a handoff entry to `log.md` (format in `pipeline/project-log.md`): decisions and the reasons for them, rejected options, open issues, files produced, and next steps.
+- Write a handoff entry to `log.md` (format in `pipeline/project-log.md`): decisions and the reasons for them, rejected options, open issues, files produced, and next steps. Update `project-state.json` (`vt-python tools/project_state.py sync-handoff projects/<name>`) and optional `work/context/<stage>-context.md` (`pipeline/context-handoffs.md`).
 - Write it so a fresh session with no memory of this one can continue without re-deriving anything: name exact files, timestamps, and parameter values.
 - Then tell me the stage is done and to start the next one in a new session (`/clear`, then the next stage's prompt).
 
