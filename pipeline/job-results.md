@@ -38,10 +38,16 @@ Failures return exit 1 and a JSON `errors[]` with `code`, `message`, `file`.
 
 ## Video inspect cache
 
-Before a full inspect run on an unchanged deliverable:
-
 ```bash
-vt-python tools/inspect_cache.py lookup projects/<name> out/main.mp4 --mode thorough
+# After inspect completes:
+vt-python tools/inspect_cache.py store projects/<name> out/main.mp4 work/inspect/main --mode thorough \
+  --inspect-script projects/<name>/work/scripts/video_inspect.py
+
+# Before intermediate QA:
+vt-python tools/inspect_cache.py lookup projects/<name> out/main.mp4 --mode default
+
+# Final QA: lookup must hit a thorough bundle (or run fresh inspect)
+vt-python tools/inspect_cache.py lookup projects/<name> out/main.mp4 --mode thorough --for-final
 ```
 
-On cache hit, `restore` copies `report.json` only; re-run inspect when the script version, mode, or video bytes change.
+`restore` copies the full bundle to `work/inspect/<deliverable>/`. Cache does not replace Opus vision QA.
