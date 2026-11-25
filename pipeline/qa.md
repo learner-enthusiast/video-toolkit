@@ -6,7 +6,7 @@ Any Whisper pass here is post-production verification only and must consume a de
 
 **Frames**
 - Extract one frame from the middle of every beat of every deliverable to `work/qa/final/`. Tile them into contact sheets of about 12 frames, with a video-inspect report for each deliverable (`pipeline/video-inspect.md`). Extraction and tiling are low-stakes (delegation order in `pipeline/delegation.md`); measuring and video-inspect runs are heavy jobs (detached Haiku runner, `pipeline/delegation.md` §6).
-- Opus looks at every sheet through the vision subagent (`pipeline/video-inspect.md`, Vision subagent); the main session reads its text report. A cheaper pre-screen can point at timestamps but never passes anything. Explain or fix every freeze, silence and black interval in the report.
+- The **creative** tier vision subagent reviews every sheet (`pipeline/video-inspect.md`, `config/model-routing.json`); the main session (often **production** tier) reads its text report only. A cheaper pre-screen can point at timestamps but never passes anything. Explain or fix every freeze, silence and black interval in the report.
 - Check: no overlay covers my face, no text is cut off or outside the 5% margin, captions are readable and not under the bubble, no stretched video, and the grade is consistent.
 - For screen beats, check that the zoom target is the thing being talked about.
 - Render one still per beat in a single bundle (`renderStill` in a loop, half scale) and tile them; it catches layout bugs before the full render. Also sample the delivered MP4 every 5 s: gaps between two scenes (an empty card during a pause) only show up there.
