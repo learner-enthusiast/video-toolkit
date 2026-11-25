@@ -6,7 +6,7 @@
 ## CI (job name: `test`)
 
 - `python3 -m compileall`, `model_verify --validate-only`, full `unittest`.
-- CPU deps for audio tests: `.github/workflows/ci-requirements.txt` (`numpy`, `scipy`, `soundfile`).
+- CPU deps: venv + `.github/workflows/ci-requirements.txt` (`numpy`, `scipy`, `soundfile`) so `test_clean_audio` runs (no GPU/models).
 - No GPU, FFmpeg (unit), Ollama, or paid APIs required for default unit tests.
 
 ## Loudness / true peak (`tools/validate/vt_validate.py`)
