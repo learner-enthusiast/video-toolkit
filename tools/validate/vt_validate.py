@@ -130,7 +130,8 @@ def check_subtitles(path: str, max_chars_per_line: int = 42, max_lines: int = 2)
     warns = []
     if not os.path.isfile(path):
         return [_err("MISSING_FILE", "SRT not found", file=path)]
-    raw = open(path, encoding="utf-8", errors="replace").read().strip()
+    with open(path, encoding="utf-8", errors="replace") as fh:
+        raw = fh.read().strip()
     if not raw:
         return [_err("SRT_EMPTY", "SRT file is empty", file=path)]
     blocks = re.split(r"\n\n+", raw)

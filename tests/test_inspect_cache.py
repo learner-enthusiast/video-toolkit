@@ -241,6 +241,86 @@ class InspectCacheTest(unittest.TestCase):
                 self.assertIn(k, man["entries"])
 
     @_patch_probe()
+    def test_symlinked_directory_rejected(self, _p):
+        with tempfile.TemporaryDirectory() as td:
+            bundle = os.path.join(td, "bundle")
+            sub = os.path.join(td, "realdir")
+            os.makedirs(sub)
+            with open(os.path.join(sub, "report.json"), "w") as f:
+                json.dump({}, f)
+            os.makedirs(bundle)
+            os.symlink(sub, os.path.join(bundle, "nested"))
+            with self.assertRaises(ValueError):
+                ic.iter_bundle_artifact_paths(bundle)
+
+    @_patch_probe()
+    def test_integrity_json_wrong_top_level(self, _p):
+        with tempfile.TemporaryDirectory() as td:
+            bundle = os.path.join(td, "b")
+            os.makedirs(bundle)
+            with open(os.path.join(bundle, "integrity.json"), "w") as f:
+                json.dump([1, 2, 3], f)
+            ok, reason = ic.verify_integrity(bundle)
+            self.assertFalse(ok)
+            self.assertIn("corrupt_integrity", reason)
+
+    @_patch_probe()
+    def test_restore_malicious_bundle_dir(self, _p):
+        with tempfile.TemporaryDirectory() as td:
+            proj = os.path.join(td, "p")
+            os.makedirs(proj)
+            video = os.path.join(proj, "v.mp4")
+            with open(video, "wb") as f:
+                f.write(b"v")
+            key = ic.fingerprint(video, self._args(video, "default"))
+            good = ic.bundle_dir(proj, key)
+            os.makedirs(good)
+            with open(os.path.join(good, "report.json"), "w") as f:
+                json.dump({}, f)
+            ic.write_bundle_meta(good, {"key": key, "mode": "default"})
+            ic.write_integrity_manifest(good, key, "default")
+            man = {"schema": ic.CACHE_SCHEMA, "entries": {key: {"bundle_dir": "work/inspect/.cache/OTHER", "mode": "default", "fingerprint": key}}}
+            os.makedirs(os.path.dirname(ic.manifest_path(proj)), exist_ok=True)
+            with open(ic.manifest_path(proj), "w") as f:
+                json.dump(man, f)
+            with self.assertRaises(SystemExit) as ex:
+                ic.cmd_restore(self._restore_args(proj, video, "default", os.path.join(proj, "out")))
+            self.assertIn("bundle_dir_mismatch", str(ex.exception))
+
+    @_patch_probe()
+    def test_restore_preserves_dest_on_failure(self, _p):
+        with tempfile.TemporaryDirectory() as td:
+            proj = os.path.join(td, "p")
+            outside = os.path.join(td, "outside")
+            os.makedirs(outside)
+            with open(os.path.join(outside, "secret"), "wb") as f:
+                f.write(b"s")
+            video = os.path.join(proj, "v.mp4")
+            os.makedirs(proj)
+            with open(video, "wb") as f:
+                f.write(b"v")
+            key = ic.fingerprint(video, self._args(video, "default"))
+            bundle = ic.bundle_dir(proj, key)
+            os.makedirs(bundle)
+            with open(os.path.join(bundle, "report.json"), "w") as f:
+                json.dump({}, f)
+            os.symlink(outside, os.path.join(bundle, "leak"))
+            dest = os.path.join(proj, "dest")
+            os.makedirs(dest)
+            with open(os.path.join(dest, "keep.txt"), "w") as f:
+                f.write("stay")
+            man = {
+                "schema": ic.CACHE_SCHEMA,
+                "entries": {key: {"bundle_dir": os.path.relpath(bundle, proj), "mode": "default", "fingerprint": key}},
+            }
+            with open(ic.manifest_path(proj), "w") as f:
+                json.dump(man, f)
+            with self.assertRaises(SystemExit):
+                ic.cmd_restore(self._restore_args(proj, video, "default", dest))
+            with open(os.path.join(dest, "keep.txt")) as f:
+                self.assertEqual(f.read(), "stay")
+
+    @_patch_probe()
     def test_final_lookup_and_restore_refused(self, _p):
         with tempfile.TemporaryDirectory() as td:
             proj, video, insp = self._thorough_project(td)

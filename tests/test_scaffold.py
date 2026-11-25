@@ -16,7 +16,8 @@ class ScaffoldTest(unittest.TestCase):
             self.assertTrue(os.path.isfile(os.path.join(path, "src", "lib", "layout.ts")))
             self.assertTrue(os.path.isfile(os.path.join(path, "src", "Root.tsx")))
             self.assertTrue(os.path.islink(os.path.join(path, "src", "shared")))
-            pkg = json.load(open(os.path.join(path, "package.json")))
+            with open(os.path.join(path, "package.json")) as pf:
+                pkg = json.load(pf)
             self.assertEqual(pkg["dependencies"]["remotion"], remotion_version())
 
     def test_refuse_non_empty(self):
@@ -24,7 +25,8 @@ class ScaffoldTest(unittest.TestCase):
             proj = os.path.join(td, "p")
             rem = os.path.join(proj, "work", "remotion")
             os.makedirs(rem)
-            open(os.path.join(rem, "keep.txt"), "w").write("x")
+            with open(os.path.join(rem, "keep.txt"), "w") as kf:
+                kf.write("x")
             with self.assertRaises(SystemExit):
                 scaffold(proj, "9:16")
 

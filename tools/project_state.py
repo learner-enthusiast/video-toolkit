@@ -235,16 +235,11 @@ def sync_stage_from_state_file(state: dict, project: str) -> str:
     return "unknown"
 
 
-def _sync_handoff_body(project: str) -> dict:
-    state, err = try_load_state(project)
-    if err or state is None:
-        state = default_state(project)
-        if err in ("INVALID_STATE_JSON", "INVALID_STATE_SCHEMA") and os.path.isfile(state_path(project)):
-            quarantine_state_file(project)
-    elif state.get("schema_version") != SCHEMA_VERSION:
-        preserved = {k: state[k] for k in ("project", "project_path", "master_language") if k in state}
-        state = default_state(project)
-        state.update(preserved)
+def _rebuild_state_from_log(project: str, *, base: dict | None = None) -> dict:
+    """Rebuild mirror fields from authoritative log.md (does not persist)."""
+    state = dict(base) if base else default_state(project)
+    if "approval_evidence" not in state:
+        state["approval_evidence"] = {k: "none" for k in APPROVALS}
     handoff = parse_last_handoff(log_path(project))
     auth = authoritative_approvals(project)
     for k in APPROVALS:
@@ -264,6 +259,21 @@ def _sync_handoff_body(project: str) -> dict:
         if handoff.get("next"):
             state["next_actions"] = [handoff["next"]]
         state["status"] = "in_progress"
+    return state
+
+
+def _sync_handoff_body(project: str) -> dict:
+    state, err = try_load_state(project)
+    if err or state is None:
+        if err in ("INVALID_STATE_JSON", "INVALID_STATE_SCHEMA") and os.path.isfile(state_path(project)):
+            quarantine_state_file(project)
+        state = _rebuild_state_from_log(project)
+    elif state.get("schema_version") != SCHEMA_VERSION:
+        preserved = {k: state[k] for k in ("project", "project_path", "master_language") if k in state}
+        state = _rebuild_state_from_log(project, base=default_state(project))
+        state.update(preserved)
+    else:
+        state = _rebuild_state_from_log(project, base=state)
     save_state(project, state)
     return state
 
@@ -280,18 +290,36 @@ def cmd_init(args):
 
 
 def cmd_show(args):
-    print(json.dumps(load_state(args.project), indent=2))
+    st, err = try_load_state(args.project)
+    if err == "NO_STATE":
+        print(json.dumps({"error": err, "recovery": "vt-python tools/project_state.py init", "state": None}, indent=2))
+        sys.exit(1)
+    if err:
+        print(
+            json.dumps(
+                {
+                    "error": err,
+                    "recovery": "vt-python tools/project_state.py sync-handoff",
+                    "state": None,
+                    "note": "log.md approvals remain authoritative",
+                },
+                indent=2,
+            )
+        )
+        sys.exit(1)
+    print(json.dumps(st, indent=2))
 
 
 def cmd_set_stage(args):
     with project_log_lock(args.project):
         state, err = try_load_state(args.project)
-        st = state if state else default_state(args.project)
-        if err in ("INVALID_STATE_JSON", "INVALID_STATE_SCHEMA") and os.path.isfile(state_path(args.project)):
-            quarantine_state_file(args.project)
-        st["stage"] = args.stage
-        st["status"] = "in_progress"
-        save_state(args.project, st)
+        if err or state is None:
+            if err in ("INVALID_STATE_JSON", "INVALID_STATE_SCHEMA") and os.path.isfile(state_path(args.project)):
+                quarantine_state_file(args.project)
+            state = _rebuild_state_from_log(args.project)
+        state["stage"] = args.stage
+        state["status"] = "in_progress"
+        save_state(args.project, state)
 
 
 def append_log_line(project: str, line: str) -> None:
