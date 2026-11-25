@@ -3,11 +3,15 @@ import os
 import tempfile
 import unittest
 
+import io
+from unittest import mock
+
 from tools.project_state import (
     APPROVALS,
     authoritative_approvals,
     cmd_record_approval,
     cmd_set_approval,
+    cmd_init,
     cmd_set_stage,
     cmd_show,
     default_state,
@@ -20,6 +24,24 @@ from tools.project_state import (
 
 
 class ProjectStateTest(unittest.TestCase):
+    def test_init_idempotent(self):
+        with tempfile.TemporaryDirectory() as td:
+            proj = os.path.join(td, "p")
+            os.makedirs(proj)
+            st = default_state(proj)
+            st["stage"] = "cut"
+            st["open_issues"] = ["keep"]
+            save_state(proj, st)
+            buf = io.StringIO()
+            with mock.patch("sys.stdout", buf):
+                cmd_init(type("A", (), {"project": proj})())
+            info = json.loads(buf.getvalue())
+            self.assertEqual(info["status"], "already_initialized")
+            with open(os.path.join(proj, "project-state.json")) as f:
+                again = json.load(f)
+            self.assertEqual(again["stage"], "cut")
+            self.assertEqual(again["open_issues"], ["keep"])
+
     def test_default_state_schema(self):
         st = default_state("projects/demo")
         self.assertEqual(st["schema_version"], 1)

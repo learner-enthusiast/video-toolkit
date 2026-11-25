@@ -9,6 +9,59 @@ from tools import asset_cache as ac
 
 
 class AssetCacheTest(unittest.TestCase):
+    def test_single_input_hash_per_store(self):
+        with tempfile.TemporaryDirectory() as td:
+            proj = os.path.join(td, "p")
+            os.makedirs(proj)
+            inp = os.path.join(proj, "in.bin")
+            out = os.path.join(proj, "out.bin")
+            with open(inp, "wb") as f:
+                f.write(b"x" * 1024)
+            with open(out, "wb") as f:
+                f.write(b"y")
+            ac._INPUT_HASH_CALLS = 0
+            store = type(
+                "A",
+                (),
+                {
+                    "project": proj,
+                    "input": inp,
+                    "op": "probe",
+                    "params": "",
+                    "output": out,
+                    "script": None,
+                    "tool_version": "1.0",
+                },
+            )()
+            ac.cmd_store(store)
+            self.assertEqual(ac._INPUT_HASH_CALLS, 1)
+
+    def test_missing_supplied_script_miss(self):
+        with tempfile.TemporaryDirectory() as td:
+            proj = os.path.join(td, "p")
+            os.makedirs(proj)
+            inp = os.path.join(proj, "in.bin")
+            with open(inp, "wb") as f:
+                f.write(b"z")
+            lookup = type(
+                "A",
+                (),
+                {
+                    "project": proj,
+                    "input": inp,
+                    "op": "x",
+                    "params": "",
+                    "script": os.path.join(proj, "nope.py"),
+                    "tool_version": "1",
+                },
+            )()
+            buf = io.StringIO()
+            with mock.patch("sys.stdout", buf):
+                with self.assertRaises(SystemExit) as e:
+                    ac.cmd_lookup(lookup)
+            self.assertEqual(e.exception.code, 1)
+            self.assertIn("script not found", json.loads(buf.getvalue())["reason"])
+
     def test_store_and_lookup_hit(self):
         with tempfile.TemporaryDirectory() as td:
             proj = os.path.join(td, "p")

@@ -105,6 +105,17 @@ def manifest_path(project: str) -> str:
     return os.path.join(project, MANIFEST)
 
 
+def _manifest_read_error(data) -> str | None:
+    if data.get("schema") != CACHE_SCHEMA:
+        return "schema_mismatch"
+    entries = data.get("entries")
+    if entries is None:
+        return None
+    if not isinstance(entries, dict):
+        return "invalid_entries"
+    return None
+
+
 def _read_manifest_file(project: str) -> dict:
     p = manifest_path(project)
     if not os.path.isfile(p):
@@ -116,13 +127,10 @@ def _read_manifest_file(project: str) -> dict:
         return {"schema": CACHE_SCHEMA, "entries": {}, "_corrupt_previous": True}
     if not isinstance(data, dict):
         return {"schema": CACHE_SCHEMA, "entries": {}, "_manifest_error": "invalid_manifest"}
-    if data.get("schema") != CACHE_SCHEMA:
-        return {"schema": CACHE_SCHEMA, "entries": {}}
-    entries = data.get("entries")
-    if entries is None:
-        data["entries"] = {}
-    elif not isinstance(entries, dict):
-        return {"schema": CACHE_SCHEMA, "entries": {}, "_manifest_error": "invalid_entries"}
+    err = _manifest_read_error(data)
+    if err:
+        return {"schema": CACHE_SCHEMA, "entries": {}, "_manifest_error": err}
+    data.setdefault("entries", {})
     return data
 
 
@@ -153,9 +161,17 @@ def manifest_transaction(project: str, mutate) -> dict:
         fcntl.flock(lf, fcntl.LOCK_EX)
         try:
             man = _read_manifest_file(project)
-            if man.get("_corrupt_previous") and os.path.isfile(p):
-                _quarantine_manifest(project)
+            read_err = None
+            if man.get("_corrupt_previous"):
+                read_err = "corrupt_json"
+            elif man.get("_manifest_error"):
+                read_err = man["_manifest_error"]
+            if read_err and os.path.isfile(p):
+                if _quarantine_manifest(project) is None:
+                    raise RuntimeError(f"inspect manifest quarantine failed: {read_err}")
+                man = {"schema": CACHE_SCHEMA, "entries": {}}
             man.pop("_corrupt_previous", None)
+            man.pop("_manifest_error", None)
             mutate(man)
             man["schema"] = CACHE_SCHEMA
             with os.fdopen(fd, "w") as f:
