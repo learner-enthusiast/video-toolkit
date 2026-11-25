@@ -7,6 +7,7 @@ import unittest
 from unittest import mock
 
 from tools import asset_cache as ac
+from tools.hooks import transcript_ckpt as tck
 from tools.project_log_lock import project_log_lock
 
 
@@ -76,6 +77,30 @@ class HookConcurrencyTest(unittest.TestCase):
             t2.join()
             self.assertEqual(min(lengths), 2)
             self.assertEqual(max(lengths), 4)
+
+
+    def test_transcript_checkpoint_lock_serializes(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = td
+            sid = "sess"
+            barrier = threading.Barrier(2)
+            counters = []
+
+            def one_pass():
+                barrier.wait()
+                with tck.checkpoint_lock(root, sid):
+                    ck = tck.load_checkpoint(root, sid)
+                    ck.setdefault("files", {})["_touch"] = ck.get("files", {}).get("_touch", 0) + 1
+                    tck.save_checkpoint(root, sid, ck)
+
+            t1 = threading.Thread(target=one_pass)
+            t2 = threading.Thread(target=one_pass)
+            t1.start()
+            t2.start()
+            t1.join()
+            t2.join()
+            ck = tck.load_checkpoint(root, sid)
+            self.assertEqual(ck["files"]["_touch"], 2)
 
 
 if __name__ == "__main__":
