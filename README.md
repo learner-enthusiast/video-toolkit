@@ -26,13 +26,13 @@ Details: `pipeline/stages.md`, `CLAUDE.md`. Start each session from **`project-s
 
 ## Model routing (token-efficient, quality-preserving)
 
-| Role | Typical model | Used for |
-|------|----------------|----------|
-| **Production** | Sonnet (`claude-sonnet-5-5`) | Implementation, cuts after your OK, Remotion, FFmpeg, most pipeline steps |
-| **Creative / QA** | Opus (`claude-opus-5-5`) | Story direction, approval stills, **final** visual QA (vision subagent) |
-| **Worker** | Haiku (`claude-haiku-5-5`) | Heavy GPU jobs (exact commands), delegation-chain fallback |
+| Tier | Used for |
+|------|----------|
+| **production** | Implementation, cuts after your OK, Remotion, FFmpeg, most pipeline steps |
+| **creative** | Story direction, approval stills, **final** visual QA (vision subagent — always creative tier, not main session) |
+| **worker** | Heavy GPU jobs (exact commands), delegation-chain fallback |
 
-Authoritative IDs and effort defaults: **`config/model-routing.json`**, policy: **`pipeline/model-routing.md`**. After Claude Code upgrades: `vt-python tools/model_verify.py`.
+Model IDs live only in **`config/model-routing.json`**. Policy: **`pipeline/model-routing.md`**. Verify: `vt-python tools/model_verify.py`.
 
 **Scripts before models:** run validators and ffprobe instead of re-reasoning about file shape (`tools/validate/vt_validate.py`, `pipeline/job-results.md`).
 

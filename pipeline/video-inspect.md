@@ -5,7 +5,7 @@
 **Inputs:** a video path, optional `--start/--end` (seconds), optional `--thorough` (final pre-publish check).
 **Output:** `work/inspect/<deliverable>/` (`<deliverable>` = the file's stem): `report.json`, `contact_sheet.jpg`, `keyframes/` (one per scene, plus every flagged frame), and `sheet_NN.jpg` for beat QA.
 
-**Cache (unchanged video):** Before a full run, `vt-python tools/inspect_cache.py lookup projects/<name> <video> --mode thorough` (`pipeline/job-results.md`). Restore only when the key matches; invalidate when bytes, mode, or the inspect script version changes. Intermediate QA may reuse cached `report.json`; final pre-publish QA still requires a fresh `--thorough` run or an explicit cache miss.
+**Cache (unchanged video):** `tools/inspect_cache.py` caches the **whole** `work/inspect/<deliverable>/` bundle (report, contact sheet, sheets, keyframes). Fingerprint includes video hash, mode, range, and `--inspect-script` file hash. `lookup --for-final` requires a **thorough** bundle (`pipeline/job-results.md`). Intermediate QA may restore a hit; **final pre-publish QA still needs a fresh `--thorough` run** or an explicit miss — cache never equals approval.
 
 **Transcript provenance gate:** this Whisper pass is a QA transcript only. For talking-head production footage, it may run only on a deliverable whose audio comes from the Prep-verified cleaned recording (`pipeline/stages.md`, `pipeline/voice-cleaning.md`); it must never be used to bootstrap Prep or to transcribe raw/unverified source audio. If provenance is unknown, omit the transcript stage and report why.
 
@@ -50,7 +50,7 @@
 
 ## Vision subagent (images stay out of the main session)
 Every look at stills, contact sheets, keyframes, flagged frames or carousel slides runs in a subagent; the main session reads its text report, never the images.
-- **Model:** the same as the main session (Opus: Agent tool, `model: "opus"`). Never a cheaper model for judging (the fresh-eyes restate test in `pipeline/qa.md` is the one exception).
+- **Model:** **creative tier (Opus)** always — independent of the main session (`config/model-routing.json` → `subagents.vision_qa`, `same_as_main: false`). In Claude Code use `--model` with the creative tier id from config, or Task/subagent `model: "opus"`. Never a cheaper model for final judging (the restate test in `pipeline/qa.md` is the one exception).
 - **Its prompt:** the image paths; `report.json` `summary` + `flags` when there is one; the beat list (storyboard rows or script beats with times and layout state); and the instruction to read and follow `brand.md`, `CLAUDE.md` (Quality bar, Inspecting a video, Creative direction) and the checklist that applies (`pipeline/qa.md` Frames, `pipeline/composition.md` Checks, or `pipeline/carousel.md` QA). Those rules win over its own taste.
 - **It returns text only:** one line per issue, `timestamp · what · severity (blocker / fix / nit) · proposed fix`, then the OK beats listed briefly (`0:00–0:12 OK`). Flags it can't settle say "ambiguous" with the frame path.
 - **Main session:** reads the report, decides fixes, re-runs the subagent on the fixed frames. A pre-screen or report is still a lead; a pass means the Opus subagent looked at every sheet.

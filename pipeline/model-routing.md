@@ -2,24 +2,24 @@
 
 **Goal:** use the right model for each decision. Sonnet runs most production work; Opus owns creative direction, hard problems, and final visual QA; Haiku runs bounded, verifiable tasks. Deterministic scripts beat any LLM when the answer is checkable.
 
-**Authority:** `config/model-routing.json` is the only place model IDs are defined. Skills and pipeline docs refer here; they do not hardcode IDs.
+**Authority:** `config/model-routing.json` is the only place **model IDs** and CLI selectors are defined. This file uses **tiers** only. Verify locally: `vt-python tools/model_verify.py`.
 
 ## Tiers
 
-| Tier | ID (Nov 2026 on this machine) | Default effort | Use for |
-|---|---|---|---|
-| Production | `claude-sonnet-5-5` | medium | Implementation, debugging, manifests, FFmpeg batches, normal Remotion, subtitles, social scaffolding, stage handoffs |
-| Creative | `claude-opus-5-5` | high | Story direction, novel storyboard choices, architectural forks, approval stills judgment, vision subagent QA |
-| Worker | `claude-haiku-5-5` | low | Log summaries, JSON extraction, heavy-job runner, delegation chain last resort |
-| Escalation (rare) | `claude-fable-5-2[1m]` | high | Only when Opus escalation failed or I ask; never routine production |
+| Tier | Default effort | Use for |
+|---|---|---|
+| **production** | medium | Implementation, debugging, manifests, FFmpeg batches, normal Remotion, subtitles, social scaffolding, stage handoffs |
+| **creative** | high | Story direction, novel storyboard choices, architectural forks, approval stills judgment, **vision subagent QA** |
+| **worker** | low | Log summaries, JSON extraction, heavy-job runner, delegation chain last resort |
+| **escalation** (rare) | high | Only when Opus escalation failed or I ask; not routine production |
 
-Long context: `claude-sonnet-5-5[1m]` when a single stage needs the full script + timeline without `/compact`.
+Long context: use the production tier's `long_context_id` in config when a single stage needs the full script + timeline without `/compact`.
 
-**Start a production stage** in Sonnet (`claude --model claude-sonnet-5-5`). Cursor sessions should use Composer/Sonnet-class models for the same role unless I explicitly open an Opus session for creative work.
+**Start a production stage** on the **production** tier. Cursor: Composer/Sonnet-class unless I open a creative session.
 
 ## Haiku must never
 
-Approve creative work, pick final cuts, pass storyboard or visual/audio quality, or sign off a finished video. The primary session (Sonnet or Opus) verifies every worker output.
+Approve creative work, pick final cuts, pass storyboard or visual/audio quality, or sign off a finished video. The primary session (production or creative tier) verifies every worker output.
 
 ## Bounded Opus checkpoints
 
@@ -31,29 +31,21 @@ Approve creative work, pick final cuts, pass storyboard or visual/audio quality,
 
 Do **not** spawn Opus for every component tweak, file rename, or validator run.
 
-## Escalation (Sonnet → Opus)
+## Escalation (production → creative)
 
-Escalate when **all** apply:
-
-1. At least two materially different fixes were tried and failed, or the issue is novel/ambiguous.
-2. Wrong choice would hurt final quality or cross multiple pipeline stages.
-3. A compact **escalation dossier** is ready (≤ 2k words): problem, files, errors, attempts, constraints, proposed options — not full chat history.
-
-Opus returns a decision or spec; Sonnet implements unless I ask otherwise.
-
-Optional **Fable** only if Opus could not resolve and the task is architectural/long-horizon (see `config/model-routing.json`).
+See `pipeline/escalation.md`. Escalate when two materially different fixes failed or quality risk is high.
 
 ## Effort
 
-Claude Code supports `--effort low|medium|high` when `per_turn_effort` is enabled. Match effort to task depth (`config/model-routing.json` → `default_by_task_class`). Do not use `high` effort for grep, ffprobe, or running validators.
+Use `--effort` per `config/model-routing.json` → `default_by_task_class`. Do not use `high` effort for grep, ffprobe, or validators.
 
 ## Subagents
 
-| Subagent | Model | Notes |
+| Subagent | Tier | Notes |
 |---|---|---|
-| Vision QA | `claude-opus-5-5` | Same policy as `pipeline/video-inspect.md` |
+| Vision QA | **creative** | Never `same_as_main`; Opus even if main session is Sonnet |
 | Restate test | worker + vision | Pre-screen only |
-| Heavy jobs | `claude-haiku-5-5` | Exact commands only (`pipeline/delegation.md` §6) |
+| Heavy jobs | worker | Exact commands only (`pipeline/delegation.md` §6) |
 
 ## Verification
 
@@ -62,10 +54,4 @@ Claude Code supports `--effort low|medium|high` when `per_turn_effort` is enable
 
 ## Maintenance
 
-After a Claude Code upgrade, run:
-
-```bash
-vt-python tools/model_verify.py
-```
-
-Update `config/model-routing.json` `verified_at` and IDs if the client reports changes. Log the result in the toolkit `log.md` entry for that maintenance turn.
+After a Claude Code upgrade: `vt-python tools/model_verify.py` — update `verified_at` in config only after reviewing that report.
