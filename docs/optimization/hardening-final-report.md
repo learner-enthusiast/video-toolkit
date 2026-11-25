@@ -6,7 +6,9 @@
 |---|---|
 | Starting HEAD (`main`) | `717cd29` |
 | Branch | `hardening-final-optimizations` |
-| Final commit | *(see `git rev-parse HEAD` after push)* |
+| Final commit | `31aa2943a2c37777e29865b14e435c458b06a93c` |
+| Pull request | https://github.com/learner-enthusiast/video-toolkit/pull/2 |
+| GitHub Actions (PR) | https://github.com/learner-enthusiast/video-toolkit/actions/runs/45657464314 — **success** |
 
 ## B. Implemented changes (by phase)
 
@@ -49,7 +51,7 @@ python3 -m unittest discover -s tests -p 'test_*.py' -v
 
 Local run: **36 tests, OK (1 skipped)**.
 
-GitHub Actions: verify on push (required for mission completion).
+GitHub Actions PR run `45657464314`: **passed** (ubuntu-latest, no FFmpeg/GPU).
 
 ## D. Token-efficiency impact
 
