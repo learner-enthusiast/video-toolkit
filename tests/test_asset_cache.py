@@ -255,6 +255,37 @@ class AssetCacheTest(unittest.TestCase):
             self.assertFalse(ok)
             self.assertEqual(reason, "path_forbidden")
 
+    def test_quarantine_failure_aborts_store(self):
+        with tempfile.TemporaryDirectory() as td:
+            proj = os.path.join(td, "p")
+            os.makedirs(proj)
+            mp = ac.manifest_path(proj)
+            os.makedirs(os.path.dirname(mp))
+            with open(mp, "w") as f:
+                f.write("{bad")
+            inp = os.path.join(proj, "in.bin")
+            out = os.path.join(proj, "out.bin")
+            with open(inp, "wb") as f:
+                f.write(b"x")
+            with open(out, "wb") as f:
+                f.write(b"y")
+            store = type(
+                "A",
+                (),
+                {
+                    "project": proj,
+                    "input": inp,
+                    "op": "probe",
+                    "params": "",
+                    "output": out,
+                    "script": None,
+                    "tool_version": "1.0",
+                },
+            )()
+            with mock.patch.object(ac.shutil, "copy2", side_effect=OSError("perm")):
+                with self.assertRaises(RuntimeError):
+                    ac.manifest_transaction(proj, lambda m: m.setdefault("entries", {}))
+
     def test_corrupt_manifest_quarantined_on_write(self):
         with tempfile.TemporaryDirectory() as td:
             proj = os.path.join(td, "p")

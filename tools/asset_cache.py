@@ -64,6 +64,10 @@ def build_operation_fingerprint(
         raise MissingScriptFingerprintError(f"script not found: {script_path}")
     inp_abs = os.path.abspath(inp)
     inp_hash, inp_size, inp_mtime = _hash_input_file(inp) if os.path.isfile(inp) else (None, None, None)
+    inp_dev = inp_ino = None
+    if os.path.isfile(inp):
+        st = os.stat(inp)
+        inp_dev, inp_ino = st.st_dev, st.st_ino
     impl = implementation_hash()
     script_hash = None
     if script_path and os.path.isfile(script_path):
@@ -74,11 +78,28 @@ def build_operation_fingerprint(
         "input_sha256": inp_hash,
         "input_size": inp_size,
         "input_mtime_ns": inp_mtime,
+        "input_dev": inp_dev,
+        "input_ino": inp_ino,
         "params": params,
         "tool_version": tool_version or "unknown",
         "implementation": impl,
         "script_hash": script_hash,
     }
+
+
+def input_unchanged(fp: dict, path: str) -> bool:
+    if not os.path.isfile(path):
+        return False
+    st = os.stat(path)
+    if fp.get("input_size") != st.st_size:
+        return False
+    if fp.get("input_mtime_ns") != st.st_mtime_ns:
+        return False
+    if fp.get("input_dev") is not None and st.st_dev != fp["input_dev"]:
+        return False
+    if fp.get("input_ino") is not None and st.st_ino != fp["input_ino"]:
+        return False
+    return True
 
 
 def cache_key_from_fingerprint(fp: dict) -> str:
@@ -116,20 +137,22 @@ def manifest_path(project: str) -> str:
     return os.path.join(project, MANIFEST)
 
 
-def _quarantine_manifest_file(path: str) -> str | None:
+def _quarantine_manifest_file(path: str) -> str:
     if not os.path.isfile(path):
-        return None
+        raise FileNotFoundError(f"manifest missing: {path}")
     base = path + ".corrupt"
     target = base
     n = 0
     while os.path.isfile(target):
         n += 1
         target = f"{base}-{n}"
-    try:
-        shutil.copy2(path, target)
-        return target
-    except OSError:
-        return None
+    shutil.copy2(path, target)
+    if not os.path.isfile(target):
+        raise OSError(f"quarantine copy missing: {target}")
+    with open(path) as orig, open(target) as q:
+        if orig.read() != q.read():
+            raise OSError("quarantine copy content mismatch")
+    return target
 
 
 def _read_manifest_file(project: str) -> tuple[dict, str | None]:
@@ -160,7 +183,11 @@ def manifest_transaction(project: str, mutate) -> dict:
         try:
             man, read_err = _read_manifest_file(project)
             if read_err and os.path.isfile(p):
-                _quarantine_manifest_file(p)
+                try:
+                    _quarantine_manifest_file(p)
+                except OSError as exc:
+                    raise RuntimeError(f"manifest quarantine failed: {exc}") from exc
+                man = {"version": CACHE_VERSION, "entries": {}}
             mutate(man)
             man["version"] = CACHE_VERSION
             man.pop("_quarantined", None)
@@ -397,6 +424,8 @@ def cmd_probe_ffprobe(args):
         json.loads(out)
     except json.JSONDecodeError:
         sys.exit("ffprobe returned invalid JSON")
+    if not input_unchanged(fp, args.input):
+        sys.exit("input changed during ffprobe")
     fd, tmp_path = tempfile.mkstemp(suffix=".json")
     try:
         with os.fdopen(fd, "w") as tmp_probe:

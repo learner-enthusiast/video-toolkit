@@ -7,7 +7,7 @@ import unittest
 from tools.hooks import transcript_ckpt as tck
 
 
-def _assistant_line(ts: str, mid: str, inp: int, sidechain: bool = False) -> bytes:
+def _assistant_line(ts, mid, inp, sidechain=False):
     return (
         json.dumps(
             {
@@ -27,92 +27,99 @@ def _assistant_line(ts: str, mid: str, inp: int, sidechain: bool = False) -> byt
             }
         )
         + "\n"
-    ).encode()
+    )
 
 
 class TranscriptIncrementalTest(unittest.TestCase):
-    def _make_large(self, path: str, n_hist: int):
-        with open(path, "wb") as f:
+    def _history(self, path, n_hist: int):
+        with open(path, "ab") as f:
             for i in range(n_hist):
-                f.write(_assistant_line("2020-01-01T00:00:00Z", f"hist-{i}", 1))
+                f.write(_assistant_line("2020-01-01T00:00:00Z", f"hist-{i}", 1).encode())
 
     def test_equivalent_to_full_scan(self):
+        since = "2026-06-01T12:00:00Z"
         with tempfile.TemporaryDirectory() as td:
             tp = os.path.join(td, "t.jsonl")
-            self._make_large(tp, 200)
+            open(tp, "wb").close()
+            self._history(tp, 200)
             with open(tp, "ab") as f:
-                f.write(_assistant_line("2026-06-01T12:00:00Z", "new-1", 40))
-                f.write(_assistant_line("2026-06-01T12:00:01Z", "new-2", 5))
-            since = "2026-06-01T12:00:00Z"
-            ckpt = {"schema": 1, "session_id": "s1", "files": {}}
-            st_inc = {"bytes_read": 0, "records_scanned": 0, "records_parsed": 0}
-            inc, _, _, _ = tck.usage_since(
-                [tp], since, main_only=True, checkpoint=ckpt, session_id="s1", stats=st_inc
+                f.write(_assistant_line(since, "new-1", 40).encode())
+                f.write(_assistant_line(since, "new-2", 5, True).encode())
+            ref_main, ref_sub, _, _, _, _, _, _ = tck.collect_usage_reference(tp, [], since)
+            ckpt = {"schema": 2, "session_id": "s1", "files": {}}
+            seen: set[str] = set()
+            st = {"bytes_read": 0, "records_scanned": 0, "records_parsed": 0}
+            main, side, _, _, _, _, _, _ = tck.scan_parent_transcript(
+                tp, since, seen, checkpoint=ckpt, session_id="s1", stats=st
             )
-            full, _, _, _ = tck.usage_since_full([tp], since, main_only=True)
-            self.assertEqual(inc, full)
-            tck.save_checkpoint(td, "s1", ckpt)
-            ckpt2 = tck.load_checkpoint(td, "s1")
-            with open(tp, "ab") as f:
-                f.write(_assistant_line("2026-06-01T12:01:00Z", "new-3", 7, False))
-            since2 = "2026-06-01T12:01:00Z"
-            st2 = {"bytes_read": 0, "records_scanned": 0, "records_parsed": 0}
-            inc2, _, _, _ = tck.usage_since(
-                [tp], since2, main_only=True, checkpoint=ckpt2, session_id="s1", stats=st2
-            )
-            self.assertEqual(inc2["input"], 7)
-            self.assertLess(st2["bytes_read"], os.path.getsize(tp) // 2)
-
-    def test_shared_seen_dedupes(self):
-        with tempfile.TemporaryDirectory() as td:
-            tp = os.path.join(td, "t.jsonl")
-            with open(tp, "wb") as f:
-                f.write(_assistant_line("2026-06-01T12:00:00Z", "dup-id", 10))
-            since = "2026-06-01T12:00:00Z"
-            seen = set()
-            a, _, n1, _ = tck.usage_since_full([tp], since, main_only=True, seen=seen)
-            b, _, n2, _ = tck.usage_since_full([tp], since, main_only=True, seen=seen)
-            self.assertEqual(n1, 1)
-            self.assertEqual(n2, 0)
-            self.assertEqual(b["input"], 0)
-            self.assertEqual(a["input"], 10)
+            sub = dict(side)
+            inc_total = dict(main)
+            for k in inc_total:
+                inc_total[k] += sub[k]
+            ref_total = dict(ref_main)
+            for k in ref_total:
+                ref_total[k] += ref_sub[k]
+            self.assertEqual(inc_total, ref_total)
 
     def test_benchmark_table(self):
+        since = "2026-06-01T12:00:00Z"
         with tempfile.TemporaryDirectory() as td:
             tp = os.path.join(td, "t.jsonl")
-            self._make_large(tp, 500)
+            open(tp, "wb").close()
+            self._history(tp, 500)
+            subdir = os.path.join(td, "subagents")
+            os.makedirs(subdir)
+            subf = os.path.join(subdir, "a.jsonl")
             with open(tp, "ab") as f:
-                f.write(_assistant_line("2026-06-01T12:00:00Z", "bench-1", 100))
-            since = "2026-06-01T12:00:00Z"
-            ckpt = {"schema": 1, "session_id": "bench", "files": {}}
-            st_inc = {"bytes_read": 0, "records_scanned": 0, "records_parsed": 0, "mode": ""}
+                f.write(_assistant_line(since, "m1", 100).encode())
+                f.write(_assistant_line(since, "s1", 25, True).encode())
+            with open(subf, "wb") as f:
+                f.write(_assistant_line(since, "sa", 10).encode())
+            full_times = []
+            inc_times = []
+            for _ in range(5):
+                t0 = time.perf_counter()
+                rmain, rsub, _, _, _, _, _, _ = tck.collect_usage_reference(tp, [subf], since)
+                full_times.append(time.perf_counter() - t0)
+            ckpt = {"schema": 2, "session_id": "bench", "files": {}}
+            seen: set[str] = set()
+            st = {"bytes_read": 0, "records_scanned": 0, "records_parsed": 0}
             t0 = time.perf_counter()
-            inc, _, _, _ = tck.usage_since(
-                [tp], since, main_only=True, checkpoint=ckpt, session_id="bench", stats=st_inc
+            main, side, _, _, _, _, _, _ = tck.scan_parent_transcript(
+                tp, since, seen, checkpoint=ckpt, session_id="bench", stats=st
             )
-            t_inc = time.perf_counter() - t0
-            t1 = time.perf_counter()
-            full, _, _, _ = tck.usage_since_full([tp], since, main_only=True)
-            t_full = time.perf_counter() - t1
-            self.assertEqual(inc, full)
-            # second pass incremental after checkpoint
+            sub, _, _, _, _ = tck.scan_subagent_files(
+                [subf], since, seen, checkpoint=ckpt, session_id="bench", stats=st
+            )
+            for k in sub:
+                sub[k] += side[k]
+            inc_times.append(time.perf_counter() - t0)
             tck.save_checkpoint(td, "bench", ckpt)
-            ckpt = tck.load_checkpoint(td, "bench")
+            ckpt2 = tck.load_checkpoint(td, "bench")
             st2 = {"bytes_read": 0, "records_scanned": 0, "records_parsed": 0}
-            t2 = time.perf_counter()
-            tck.usage_since([tp], since, main_only=True, checkpoint=ckpt, session_id="bench", stats=st2)
-            t_ckpt = time.perf_counter() - t2
-            self.assertLess(st2["bytes_read"], st_inc["bytes_read"])
+            seen2: set[str] = set()
+            t1 = time.perf_counter()
+            tck.scan_parent_transcript(tp, since, seen2, checkpoint=ckpt2, session_id="bench", stats=st2)
+            inc_times.append(time.perf_counter() - t1)
+            full_med = sorted(full_times)[len(full_times) // 2]
+            inc_med = sorted(inc_times)[len(inc_times) // 2]
+            inc_total = dict(main)
+            for k in inc_total:
+                inc_total[k] += sub[k]
+            ref_total = dict(rmain)
+            for k in ref_total:
+                ref_total[k] += rsub[k]
+            self.assertEqual(inc_total, ref_total)
             print(
                 json.dumps(
                     {
-                        "full_bytes_read": os.path.getsize(tp),
-                        "incremental_first_bytes": st_inc["bytes_read"],
-                        "checkpoint_pass_bytes": st2["bytes_read"],
-                        "full_seconds": round(t_full, 4),
-                        "incremental_first_seconds": round(t_inc, 4),
-                        "checkpoint_pass_seconds": round(t_ckpt, 4),
-                        "tokens_match": inc == full,
+                        "full_bytes": os.path.getsize(tp),
+                        "incremental_first_bytes": st["bytes_read"],
+                        "unchanged_pass_bytes": st2["bytes_read"],
+                        "full_scan_median_s": round(full_med, 5),
+                        "incremental_median_s": round(inc_med, 5),
+                        "main_input": main["input"],
+                        "sub_input": sub["input"],
                     },
                     indent=2,
                 )

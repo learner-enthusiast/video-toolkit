@@ -236,9 +236,22 @@ def insert_footer(log, prompt_ref, footer):
         if lines[i].startswith("### Handoff") or lines[i].startswith("## "):
             end = i
             break
-    while end > start + 1 and lines[end - 1].strip() == "":
-        end -= 1
-    lines[end:end] = ["", *footer.split("\n"), ""]
+    fin_idx = None
+    for i in range(start + 1, end):
+        if lines[i].startswith("**Finished**"):
+            fin_idx = i
+            break
+    footer_lines = ["", *footer.split("\n"), ""]
+    if fin_idx is not None:
+        del_to = fin_idx + 1
+        while del_to < end and lines[del_to].strip():
+            del_to += 1
+        del lines[fin_idx:del_to]
+        end -= del_to - fin_idx
+        fin_idx = end
+    else:
+        fin_idx = end
+    lines[fin_idx:fin_idx] = footer_lines
     text = "\n".join(lines)
     text = re.sub(r"\n{3,}", "\n\n", text)
     with open(log, "w") as f:
@@ -279,55 +292,82 @@ def cmd_tokens(data, root):
         time.sleep(1.0)  # let Claude Code flush the last assistant message
     tp = data.get("transcript_path") or ""
     since = st["started_utc"]
-    ckpt = tck.load_checkpoint(root, sid)
-    if ckpt.pop("_invalid", None):
-        ckpt["files"] = {}
-    scan_kw = dict(root=root, session_id=sid, checkpoint=ckpt)
-    main, last, n_main, main_models = usage_since([tp], since, main_only=True, **scan_kw) if tp else (None, None, 0, {})
+    inc = os.environ.get("PROJLOG_INCREMENTAL", "1") != "0"
     sub_paths = []
     if tp:
-        sub_paths = glob.glob(os.path.join(tp[:-len(".jsonl")] if tp.endswith(".jsonl") else tp, "subagents", "*.jsonl"))
-    sub_seen = set()
-    sub, slast, n_sub, sub_models = usage_since(sub_paths, since, seen=sub_seen, **scan_kw)
-    side, sdlast, n_side, side_models = (
-        usage_since([tp], since, main_only=False, seen=sub_seen, **scan_kw) if tp else (None, None, 0, {})
-    )
-    for k in sub:
-        sub[k] += side[k] if side else 0
-    sub_combined: dict[str, dict] = {}
-    for src in (sub_models or {}, side_models or {}):
-        for model, t in src.items():
-            dst = sub_combined.setdefault(
-                model, dict(input=0, cache_write=0, cache_read=0, output=0)
+        base = tp[:-len(".jsonl")] if tp.endswith(".jsonl") else tp
+        sub_paths = glob.glob(os.path.join(base, "subagents", "*.jsonl"))
+
+    with tck.checkpoint_lock(root, sid):
+        ckpt = tck.load_checkpoint(root, sid)
+        if ckpt.pop("_invalid", None):
+            ckpt["files"] = {}
+        seen: set[str] = set()
+        scan_stats: dict = {}
+        if tp:
+            main, side, main_models, side_models, last, n_main, n_side, scan_stats = tck.scan_parent_transcript(
+                tp,
+                since,
+                seen,
+                checkpoint=ckpt if inc else None,
+                session_id=sid,
+                incremental=inc,
+                stats=scan_stats,
             )
-            for key in dst:
-                dst[key] += t[key]
-    started = parse_iso(since)
-    fin_iso = max([x for x in (last, slast, sdlast) if x] or [utc_now_iso()])
-    finished = parse_iso(fin_iso)
-    secs = max(0, int((finished - started).total_seconds()))
-    took = f"{secs // 60} m {secs % 60:02d} s" if secs >= 60 else f"{secs} s"
-    if n_main:
-        tok = f"**Tokens:** {fmt(main)} (main session"
-        tok += f"; subagents: {fmt(sub)})" if (n_sub or n_side) else "; subagents: none)"
-        tok += fmt_models_footer(main_models or {}, sub_combined)
-    else:
-        tok = "**Tokens:** not available (no assistant usage found in the transcript)"
-    stage = st.get("stage") or "unknown"
-    footer = (
-        f"**Finished** {finished.astimezone(IST):%H:%M:%S} · **Took** {took}\n"
-        f"**Stage:** {stage}\n{tok}"
-    )
-    with log_lock(root, project):
-        insert_footer(os.path.join(root, project, "log.md"), st["prompt_ref"], footer)
-        try:
-            tck.save_checkpoint(root, sid, ckpt)
-        except Exception as exc:
-            log_err(root, project, f"checkpoint save failed: {exc}")
-    if os.environ.get("PROJLOG_VERIFY") == "1" and tp and n_main:
-        ref, _, _, _ = tck.usage_since_full([tp], since, main_only=True)
-        if ref != main:
-            log_err(root, project, f"incremental verify mismatch main tokens: {ref} vs {main}")
+        else:
+            main, side, main_models, side_models, last, n_main, n_side = (None, None, {}, {}, None, 0, 0)
+        sub, sub_models, slast, n_sub, _ = tck.scan_subagent_files(
+            sub_paths,
+            since,
+            seen,
+            checkpoint=ckpt if inc else None,
+            session_id=sid,
+            incremental=inc,
+            stats=scan_stats,
+        )
+        if side and sub:
+            for k in sub:
+                sub[k] += side[k]
+        elif side:
+            sub = dict(side)
+        sub_combined: dict[str, dict] = {}
+        for src in (sub_models or {}, side_models or {}):
+            for model, t in src.items():
+                dst = sub_combined.setdefault(model, dict(input=0, cache_write=0, cache_read=0, output=0))
+                for key in dst:
+                    dst[key] += t[key]
+        sdlast = None
+        if not main:
+            main = dict(input=0, cache_write=0, cache_read=0, output=0)
+        if not sub:
+            sub = dict(input=0, cache_write=0, cache_read=0, output=0)
+        started = parse_iso(since)
+        fin_iso = max([x for x in (last, slast, sdlast) if x] or [utc_now_iso()])
+        finished = parse_iso(fin_iso)
+        secs = max(0, int((finished - started).total_seconds()))
+        took = f"{secs // 60} m {secs % 60:02d} s" if secs >= 60 else f"{secs} s"
+        counted_main = n_main > 0
+        if counted_main:
+            tok = f"**Tokens:** {fmt(main)} (main session"
+            tok += f"; subagents: {fmt(sub)})" if (n_sub or n_side) else "; subagents: none)"
+            tok += fmt_models_footer(main_models or {}, sub_combined)
+        else:
+            tok = "**Tokens:** not available (no assistant usage found in the transcript)"
+        stage = st.get("stage") or "unknown"
+        footer = (
+            f"**Finished** {finished.astimezone(IST):%H:%M:%S} · **Took** {took}\n"
+            f"**Stage:** {stage}\n{tok}"
+        )
+        with log_lock(root, project):
+            insert_footer(os.path.join(root, project, "log.md"), st["prompt_ref"], footer)
+            try:
+                tck.save_checkpoint(root, sid, ckpt)
+            except Exception as exc:
+                log_err(root, project, f"checkpoint save failed: {exc}")
+    if os.environ.get("PROJLOG_VERIFY") == "1" and tp:
+        rmain, rsub, _, _, _, _, _, _ = tck.collect_usage_reference(tp, sub_paths, since)
+        if rmain != main or rsub != sub:
+            log_err(root, project, f"incremental verify mismatch: main {rmain}!={main} sub {rsub}!={sub}")
     drop_state(sp, started_key)
 
 
