@@ -1,7 +1,7 @@
 # Post-hardening status (reliability pass)
 
 **Historical baseline (audit):** `main` @ `63da97529d024442b9275396694b9913d22449ff` (post–PR #3).  
-**This pass:** branch [`reliability-final-pass`](https://github.com/learner-enthusiast/video-toolkit/pull/4), tip @ `5715a08` (after green CI).  
+**This pass:** branch [`reliability-final-pass`](https://github.com/learner-enthusiast/video-toolkit/pull/4), tip @ `4fc7e91`.  
 Older reports in this folder are **historical** unless dated after this pass.
 
 ## Pull request and CI
@@ -10,8 +10,8 @@ Older reports in this folder are **historical** unless dated after this pass.
 |------|--------|
 | PR | [#4](https://github.com/learner-enthusiast/video-toolkit/pull/4) |
 | Required check name | **`test`** (workflow `ci`) |
-| Latest green run | [45665229743](https://github.com/learner-enthusiast/video-toolkit/actions/runs/45665229743) |
-| Tests | **72** run, **72** passed, **0** skipped, ~4.5s |
+| Latest green run | [45665941160](https://github.com/learner-enthusiast/video-toolkit/actions/runs/45665941160) |
+| Tests | **73** run, **73** passed, **0** skipped |
 | Local (no scipy/ffmpeg) | 57 run, 1 skipped (`test_clean_audio` needs venv deps) |
 
 Steps: `compileall`, `model_verify --validate-only`, full `unittest` inside `.ci-venv` + `ci-requirements.txt` (`numpy`, `scipy`, `soundfile`); `apt install ffmpeg` for audio cleaning tests. No GPU, model weights, or paid APIs in CI.
