@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """Shared validation for video projects. Compact JSON report to stdout."""
+from __future__ import annotations
+
 import argparse
 import json
 import os
@@ -7,58 +9,110 @@ import re
 import subprocess
 import sys
 
-TOOLKIT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+# Allow running as script or module
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+from tools import project_state as pst  # noqa: E402
+
+SCHEMA_VERSION = 1
+NUMBER_WORDS = {
+    "one": "1",
+    "two": "2",
+    "three": "3",
+    "four": "4",
+    "five": "5",
+    "six": "6",
+    "seven": "7",
+    "eight": "8",
+    "nine": "9",
+    "ten": "10",
+}
 
 
-def _err(code, message, **kw):
-    return {"code": code, "message": message, **kw}
+def _err(code, message, severity="error", **kw):
+    return {"code": code, "message": message, "severity": severity, **kw}
 
 
 def check_project(project: str) -> list:
     errs = []
-    required = ["script.md", "log.md"]
-    for f in required:
+    for f in ("script.md", "log.md"):
         if not os.path.isfile(os.path.join(project, f)):
-            errs.append(_err("MISSING_FILE", f"Required file missing", file=f))
-    for d in ["raw", "work", "out"]:
+            errs.append(_err("MISSING_FILE", "Required file missing", file=f))
+    for d in ("raw", "work", "out"):
         if not os.path.isdir(os.path.join(project, d)):
-            errs.append(_err("MISSING_DIR", f"Expected directory missing", path=d))
+            errs.append(_err("MISSING_DIR", "Expected directory missing", path=d))
+    return errs
+
+
+def check_state_schema(project: str) -> list:
+    sp = pst.state_path(project)
+    if not os.path.isfile(sp):
+        return [_err("NO_STATE", "project-state.json missing", file=sp)]
+    try:
+        with open(sp) as f:
+            st = json.load(f)
+    except json.JSONDecodeError as e:
+        return [_err("INVALID_STATE_SCHEMA", str(e), file=sp)]
+    if st.get("schema_version") != SCHEMA_VERSION:
+        errs = [
+            _err(
+                "INVALID_STATE_SCHEMA",
+                f"schema_version {st.get('schema_version')!r} != {SCHEMA_VERSION}",
+                file=sp,
+            )
+        ]
+    else:
+        errs = []
+    for k in pst.APPROVALS:
+        if k not in (st.get("approvals") or {}):
+            errs.append(_err("INVALID_STATE_SCHEMA", f"approvals.{k} missing", file=sp))
     return errs
 
 
 def check_stage(project: str) -> list:
     errs = []
-    state_file = os.path.join(project, "project-state.json")
-    if not os.path.isfile(state_file):
-        errs.append(
-            _err(
-                "NO_STATE",
-                "project-state.json missing; run tools/project_state.py init",
-                file=state_file,
-            )
-        )
+    errs.extend(check_state_schema(project))
+    auth = pst.authoritative_approvals(project)
+    if auth["source"] == "missing_log":
+        errs.append(_err("MISSING_FILE", "log.md required for stage validation", file="log.md"))
         return errs
-    with open(state_file) as f:
-        st = json.load(f)
+    st = pst.load_state(project)
     stage = st.get("stage", "prep")
-    approvals = st.get("approvals", {})
-    if stage == "compose" and not approvals.get("rough_cut"):
+    rec = pst.reconcile(project)
+    for issue in rec["issues"]:
         errs.append(
             _err(
-                "ROUGH_CUT_NOT_APPROVED",
-                "Compose requires rough_cut approval in project-state or log",
+                "STATE_OUT_OF_SYNC",
+                f"{issue['approval']}: log={issue['log']} state={issue['state']}",
+                approval=issue["approval"],
+                log_evidence=issue.get("log_evidence"),
             )
         )
+    if stage in ("compose", "deliver"):
+        rc = auth["approvals"]["rough_cut"]
+        if rc["status"] == "unverified" and not rc["approved"]:
+            errs.append(
+                _err(
+                    "APPROVAL_UNVERIFIABLE",
+                    "No **Approval:** rough_cut=… line in log.md; cannot verify user OK",
+                    stage=stage,
+                )
+            )
+        elif rc["status"] == "rejected":
+            errs.append(_err("ROUGH_CUT_NOT_APPROVED", "rough_cut=rejected in log", stage=stage))
+        elif not rc["approved"]:
+            errs.append(_err("ROUGH_CUT_NOT_APPROVED", "rough_cut not approved in log.md", stage=stage))
     return errs
 
 
-def check_subtitles(path: str) -> list:
+def check_subtitles(path: str, max_chars_per_line: int = 42, max_lines: int = 2) -> list:
     errs = []
+    warns = []
     if not os.path.isfile(path):
         return [_err("MISSING_FILE", "SRT not found", file=path)]
-    prev_end = None
-    with open(path, encoding="utf-8", errors="replace") as f:
-        blocks = re.split(r"\n\n+", f.read().strip())
+    raw = open(path, encoding="utf-8", errors="replace").read().strip()
+    if not raw:
+        return [_err("SRT_EMPTY", "SRT file is empty", file=path)]
+    blocks = re.split(r"\n\n+", raw)
     ts_re = re.compile(
         r"(\d{2}):(\d{2}):(\d{2}),(\d{3})\s*-->\s*(\d{2}):(\d{2}):(\d{2}),(\d{3})"
     )
@@ -66,30 +120,63 @@ def check_subtitles(path: str) -> list:
     def to_ms(h, m, s, ms):
         return (int(h) * 3600 + int(m) * 60 + int(s)) * 1000 + int(ms)
 
+    prev_end = None
+    expect_index = 1
     for i, block in enumerate(blocks, 1):
-        lines = block.strip().splitlines()
-        if len(lines) < 2:
+        lines = [ln.rstrip() for ln in block.strip().splitlines() if ln.strip()]
+        if not lines:
+            errs.append(_err("SRT_EMPTY_CUE", "Empty cue block", index=i))
             continue
-        m = ts_re.match(lines[1] if lines[0].isdigit() else lines[0])
-        if not m and lines[0].isdigit():
-            m = ts_re.match(lines[1])
+        idx = None
+        ts_idx = 0
+        if lines[0].isdigit():
+            idx = int(lines[0])
+            if idx != expect_index:
+                warns.append(
+                    _err("SRT_INDEX_SKIP", f"expected cue {expect_index}, got {idx}", index=i, severity="warning")
+                )
+            expect_index = max(expect_index, idx + 1)
+            ts_idx = 1
+        if ts_idx >= len(lines):
+            errs.append(_err("SRT_BAD_TIMESTAMP", "Missing timestamp line", index=i))
+            continue
+        m = ts_re.match(lines[ts_idx])
         if not m:
-            errs.append(_err("SRT_BAD_TIMESTAMP", "Unparseable cue", index=i))
+            errs.append(_err("SRT_BAD_TIMESTAMP", "Unparseable cue timestamp", index=i))
             continue
         start = to_ms(*m.groups()[:4])
         end = to_ms(*m.groups()[4:])
+        if start < 0 or end < 0:
+            errs.append(_err("SRT_NEGATIVE_TIME", "Negative timestamp", index=i))
         if end <= start:
             errs.append(_err("SRT_BAD_INTERVAL", "Cue end before start", index=i))
         if prev_end is not None and start < prev_end:
             errs.append(_err("SRT_OVERLAP", "Overlapping cues", index=i))
+        text_lines = lines[ts_idx + 1 :]
+        if not text_lines:
+            errs.append(_err("SRT_EMPTY_TEXT", "Cue has no text", index=i))
+        if len(text_lines) > max_lines:
+            warns.append(
+                _err("SRT_TOO_MANY_LINES", f">{max_lines} lines", index=i, severity="warning")
+            )
+        for tl in text_lines:
+            if len(tl) > max_chars_per_line:
+                warns.append(
+                    _err("SRT_LONG_LINE", f"line length {len(tl)}", index=i, severity="warning")
+                )
+        dur = end - start
+        if dur > 12000:
+            warns.append(_err("SRT_LONG_CUE", f"cue {dur}ms", index=i, severity="warning"))
         prev_end = end
-    return errs
+    return errs + warns
 
 
 def check_render(path: str, expect: dict | None = None) -> list:
     errs = []
     if not os.path.isfile(path):
         return [_err("MISSING_FILE", "Video not found", file=path)]
+    if os.path.getsize(path) < 256:
+        return [_err("RENDER_EMPTY", "Output file too small", file=path)]
     try:
         out = subprocess.check_output(
             [
@@ -97,64 +184,133 @@ def check_render(path: str, expect: dict | None = None) -> list:
                 "-v",
                 "error",
                 "-show_entries",
-                "format=duration:stream=width,height,r_frame_rate,codec_name",
+                "format=duration,size:stream=codec_type,codec_name,width,height,"
+                "r_frame_rate,sample_rate,channels",
                 "-of",
                 "json",
                 path,
             ],
             text=True,
+            timeout=60,
         )
         data = json.loads(out)
-    except (subprocess.CalledProcessError, json.JSONDecodeError) as e:
+    except (subprocess.CalledProcessError, json.JSONDecodeError, subprocess.TimeoutExpired) as e:
         return [_err("FFPROBE_FAILED", str(e), file=path)]
     streams = data.get("streams") or []
-    v = next((s for s in streams if s.get("codec_type") == "video" or "width" in s), streams[0] if streams else {})
+    videos = [s for s in streams if s.get("codec_type") == "video" or ("width" in s and "codec_type" not in s)]
+    audios = [s for s in streams if s.get("codec_type") == "audio"]
+    if not videos:
+        errs.append(_err("MISSING_VIDEO_STREAM", "No video stream", file=path))
+    v = videos[0] if videos else {}
     dur = float((data.get("format") or {}).get("duration") or 0)
-    if expect:
-        if expect.get("width") and v.get("width") != expect["width"]:
-            errs.append(
-                _err("BAD_WIDTH", f"width {v.get('width')} != {expect['width']}", file=path)
+    expect = expect or {}
+    if expect.get("require_audio", True) and not audios:
+        errs.append(_err("MISSING_AUDIO_STREAM", "No audio stream", file=path))
+    if expect.get("width") and v.get("width") != expect["width"]:
+        errs.append(_err("BAD_WIDTH", f"width {v.get('width')} != {expect['width']}", file=path))
+    if expect.get("height") and v.get("height") != expect["height"]:
+        errs.append(_err("BAD_HEIGHT", f"height {v.get('height')} != {expect['height']}", file=path))
+    tol = expect.get("duration_tolerance", 0.5)
+    if expect.get("duration") is not None and abs(dur - expect["duration"]) > tol:
+        errs.append(
+            _err("BAD_DURATION", f"duration {dur:.2f}s expected {expect['duration']}", file=path)
+        )
+    if expect.get("max_duration") and dur > expect["max_duration"] + tol:
+        errs.append(_err("BAD_DURATION", f"duration {dur:.2f}s too long", file=path))
+    if expect.get("video_codec") and v.get("codec_name") != expect["video_codec"]:
+        errs.append(_err("BAD_CODEC", f"codec {v.get('codec_name')}", file=path))
+    try:
+        subprocess.run(
+            ["ffmpeg", "-v", "error", "-i", path, "-f", "null", "-"],
+            capture_output=True,
+            timeout=120,
+            check=True,
+        )
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError) as e:
+        errs.append(_err("FFMPEG_DECODE_FAILED", str(e)[:200], file=path))
+    if expect.get("lufs_target") is not None:
+        # ebur128 is slow; optional
+        try:
+            proc = subprocess.run(
+                [
+                    "ffmpeg",
+                    "-hide_banner",
+                    "-i",
+                    path,
+                    "-af",
+                    "ebur128=framelog=0",
+                    "-f",
+                    "null",
+                    "-",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=180,
             )
-        if expect.get("height") and v.get("height") != expect["height"]:
-            errs.append(
-                _err("BAD_HEIGHT", f"height {v.get('height')} != {expect['height']}", file=path)
-            )
-        if expect.get("max_duration") and dur > expect["max_duration"] + 0.05:
-            errs.append(
-                _err("BAD_DURATION", f"duration {dur:.2f}s too long", file=path)
-            )
+            m = re.search(r"I:\s*(-?\d+\.\d+)\s*LUFS", proc.stderr)
+            if not m:
+                errs.append(_err("LOUDNESS_UNMEASURED", "Could not parse ebur128", severity="warning", file=path))
+            else:
+                lufs = float(m.group(1))
+                target = expect["lufs_target"]
+                if abs(lufs - target) > expect.get("lufs_tolerance", 0.5):
+                    errs.append(
+                        _err(
+                            "LOUDNESS_OUT_OF_RANGE",
+                            f"integrated {lufs:.1f} LUFS, target {target}",
+                            file=path,
+                            actual=lufs,
+                        )
+                    )
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            errs.append(_err("LOUDNESS_SKIPPED", "ffmpeg ebur128 unavailable", severity="warning"))
     return errs
 
 
-def check_phrases(project: str, timeline_path: str, scene_glob: str) -> list:
-    errs = []
-    if not os.path.isfile(timeline_path):
-        return [_err("MISSING_TIMELINE", "timeline.json not found", file=timeline_path)]
-    with open(timeline_path) as f:
-        tl = json.load(f)
+def _normalize_phrase(phrase: str) -> list[str]:
+    low = phrase.lower().strip()
+    variants = [low, low.replace("-", " ")]
+    tokens = low.split()
+    mapped = " ".join(NUMBER_WORDS.get(t, t) for t in tokens)
+    if mapped != low:
+        variants.append(mapped)
+    return variants
+
+
+def _timeline_corpus(tl: dict) -> str:
     words = []
     for w in tl.get("words") or tl.get("timeline", {}).get("words") or []:
         if isinstance(w, dict):
             words.append(str(w.get("word") or w.get("text") or "").lower())
         elif isinstance(w, (list, tuple)) and len(w) >= 3:
             words.append(str(w[2]).lower())
-    corpus = " ".join(words)
+    return " ".join(words)
+
+
+def check_phrases(project: str, timeline_path: str, scene_glob: str = "") -> list:
+    errs = []
+    if not os.path.isfile(timeline_path):
+        return [_err("MISSING_TIMELINE", "timeline.json not found", file=timeline_path)]
+    with open(timeline_path) as f:
+        tl = json.load(f)
+    corpus = _timeline_corpus(tl)
     remotion = os.path.join(project, "work", "remotion")
     if not os.path.isdir(remotion):
         return errs
     pat = re.compile(r"""at\s*\(\s*['"]([^'"]+)['"]""")
-    for root, _, files in os.walk(remotion):
+    skip_dirs = {"node_modules", ".cache", "dist"}
+    for root, dirs, files in os.walk(remotion):
+        dirs[:] = [d for d in dirs if d not in skip_dirs]
         for fn in files:
             if not fn.endswith((".tsx", ".ts")):
                 continue
-            if scene_glob and scene_glob not in os.path.join(root, fn):
-                pass
             p = os.path.join(root, fn)
+            if scene_glob and scene_glob not in p:
+                continue
             with open(p, encoding="utf-8") as f:
                 text = f.read()
             for phrase in pat.findall(text):
-                needle = phrase.lower().replace("-", " ")
-                if needle and needle not in corpus and phrase.lower() not in corpus:
+                if not any(v in corpus or v.replace(" ", "-") in corpus for v in _normalize_phrase(phrase)):
                     errs.append(
                         _err(
                             "MISSING_PHRASE",
@@ -169,6 +325,7 @@ def check_phrases(project: str, timeline_path: str, scene_glob: str) -> list:
 CHECKS = {
     "project": check_project,
     "stage": check_stage,
+    "state_schema": check_state_schema,
 }
 
 
@@ -178,15 +335,18 @@ def main():
     ap.add_argument(
         "--check",
         action="append",
-        choices=["project", "stage", "subtitles", "render", "phrases"],
+        choices=list(CHECKS) + ["subtitles", "render", "phrases"],
         default=["project"],
     )
-    ap.add_argument("--srt", help="SRT path for subtitles check")
-    ap.add_argument("--video", help="MP4 path for render check")
-    ap.add_argument("--timeline", help="timeline.json for phrases check")
+    ap.add_argument("--srt")
+    ap.add_argument("--video")
+    ap.add_argument("--timeline")
     ap.add_argument("--width", type=int)
     ap.add_argument("--height", type=int)
     ap.add_argument("--max-duration", type=float)
+    ap.add_argument("--duration", type=float)
+    ap.add_argument("--lufs-target", type=float)
+    ap.add_argument("--no-audio-required", action="store_true")
     args = ap.parse_args()
 
     errors = []
@@ -194,43 +354,40 @@ def main():
     for name in args.check:
         if name in CHECKS:
             e = CHECKS[name](args.project)
-            checks_run[name] = "failed" if e else "passed"
-            errors.extend(e)
         elif name == "subtitles":
             if not args.srt:
-                sys.exit("--srt required for subtitles check")
+                sys.exit("--srt required")
             e = check_subtitles(args.srt)
-            checks_run[name] = "failed" if e else "passed"
-            errors.extend(e)
         elif name == "render":
             if not args.video:
-                sys.exit("--video required for render check")
-            expect = {}
+                sys.exit("--video required")
+            expect = {"require_audio": not args.no_audio_required}
             if args.width:
                 expect["width"] = args.width
             if args.height:
                 expect["height"] = args.height
             if args.max_duration:
                 expect["max_duration"] = args.max_duration
-            e = check_render(args.video, expect or None)
-            checks_run[name] = "failed" if e else "passed"
-            errors.extend(e)
+            if args.duration:
+                expect["duration"] = args.duration
+            if args.lufs_target is not None:
+                expect["lufs_target"] = args.lufs_target
+            e = check_render(args.video, expect)
         elif name == "phrases":
             tl = args.timeline or os.path.join(
                 args.project, "work", "remotion", "public", "data", "timeline.json"
             )
-            e = check_phrases(args.project, tl, "")
-            checks_run[name] = "failed" if e else "passed"
-            errors.extend(e)
+            e = check_phrases(args.project, tl)
+        else:
+            e = []
+        failed = any(x.get("severity", "error") == "error" for x in e)
+        checks_run[name] = "failed" if failed else ("warn" if e else "passed")
+        errors.extend(e)
 
-    report = {
-        "status": "failed" if errors else "passed",
-        "checks": checks_run,
-        "errors": errors,
-    }
+    report = {"status": "failed" if any(x.get("severity", "error") == "error" for x in errors) else "passed", "checks": checks_run, "errors": errors}
     json.dump(report, sys.stdout, indent=2)
     sys.stdout.write("\n")
-    sys.exit(1 if errors else 0)
+    sys.exit(1 if report["status"] == "failed" else 0)
 
 
 if __name__ == "__main__":

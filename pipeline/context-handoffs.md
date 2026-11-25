@@ -26,7 +26,7 @@ Schema version in `tools/project_state.py` (`SCHEMA_VERSION`). Fields include `s
 **Rules**
 
 - Update state when a stage ends or an approval is recorded in `log.md`.
-- If state and `log.md` disagree, **`log.md` wins**.
+- If state and `log.md` disagree, **`log.md` wins**. Approvals use explicit `**Approval:** name=approved` lines (`pipeline/project-log.md`); stage alone never implies approval.
 - Never delete handoff history from `log.md` to shrink context.
 
 ## Stage context packets

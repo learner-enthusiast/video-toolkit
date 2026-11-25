@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Machine-readable project state (mirror of log handoffs). log.md remains authoritative."""
+"""Machine-readable project state (mirror of log). log.md is authoritative."""
+from __future__ import annotations
+
 import argparse
 import json
 import os
@@ -10,10 +12,16 @@ from datetime import datetime, timezone
 SCHEMA_VERSION = 1
 STAGES = ("prep", "cut", "compose", "deliver")
 APPROVALS = ("script", "rough_cut", "storyboard", "stills", "final")
+APPROVAL_LINE = re.compile(r"^\*\*Approval:\*\*\s*(.+)$", re.M | re.I)
+APPROVAL_KV = re.compile(r"(\w+)=(approved|rejected|pending)", re.I)
 
 
 def state_path(project: str) -> str:
     return os.path.join(project, "project-state.json")
+
+
+def log_path(project: str) -> str:
+    return os.path.join(project, "log.md")
 
 
 def default_state(project: str) -> dict:
@@ -26,6 +34,7 @@ def default_state(project: str) -> dict:
         "status": "not_started",
         "master_language": "en",
         "approvals": {k: False for k in APPROVALS},
+        "approval_evidence": {k: "none" for k in APPROVALS},
         "artifacts": {
             "transcript": "pending",
             "edl": "pending",
@@ -44,7 +53,9 @@ def load_state(project: str) -> dict:
     if not os.path.isfile(p):
         return default_state(project)
     with open(p) as f:
-        return json.load(f)
+        st = json.load(f)
+    st.setdefault("approval_evidence", {k: "none" for k in APPROVALS})
+    return st
 
 
 def save_state(project: str, state: dict) -> None:
@@ -57,10 +68,73 @@ def save_state(project: str, state: dict) -> None:
         f.write("\n")
 
 
-def parse_last_handoff(log_path: str) -> dict | None:
-    if not os.path.isfile(log_path):
+def parse_approvals_from_log(text: str) -> dict[str, dict]:
+    """Latest approval line per key: {name: {value, line_index, raw}}."""
+    found: dict[str, dict] = {}
+    for m in APPROVAL_LINE.finditer(text):
+        line_no = text[: m.start()].count("\n") + 1
+        for kv in APPROVAL_KV.finditer(m.group(1)):
+            key = kv.group(1).lower()
+            if key not in APPROVALS:
+                continue
+            found[key] = {
+                "value": kv.group(2).lower(),
+                "line": line_no,
+                "raw": m.group(0).strip(),
+            }
+    return found
+
+
+def authoritative_approvals(project: str) -> dict:
+    lp = log_path(project)
+    if not os.path.isfile(lp):
+        return {
+            "source": "missing_log",
+            "approvals": {k: {"approved": False, "evidence": "missing_log"} for k in APPROVALS},
+        }
+    with open(lp) as f:
+        text = f.read()
+    parsed = parse_approvals_from_log(text)
+    out = {}
+    for k in APPROVALS:
+        if k in parsed:
+            out[k] = {
+                "approved": parsed[k]["value"] == "approved",
+                "evidence": parsed[k]["raw"],
+                "line": parsed[k]["line"],
+                "status": parsed[k]["value"],
+            }
+        else:
+            out[k] = {"approved": False, "evidence": "none", "status": "unverified"}
+    return {"source": "log.md", "approvals": out, "parsed_lines": len(parsed)}
+
+
+def reconcile(project: str) -> dict:
+    """Compare log approvals to project-state.json."""
+    auth = authoritative_approvals(project)
+    state = load_state(project)
+    st_ap = state.get("approvals") or {}
+    issues = []
+    for k in APPROVALS:
+        log_ok = auth["approvals"][k]["approved"]
+        st_ok = bool(st_ap.get(k))
+        if log_ok != st_ok:
+            issues.append(
+                {
+                    "code": "STATE_OUT_OF_SYNC",
+                    "approval": k,
+                    "log": log_ok,
+                    "state": st_ok,
+                    "log_evidence": auth["approvals"][k].get("evidence"),
+                }
+            )
+    return {"authoritative": auth, "state_file": st_ap, "issues": issues}
+
+
+def parse_last_handoff(log_file: str) -> dict | None:
+    if not os.path.isfile(log_file):
         return None
-    with open(log_path) as f:
+    with open(log_file) as f:
         text = f.read()
     parts = re.split(r"(?=^### Handoff:)", text, flags=re.M)
     if len(parts) < 2:
@@ -83,25 +157,24 @@ def parse_last_handoff(log_path: str) -> dict | None:
 
 def sync_handoff(project: str) -> dict:
     state = load_state(project)
-    handoff = parse_last_handoff(os.path.join(project, "log.md"))
-    if not handoff:
-        save_state(project, state)
-        return state
-    line = handoff.get("stage_line", "")
-    m = re.search(r"(\d)\s*·\s*(\w+)", line)
-    if m:
-        stage_map = {"1": "prep", "2": "cut", "3": "compose", "4": "deliver"}
-        state["stage"] = stage_map.get(m.group(1), state["stage"])
-    if handoff.get("open_issues"):
-        state["open_issues"] = [
-            s.strip() for s in re.split(r"·", handoff["open_issues"]) if s.strip()
-        ]
-    if handoff.get("next"):
-        state["next_actions"] = [handoff["next"]]
-    state["status"] = "in_progress"
-    nxt = (handoff.get("next") or "").lower()
-    if state["stage"] in ("compose", "deliver") and "waiting for ok" not in nxt:
-        state["approvals"]["rough_cut"] = True
+    handoff = parse_last_handoff(log_path(project))
+    auth = authoritative_approvals(project)
+    for k in APPROVALS:
+        state["approvals"][k] = auth["approvals"][k]["approved"]
+        state["approval_evidence"][k] = auth["approvals"][k].get("evidence", "none")
+    if handoff:
+        line = handoff.get("stage_line", "")
+        m = re.search(r"(\d)\s*·\s*(\w+)", line)
+        if m:
+            stage_map = {"1": "prep", "2": "cut", "3": "compose", "4": "deliver"}
+            state["stage"] = stage_map.get(m.group(1), state["stage"])
+        if handoff.get("open_issues"):
+            state["open_issues"] = [
+                s.strip() for s in re.split(r"·", handoff["open_issues"]) if s.strip()
+            ]
+        if handoff.get("next"):
+            state["next_actions"] = [handoff["next"]]
+        state["status"] = "in_progress"
     save_state(project, state)
     return state
 
@@ -123,8 +196,10 @@ def cmd_set_stage(args):
 
 
 def cmd_set_approval(args):
+    """Mirror only — prefer writing **Approval:** lines to log.md."""
     st = load_state(args.project)
-    st["approvals"][args.name] = args.value.lower() in ("1", "true", "yes")
+    st["approvals"][args.name] = args.value.lower() in ("1", "true", "yes", "approved")
+    st["approval_evidence"][args.name] = f"manual:set-approval {args.value}"
     save_state(args.project, st)
 
 
@@ -132,32 +207,34 @@ def cmd_sync(args):
     print(json.dumps(sync_handoff(args.project), indent=2))
 
 
+def cmd_reconcile(args):
+    print(json.dumps(reconcile(args.project), indent=2))
+
+
 def main():
     p = argparse.ArgumentParser(description="Project state for video-toolkit")
     sub = p.add_subparsers(dest="cmd", required=True)
 
-    s = sub.add_parser("init", help="Create default project-state.json")
-    s.add_argument("project")
-    s.set_defaults(func=cmd_init)
+    def add_proj(name, func):
+        s = sub.add_parser(name)
+        s.add_argument("project")
+        s.set_defaults(func=func)
 
-    s = sub.add_parser("show", help="Print project-state.json")
-    s.add_argument("project")
-    s.set_defaults(func=cmd_show)
+    add_proj("init", cmd_init)
+    add_proj("show", cmd_show)
+    add_proj("sync-handoff", cmd_sync)
+    add_proj("reconcile", cmd_reconcile)
 
-    s = sub.add_parser("set-stage", help="Set stage")
+    s = sub.add_parser("set-stage")
     s.add_argument("project")
     s.add_argument("stage", choices=STAGES)
     s.set_defaults(func=cmd_set_stage)
 
-    s = sub.add_parser("set-approval", help="Set approval flag")
+    s = sub.add_parser("set-approval")
     s.add_argument("project")
     s.add_argument("name", choices=APPROVALS)
     s.add_argument("value")
     s.set_defaults(func=cmd_set_approval)
-
-    s = sub.add_parser("sync-handoff", help="Update from latest ### Handoff in log.md")
-    s.add_argument("project")
-    s.set_defaults(func=cmd_sync)
 
     args = p.parse_args()
     args.func(args)

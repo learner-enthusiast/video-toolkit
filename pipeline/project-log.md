@@ -29,6 +29,14 @@
 **Tokens:** input 1,204 · cache write 18,845 · cache read 412,330 · output 9,876 (main session; subagents: …)  ← hook
 ```
 
+**Approvals (authoritative in this file)** — record explicit user OK before Compose or deliverable sign-off:
+
+```markdown
+**Approval:** rough_cut=approved
+```
+
+Allowed keys: `script`, `rough_cut`, `storyboard`, `stills`, `final`. Values: `approved`, `rejected`, `pending`. Newest line wins. `tools/project_state.py sync-handoff` mirrors these into `project-state.json`; validators read **this file**, not inferred stage.
+
 **Stage handoff** (`pipeline/stages.md`)
 - The last entry of every stage is a normal entry followed by a handoff block:
 
