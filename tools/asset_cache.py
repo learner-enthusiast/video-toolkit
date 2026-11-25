@@ -60,16 +60,32 @@ def manifest_path(project: str) -> str:
     return os.path.join(project, MANIFEST)
 
 
+def _quarantine_manifest_file(path: str) -> str | None:
+    if not os.path.isfile(path):
+        return None
+    base = path + ".corrupt"
+    target = base
+    n = 0
+    while os.path.isfile(target):
+        n += 1
+        target = f"{base}-{n}"
+    try:
+        shutil.copy2(path, target)
+        return target
+    except OSError:
+        return None
+
+
 def _read_manifest_file(project: str) -> tuple[dict, str | None]:
     p = manifest_path(project)
     if not os.path.isfile(p):
         return {"version": CACHE_VERSION, "entries": {}}, None
-    try:
-        with open(p) as f:
-            data = json.load(f)
-    except json.JSONDecodeError:
-        return {"version": CACHE_VERSION, "entries": {}}, "corrupt_manifest"
-    if not isinstance(data, dict) or "entries" not in data:
+    data, err = ps.load_json_dict(p)
+    if err == "missing":
+        return {"version": CACHE_VERSION, "entries": {}}, None
+    if err:
+        return {"version": CACHE_VERSION, "entries": {}}, err
+    if "entries" not in data:
         return {"version": CACHE_VERSION, "entries": {}}, "invalid_manifest"
     if not isinstance(data.get("entries"), dict):
         return {"version": CACHE_VERSION, "entries": {}}, "invalid_entries"
@@ -86,9 +102,12 @@ def manifest_transaction(project: str, mutate) -> dict:
     with open(lock_path, "a") as lf:
         fcntl.flock(lf, fcntl.LOCK_EX)
         try:
-            man, _ = _read_manifest_file(project)
+            man, read_err = _read_manifest_file(project)
+            if read_err and os.path.isfile(p):
+                _quarantine_manifest_file(p)
             mutate(man)
             man["version"] = CACHE_VERSION
+            man.pop("_quarantined", None)
             with os.fdopen(fd, "w") as f:
                 json.dump(man, f, indent=2)
                 f.write("\n")
@@ -113,8 +132,64 @@ def bundle_root(project: str, key: str) -> str:
     return os.path.join(project, "work", "cache", "bundles", key)
 
 
-def verify_entry(project: str, ent: dict, key: str | None = None) -> tuple[bool, str]:
-    required = ("path", "sha256", "size", "cache_key", "op", "schema")
+def _expect_fingerprint(op: str, inp: str, params, script_path, tool_version) -> dict:
+    expect_input = os.path.abspath(inp)
+    if os.path.isfile(inp):
+        expect_input_hash = sha256_file(inp)
+    else:
+        expect_input_hash = None
+    return {
+        "op": op,
+        "input": expect_input,
+        "input_hash": expect_input_hash,
+        "params": params,
+        "tool_version": tool_version or "unknown",
+        "implementation": implementation_hash(),
+        "script_hash": sha256_file(script_path)[:16] if script_path and os.path.isfile(script_path) else None,
+    }
+
+
+def _entry_matches_operation(ent: dict, expect: dict) -> str | None:
+    if ent.get("op") != expect["op"]:
+        return "op_mismatch"
+    if ent.get("input") != expect["input"]:
+        return "input_mismatch"
+    if expect["input_hash"]:
+        if ent.get("input_sha256") and ent["input_sha256"] != expect["input_hash"]:
+            return "input_hash_mismatch"
+    stored_ver = ent.get("tool_version") or "unknown"
+    if stored_ver != expect["tool_version"]:
+        return "tool_version_mismatch"
+    if ent.get("implementation") != expect["implementation"]:
+        return "implementation_mismatch"
+    if expect["script_hash"]:
+        if ent.get("script_hash") != expect["script_hash"]:
+            return "script_hash_mismatch"
+    if expect["params"] != ent.get("params"):
+        return "params_mismatch"
+    return None
+
+
+def verify_entry(
+    project: str,
+    ent: dict,
+    key: str | None = None,
+    *,
+    operation: dict | None = None,
+) -> tuple[bool, str]:
+    if not isinstance(ent, dict):
+        return False, "invalid_entry"
+    required = (
+        "path",
+        "sha256",
+        "size",
+        "cache_key",
+        "op",
+        "schema",
+        "input",
+        "tool_version",
+        "implementation",
+    )
     for field in required:
         if field not in ent:
             return False, f"missing_field:{field}"
@@ -126,16 +201,19 @@ def verify_entry(project: str, ent: dict, key: str | None = None) -> tuple[bool,
         return False, "invalid_checksum_format"
     if not isinstance(ent["size"], int) or ent["size"] < 1:
         return False, "invalid_size"
-    resolved = ps.safe_project_relpath(project, ent["path"])
-    if not resolved or not os.path.isfile(resolved):
-        return False, "missing_file"
-    if os.path.islink(resolved):
-        return False, "symlink_forbidden"
+    lookup_key = key or ent["cache_key"]
+    resolved = ps.resolve_in_asset_bundle(project, lookup_key, ent["path"])
+    if not resolved:
+        return False, "path_forbidden"
     size = os.path.getsize(resolved)
     if size != ent["size"]:
         return False, "size_mismatch"
     if sha256_file(resolved) != ent["sha256"]:
         return False, "checksum_mismatch"
+    if operation:
+        meta_err = _entry_matches_operation(ent, operation)
+        if meta_err:
+            return False, meta_err
     return True, "hit"
 
 
@@ -145,6 +223,8 @@ def _key_lock_path(project: str, key: str) -> str:
 
 def _atomic_install_output(project: str, key: str, src_file: str, dest_name: str) -> str:
     dest_dir = bundle_root(project, key)
+    if ps.path_has_symlink_component(dest_dir):
+        raise ValueError("symlink_forbidden:bundle_root")
     os.makedirs(dest_dir, exist_ok=True)
     target = os.path.join(dest_dir, dest_name)
     lock = _key_lock_path(project, key)
@@ -160,7 +240,7 @@ def _atomic_install_output(project: str, key: str, src_file: str, dest_name: str
                     os.fsync(fout.fileno())
                 fd = None
                 if os.path.getsize(tmp) < 1:
-                    raise ValueError("empty output")
+                    raise ValueError("empty_output")
                 os.replace(tmp, target)
             finally:
                 fcntl.flock(lf, fcntl.LOCK_UN)
@@ -192,9 +272,10 @@ def cmd_lookup(args):
         sys.stdout.write("\n")
         sys.exit(1)
     ent = man["entries"].get(key)
+    op_expect = _expect_fingerprint(args.op, args.input, params, args.script, args.tool_version)
     out = {"hit": False, "key": key, "reason": "miss", "entry": ent}
     if ent:
-        ok, reason = verify_entry(args.project, ent, key)
+        ok, reason = verify_entry(args.project, ent, key, operation=op_expect)
         out["hit"] = ok
         out["reason"] = reason
         if ok:
@@ -219,12 +300,14 @@ def cmd_store(args):
     if out_size < 1:
         sys.exit("output file empty")
     out_hash = sha256_file(args.output)
+    inp_hash = sha256_file(args.input) if os.path.isfile(args.input) else None
     target = _atomic_install_output(args.project, key, args.output, os.path.basename(args.output))
-    rel = os.path.relpath(target, args.project)
+    rel = os.path.relpath(target, args.project).replace("\\", "/")
     entry = {
         "op": args.op,
         "path": rel,
         "input": os.path.abspath(args.input),
+        "input_sha256": inp_hash,
         "params": params,
         "tool_version": args.tool_version or "unknown",
         "schema": CACHE_VERSION,
@@ -232,6 +315,7 @@ def cmd_store(args):
         "size": out_size,
         "sha256": out_hash,
         "implementation": implementation_hash(),
+        "script_hash": sha256_file(args.script)[:16] if args.script and os.path.isfile(args.script) else None,
     }
 
     def _add(man: dict) -> None:
@@ -246,10 +330,11 @@ def cmd_probe_ffprobe(args):
     params = {"tool": "ffprobe", "entries": args.entries or "format,duration:stream=codec_type"}
     key = cache_key("ffprobe", args.input, params, tool_version=args.tool_version or "unknown")
     man, man_err = _read_manifest_file(args.project)
+    op_expect = _expect_fingerprint("ffprobe", args.input, params, None, args.tool_version or "unknown")
     if not man_err:
         ent = man["entries"].get(key)
         if ent and not args.force:
-            ok, reason = verify_entry(args.project, ent, key)
+            ok, reason = verify_entry(args.project, ent, key, operation=op_expect)
             if ok:
                 print(os.path.join(args.project, ent["path"]))
                 return
@@ -264,21 +349,22 @@ def cmd_probe_ffprobe(args):
         json.loads(out)
     except json.JSONDecodeError:
         sys.exit("ffprobe returned invalid JSON")
-    tmp_probe = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".json")
+    fd, tmp_path = tempfile.mkstemp(suffix=".json")
     try:
-        tmp_probe.write(out)
-        tmp_probe.flush()
-        os.fsync(tmp_probe.fileno())
-        tmp_probe.close()
-        target = _atomic_install_output(args.project, key, tmp_probe.name, "probe.json")
+        with os.fdopen(fd, "w") as tmp_probe:
+            tmp_probe.write(out)
+            tmp_probe.flush()
+            os.fsync(tmp_probe.fileno())
+        target = _atomic_install_output(args.project, key, tmp_path, "probe.json")
     finally:
-        if os.path.isfile(tmp_probe.name):
-            os.remove(tmp_probe.name)
-    rel = os.path.relpath(target, args.project)
+        if os.path.isfile(tmp_path):
+            os.remove(tmp_path)
+    rel = os.path.relpath(target, args.project).replace("\\", "/")
     entry = {
         "op": "ffprobe",
         "path": rel,
         "input": os.path.abspath(args.input),
+        "input_sha256": sha256_file(args.input) if os.path.isfile(args.input) else None,
         "params": params,
         "tool_version": args.tool_version or "unknown",
         "schema": CACHE_VERSION,
@@ -286,6 +372,7 @@ def cmd_probe_ffprobe(args):
         "size": os.path.getsize(target),
         "sha256": sha256_file(target),
         "implementation": implementation_hash(),
+        "script_hash": None,
     }
 
     def _add(man: dict) -> None:

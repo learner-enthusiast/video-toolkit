@@ -70,7 +70,8 @@ class ProjlogUsageTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             root = os.path.join(td, "toolkit")
             os.makedirs(os.path.join(root, "projects", "pl", "01-ep", "raw"))
-            open(os.path.join(root, "CLAUDE.md"), "w").write("rules\n")
+            with open(os.path.join(root, "CLAUDE.md"), "w") as cf:
+                cf.write("rules\n")
             proj, _ = projlog.resolve_mentions(root, "work on projects/pl/01-ep/foo")
             self.assertEqual(proj, "projects/pl/01-ep")
 

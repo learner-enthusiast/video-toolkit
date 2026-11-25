@@ -126,6 +126,23 @@ def _read_manifest_file(project: str) -> dict:
     return data
 
 
+def _quarantine_manifest(project: str) -> str | None:
+    p = manifest_path(project)
+    if not os.path.isfile(p):
+        return None
+    base = p + ".corrupt"
+    target = base
+    n = 0
+    while os.path.isfile(target):
+        n += 1
+        target = f"{base}-{n}"
+    try:
+        shutil.copy2(p, target)
+        return target
+    except OSError:
+        return None
+
+
 def manifest_transaction(project: str, mutate) -> dict:
     """Lock → read → mutate → atomic write."""
     p = manifest_path(project)
@@ -136,9 +153,11 @@ def manifest_transaction(project: str, mutate) -> dict:
         fcntl.flock(lf, fcntl.LOCK_EX)
         try:
             man = _read_manifest_file(project)
+            if man.get("_corrupt_previous") and os.path.isfile(p):
+                _quarantine_manifest(project)
+            man.pop("_corrupt_previous", None)
             mutate(man)
             man["schema"] = CACHE_SCHEMA
-            man.pop("_corrupt_previous", None)
             with os.fdopen(fd, "w") as f:
                 json.dump(man, f, indent=2)
                 f.write("\n")
@@ -165,20 +184,16 @@ resolve_in_bundle = ps.resolve_contained
 
 
 def iter_bundle_artifact_paths(bundle_root: str) -> list[str]:
-    """Relative paths of non-metadata files; symlinks are rejected."""
+    """Relative paths of non-metadata files; any symlink under bundle is rejected."""
+    ps.assert_no_symlinks_under(bundle_root)
     found: list[str] = []
     for dirpath, dirnames, files in os.walk(bundle_root, followlinks=False):
-        dirnames[:] = [
-            d
-            for d in dirnames
-            if not os.path.islink(os.path.join(dirpath, d))
-            and d not in METADATA_FILES
-        ]
+        dirnames[:] = [d for d in dirnames if d not in METADATA_FILES]
         for fn in files:
             if fn in METADATA_FILES:
                 continue
             ap = os.path.join(dirpath, fn)
-            if os.path.islink(ap):
+            if ps.lstat_is_symlink(ap):
                 raise ValueError(f"symlink_forbidden:{fn}")
             rel = os.path.relpath(ap, bundle_root).replace("\\", "/")
             if not normalize_relpath(rel):
@@ -186,6 +201,23 @@ def iter_bundle_artifact_paths(bundle_root: str) -> list[str]:
             found.append(rel)
     found.sort()
     return found
+
+
+def validate_bundle_root_safe(project: str, key: str) -> str | None:
+    """Ensure inspect cache bundle path and ancestors are not symlinks."""
+    rel = _expected_bundle_relpath(key)
+    bundle = os.path.join(project, rel)
+    proj_real = os.path.realpath(project)
+    expected_parent = os.path.realpath(os.path.join(proj_real, "work", "inspect", ".cache"))
+    if ps.path_has_symlink_component(bundle):
+        return "symlink_forbidden"
+    try:
+        bundle_real = os.path.realpath(bundle)
+    except OSError:
+        return "missing_bundle"
+    if not bundle_real.startswith(expected_parent + os.sep):
+        return "bundle_outside_cache_root"
+    return None
 
 
 def _expected_bundle_relpath(key: str) -> str:
@@ -206,17 +238,18 @@ def validate_cache_entry(project: str, key: str, ent: dict | None) -> str | None
     bpath = os.path.join(project, rel)
     if not os.path.isdir(bpath):
         return "missing_bundle"
+    root_err = validate_bundle_root_safe(project, key)
+    if root_err:
+        return root_err
     bmeta = os.path.join(bpath, "bundle.json")
     if os.path.isfile(bmeta):
-        try:
-            with open(bmeta) as f:
-                meta = json.load(f)
-            if meta.get("key") != key:
-                return "bundle_meta_mismatch"
-            if ent.get("mode") and meta.get("mode") != ent.get("mode"):
-                return "bundle_mode_mismatch"
-        except (json.JSONDecodeError, OSError):
-            return "corrupt_bundle_meta"
+        meta, meta_err = ps.load_json_dict(bmeta)
+        if meta_err:
+            return f"corrupt_bundle_meta:{meta_err}"
+        if meta.get("key") != key:
+            return "bundle_meta_mismatch"
+        if ent.get("mode") and meta.get("mode") != ent.get("mode"):
+            return "bundle_mode_mismatch"
     return None
 
 
@@ -225,19 +258,22 @@ def _required_listed_in_integrity(bundle_path: str, thorough: bool) -> str | Non
     if err:
         return err
     ipath = os.path.join(bundle_path, "integrity.json")
-    if not os.path.isfile(ipath):
+    data, err = ps.load_json_dict(ipath)
+    if err == "missing":
         return "missing_integrity_manifest"
-    try:
-        with open(ipath) as f:
-            data = json.load(f)
-        listed = {
-            normalize_relpath(str(r.get("path")))
-            for r in (data.get("artifacts") or [])
-            if isinstance(r, dict)
-        }
-        listed.discard(None)
-    except (json.JSONDecodeError, OSError):
-        return "corrupt_integrity_manifest"
+    if err:
+        return f"corrupt_integrity_manifest:{err}"
+    arts = data.get("artifacts")
+    if not isinstance(arts, list):
+        return "corrupt_integrity_manifest:invalid_artifacts"
+    listed = set()
+    for r in arts:
+        if not isinstance(r, dict):
+            return "corrupt_integrity_manifest:invalid_artifact_row"
+        n = normalize_relpath(str(r.get("path", "")))
+        if not n:
+            return "corrupt_integrity_manifest:unsafe_path"
+        listed.add(n)
     for req in reqs:
         if req == "sheet_*.jpg":
             continue
@@ -332,15 +368,11 @@ def verify_integrity(
     expected_mode: str | None = None,
 ) -> tuple[bool, str]:
     ipath = os.path.join(bundle_path, "integrity.json")
-    if not os.path.isfile(ipath):
+    data, err = ps.load_json_dict(ipath)
+    if err == "missing":
         return False, "missing_integrity_manifest"
-    try:
-        with open(ipath) as f:
-            data = json.load(f)
-    except json.JSONDecodeError:
-        return False, "corrupt_integrity_manifest"
-    if not isinstance(data, dict):
-        return False, "corrupt_integrity_manifest"
+    if err:
+        return False, f"corrupt_integrity_manifest:{err}"
     if data.get("schema") != CACHE_SCHEMA:
         return False, "schema_mismatch"
     if expected_key and data.get("fingerprint") != expected_key:
@@ -436,6 +468,44 @@ def write_integrity_manifest(bundle: str, fingerprint_key: str, mode: str) -> No
     with open(os.path.join(bundle, "integrity.json"), "w") as f:
         json.dump(manifest, f, indent=2)
         f.write("\n")
+
+
+def safe_restore_from_bundle(bundle_path: str, out_dir: str, *, force: bool) -> None:
+    """Copy bundle artifacts to out_dir via staging; refuse symlinks; keep dest on failure."""
+    ps.assert_no_symlinks_under(bundle_path)
+    parent = os.path.dirname(out_dir) or "."
+    os.makedirs(parent, exist_ok=True)
+    staging = tempfile.mkdtemp(dir=parent, prefix=".inspect-restore-")
+    bak = None
+    try:
+        for rel in iter_bundle_artifact_paths(bundle_path):
+            src = resolve_in_bundle(bundle_path, rel)
+            if not src or not os.path.isfile(src):
+                raise ValueError(f"missing_artifact:{rel}")
+            if ps.lstat_is_symlink(src):
+                raise ValueError(f"symlink_forbidden:{rel}")
+            dest = os.path.join(staging, rel)
+            os.makedirs(os.path.dirname(dest), exist_ok=True)
+            shutil.copyfile(src, dest)
+        if os.path.isdir(out_dir) and os.listdir(out_dir):
+            if not force:
+                raise ValueError("out-dir non-empty")
+            bak = out_dir + ".restore-bak"
+            if os.path.isdir(bak):
+                shutil.rmtree(bak)
+            os.rename(out_dir, bak)
+        if os.path.isdir(out_dir):
+            shutil.rmtree(out_dir)
+        os.rename(staging, out_dir)
+        staging = None
+        if bak and os.path.isdir(bak):
+            shutil.rmtree(bak)
+    except Exception:
+        if staging and os.path.isdir(staging):
+            shutil.rmtree(staging, ignore_errors=True)
+        if bak and os.path.isdir(bak) and not os.path.isdir(out_dir):
+            os.rename(bak, out_dir)
+        raise
 
 
 def atomic_install_bundle(src: str, dest: str) -> None:
@@ -583,9 +653,17 @@ def cmd_restore(args):
     key = fingerprint(args.video, args)
     project = args.project
     man = load_manifest(project)
-    ent = man.get("entries", {}).get(key)
+    if man.get("_manifest_error"):
+        sys.exit(f"manifest invalid: {man['_manifest_error']}")
+    entries = man.get("entries")
+    if not isinstance(entries, dict):
+        sys.exit("manifest invalid: invalid_entries")
+    ent = entries.get(key)
     if not ent:
         sys.exit(2)
+    entry_err = validate_cache_entry(project, key, ent)
+    if entry_err:
+        sys.exit(f"cache entry invalid: {entry_err}")
     src = os.path.join(project, ent["bundle_dir"])
     thorough = args.mode == "thorough"
     missing, integrity_reason = validate_bundle(
@@ -598,20 +676,13 @@ def cmd_restore(args):
     out_dir = args.out_dir or os.path.join(
         project, "work", "inspect", os.path.splitext(os.path.basename(args.video))[0]
     )
-    if os.path.isdir(out_dir) and os.listdir(out_dir) and not args.force:
-        sys.exit("out-dir non-empty; pass --force")
-    os.makedirs(out_dir, exist_ok=True)
-    for name in os.listdir(src):
-        if name in METADATA_FILES:
-            continue
-        sp = os.path.join(src, name)
-        dp = os.path.join(out_dir, name)
-        if os.path.isdir(sp):
-            if os.path.exists(dp):
-                shutil.rmtree(dp)
-            shutil.copytree(sp, dp)
-        else:
-            shutil.copy2(sp, dp)
+    try:
+        safe_restore_from_bundle(src, out_dir, force=bool(args.force))
+    except ValueError as exc:
+        msg = str(exc)
+        if msg == "out-dir non-empty":
+            sys.exit("out-dir non-empty; pass --force")
+        sys.exit(msg)
     print(out_dir)
 
 

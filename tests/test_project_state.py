@@ -8,6 +8,8 @@ from tools.project_state import (
     authoritative_approvals,
     cmd_record_approval,
     cmd_set_approval,
+    cmd_set_stage,
+    cmd_show,
     default_state,
     parse_approvals_from_log,
     parse_last_handoff,
@@ -124,6 +126,37 @@ class ProjectStateTest(unittest.TestCase):
             with open(os.path.join(proj, "project-state.json")) as f:
                 repaired = json.load(f)
             self.assertEqual(repaired["approval_evidence"]["rough_cut"], "**Approval:** rough_cut=rejected")
+
+    def test_set_stage_recovers_approvals_from_log(self):
+        with tempfile.TemporaryDirectory() as td:
+            proj = os.path.join(td, "p")
+            os.makedirs(proj)
+            with open(os.path.join(proj, "log.md"), "w") as f:
+                f.write("**Approval:** rough_cut=approved\n")
+            with open(os.path.join(proj, "project-state.json"), "w") as f:
+                f.write("[bad]")
+            cmd_set_stage(type("A", (), {"project": proj, "stage": "cut"})())
+            with open(os.path.join(proj, "project-state.json")) as f:
+                st = json.load(f)
+            self.assertTrue(st["approvals"]["rough_cut"])
+            self.assertEqual(st["stage"], "cut")
+
+    def test_show_invalid_state_does_not_mutate(self):
+        with tempfile.TemporaryDirectory() as td:
+            proj = os.path.join(td, "p")
+            os.makedirs(proj)
+            with open(os.path.join(proj, "project-state.json"), "w") as f:
+                f.write("[1]")
+            import io
+            from unittest import mock
+
+            buf = io.StringIO()
+            with mock.patch("sys.stdout", buf):
+                with self.assertRaises(SystemExit) as ex:
+                    cmd_show(type("A", (), {"project": proj})())
+            self.assertEqual(ex.exception.code, 1)
+            with open(os.path.join(proj, "project-state.json")) as f:
+                self.assertEqual(f.read(), "[1]")
 
     def test_set_approval_deprecated(self):
         with tempfile.TemporaryDirectory() as td:

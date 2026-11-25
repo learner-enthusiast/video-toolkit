@@ -27,10 +27,10 @@ If `gh` reports insufficient permissions, configure in GitHub: **Settings → Br
 
 ## Current status
 
-Run:
+**Enabled** on `main` (2026-11-25): required check **test**, strict up-to-date, force pushes and deletions blocked, `enforce_admins` true, no mandatory reviewer count.
+
+Verify:
 
 ```bash
-gh api repos/learner-enthusiast/video-toolkit/branches/main/protection 2>&1 | head -20
+gh api repos/learner-enthusiast/video-toolkit/branches/main/protection
 ```
-
-Document the result in `docs/optimization/post-hardening-status.md` when protection is applied.

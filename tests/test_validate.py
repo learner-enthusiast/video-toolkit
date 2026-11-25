@@ -74,8 +74,10 @@ class ValidateTest(unittest.TestCase):
             proj = os.path.join(td, "p")
             for d in ("raw", "work", "out"):
                 os.makedirs(os.path.join(proj, d))
-            open(os.path.join(proj, "script.md"), "w").write("# s\n")
-            open(os.path.join(proj, "log.md"), "w").write("**Approval:** rough_cut=approved\n")
+            with open(os.path.join(proj, "script.md"), "w") as sf:
+                sf.write("# s\n")
+            with open(os.path.join(proj, "log.md"), "w") as lf:
+                lf.write("**Approval:** rough_cut=approved\n")
             with open(os.path.join(proj, "project-state.json"), "w") as f:
                 f.write("[1,2,3]")
             errs = vt_validate.check_stage(proj)
