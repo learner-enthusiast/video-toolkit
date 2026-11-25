@@ -9,9 +9,12 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-import numpy as np
-import soundfile as sf
-from scipy.signal import fftconvolve
+try:
+    import numpy as np
+    import soundfile as sf
+    from scipy.signal import fftconvolve
+except ImportError:
+    raise unittest.SkipTest("numpy/scipy/soundfile required (use vt-python venv for full suite)")
 
 from tools import clean_audio
 from tools.clean_audio import clean, main, probe, wpe_dereverb

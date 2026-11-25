@@ -14,6 +14,8 @@
 
 ## Benchmark before enable
 
+**Method:** for each representative project, run (A) full multi-pass per `pipeline/transcribe.md` and (B) adaptive draft on the same cleaned WAV; compare with `ctc_window.py` spot-checks and manual correction count. Record wall time, GPU OOMs, and hook-logged session tokens. Store results in `docs/optimization/benchmarks/transcription.json` (create when first run).
+
 Compare old vs adaptive on representative projects: word accuracy, retake detection, caption sync, manual fix count, wall time, and hook-logged tokens. Record results in `docs/optimization/final-report.md`.
 
 ## Safe fallback

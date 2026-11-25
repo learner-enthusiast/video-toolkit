@@ -7,6 +7,22 @@ from tools.validate import vt_validate
 
 
 class ValidateTest(unittest.TestCase):
+    def _project(self, log_body=""):
+        td = tempfile.mkdtemp()
+        proj = os.path.join(td, "p")
+        for d in ("raw", "work", "out"):
+            os.makedirs(os.path.join(proj, d))
+        open(os.path.join(proj, "script.md"), "w").write("# s\n")
+        open(os.path.join(proj, "log.md"), "w").write(log_body)
+        state = {
+            "schema_version": 1,
+            "stage": "compose",
+            "approvals": {k: False for k in ["script", "rough_cut", "storyboard", "stills", "final"]},
+        }
+        with open(os.path.join(proj, "project-state.json"), "w") as f:
+            json.dump(state, f)
+        return proj
+
     def test_project_missing_script(self):
         with tempfile.TemporaryDirectory() as td:
             proj = os.path.join(td, "p")
@@ -14,8 +30,7 @@ class ValidateTest(unittest.TestCase):
             os.makedirs(os.path.join(proj, "work"))
             os.makedirs(os.path.join(proj, "out"))
             errs = vt_validate.check_project(proj)
-            codes = {e["code"] for e in errs}
-            self.assertIn("MISSING_FILE", codes)
+            self.assertTrue(any(e["code"] == "MISSING_FILE" for e in errs))
 
     def test_srt_overlap(self):
         with tempfile.NamedTemporaryFile(mode="w", suffix=".srt", delete=False) as f:
@@ -31,18 +46,25 @@ class ValidateTest(unittest.TestCase):
             os.remove(path)
 
     def test_stage_compose_without_approval(self):
-        with tempfile.TemporaryDirectory() as td:
-            proj = os.path.join(td, "p")
-            os.makedirs(proj)
-            state = {
-                "schema_version": 1,
-                "stage": "compose",
-                "approvals": {"rough_cut": False},
-            }
-            with open(os.path.join(proj, "project-state.json"), "w") as f:
-                json.dump(state, f)
-            errs = vt_validate.check_stage(proj)
-            self.assertTrue(any(e["code"] == "ROUGH_CUT_NOT_APPROVED" for e in errs))
+        proj = self._project("# log\n")
+        errs = vt_validate.check_stage(proj)
+        codes = {e["code"] for e in errs}
+        self.assertIn("APPROVAL_UNVERIFIABLE", codes)
+
+    def test_stage_with_approval(self):
+        proj = self._project("**Approval:** rough_cut=approved\n")
+        errs = vt_validate.check_stage(proj)
+        self.assertFalse(any(e["code"] == "ROUGH_CUT_NOT_APPROVED" for e in errs))
+
+    def test_state_out_of_sync(self):
+        proj = self._project("**Approval:** rough_cut=rejected\n")
+        with open(os.path.join(proj, "project-state.json")) as f:
+            st = json.load(f)
+        st["approvals"]["rough_cut"] = True
+        with open(os.path.join(proj, "project-state.json"), "w") as f:
+            json.dump(st, f)
+        errs = vt_validate.check_stage(proj)
+        self.assertTrue(any(e["code"] == "STATE_OUT_OF_SYNC" for e in errs))
 
 
 if __name__ == "__main__":
