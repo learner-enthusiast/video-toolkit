@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import argparse
+import fcntl
 import json
 import os
 import re
 import sys
 from datetime import datetime, timezone
+
+APPROVAL_STATUSES = ("approved", "rejected", "pending")
 
 SCHEMA_VERSION = 1
 STAGES = ("prep", "cut", "compose", "deliver")
@@ -56,6 +59,20 @@ def load_state(project: str) -> dict:
         st = json.load(f)
     st.setdefault("approval_evidence", {k: "none" for k in APPROVALS})
     return st
+
+
+def try_load_state(project: str) -> tuple[dict | None, str | None]:
+    """Return (state, error_code) — error_code set when JSON is unreadable."""
+    p = state_path(project)
+    if not os.path.isfile(p):
+        return None, "NO_STATE"
+    try:
+        with open(p) as f:
+            return json.load(f), None
+    except json.JSONDecodeError:
+        return None, "INVALID_STATE_JSON"
+    except OSError:
+        return None, "INVALID_STATE_JSON"
 
 
 def save_state(project: str, state: dict) -> None:
@@ -195,12 +212,44 @@ def cmd_set_stage(args):
     save_state(args.project, st)
 
 
+def _append_log_line(project: str, line: str) -> None:
+    lp = log_path(project)
+    os.makedirs(os.path.dirname(lp) or ".", exist_ok=True)
+    lock = lp + ".lock"
+    with open(lock, "a") as lf:
+        fcntl.flock(lf, fcntl.LOCK_EX)
+        try:
+            lead = ""
+            if os.path.isfile(lp) and os.path.getsize(lp):
+                with open(lp, "rb") as f:
+                    if not f.read().endswith(b"\n"):
+                        lead = "\n"
+            else:
+                lead = ""
+            with open(lp, "a") as f:
+                f.write(f"{lead}{line}\n")
+        finally:
+            fcntl.flock(lf, fcntl.LOCK_UN)
+
+
+def cmd_record_approval(args):
+    status = args.status.lower()
+    if status not in APPROVAL_STATUSES:
+        sys.exit(f"status must be one of: {', '.join(APPROVAL_STATUSES)}")
+    if not os.path.isfile(log_path(args.project)):
+        sys.exit("log.md missing; create the project first")
+    _append_log_line(args.project, f"**Approval:** {args.name}={status}")
+    sync_handoff(args.project)
+    print(log_path(args.project))
+
+
 def cmd_set_approval(args):
-    """Mirror only — prefer writing **Approval:** lines to log.md."""
-    st = load_state(args.project)
-    st["approvals"][args.name] = args.value.lower() in ("1", "true", "yes", "approved")
-    st["approval_evidence"][args.name] = f"manual:set-approval {args.value}"
-    save_state(args.project, st)
+    sys.stderr.write(
+        "set-approval is deprecated: approvals must be recorded in log.md.\n"
+        "Use: vt-python tools/project_state.py record-approval "
+        f"{args.project} {args.name} approved|rejected|pending\n"
+    )
+    sys.exit(2)
 
 
 def cmd_sync(args):
@@ -235,6 +284,12 @@ def main():
     s.add_argument("name", choices=APPROVALS)
     s.add_argument("value")
     s.set_defaults(func=cmd_set_approval)
+
+    s = sub.add_parser("record-approval")
+    s.add_argument("project")
+    s.add_argument("name", choices=APPROVALS)
+    s.add_argument("status", choices=APPROVAL_STATUSES)
+    s.set_defaults(func=cmd_record_approval)
 
     args = p.parse_args()
     args.func(args)

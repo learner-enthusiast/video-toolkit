@@ -17,7 +17,7 @@ Maintained with:
 ```bash
 vt-python tools/project_state.py init projects/<name>
 vt-python tools/project_state.py set-stage projects/<name> compose
-vt-python tools/project_state.py set-approval projects/<name> rough_cut true
+vt-python tools/project_state.py record-approval projects/<name> rough_cut approved
 vt-python tools/project_state.py sync-handoff projects/<name>   # parses latest ### Handoff
 ```
 

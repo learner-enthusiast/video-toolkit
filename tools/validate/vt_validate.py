@@ -51,32 +51,53 @@ def check_state_schema(project: str) -> list:
         with open(sp) as f:
             st = json.load(f)
     except json.JSONDecodeError as e:
-        return [_err("INVALID_STATE_SCHEMA", str(e), file=sp)]
+        return [_err("INVALID_STATE_JSON", str(e), file=sp)]
+    except OSError as e:
+        return [_err("INVALID_STATE_JSON", str(e), file=sp)]
+    if not isinstance(st, dict):
+        return [_err("INVALID_STATE_SCHEMA", "top-level JSON must be an object", file=sp)]
+    errs = []
     if st.get("schema_version") != SCHEMA_VERSION:
-        errs = [
+        errs.append(
             _err(
                 "INVALID_STATE_SCHEMA",
                 f"schema_version {st.get('schema_version')!r} != {SCHEMA_VERSION}",
                 file=sp,
             )
-        ]
+        )
+    approvals = st.get("approvals")
+    if approvals is None:
+        errs.append(_err("INVALID_STATE_SCHEMA", "approvals missing", file=sp))
+    elif not isinstance(approvals, dict):
+        errs.append(_err("INVALID_STATE_SCHEMA", "approvals must be an object", file=sp))
     else:
-        errs = []
-    for k in pst.APPROVALS:
-        if k not in (st.get("approvals") or {}):
-            errs.append(_err("INVALID_STATE_SCHEMA", f"approvals.{k} missing", file=sp))
+        for k in pst.APPROVALS:
+            if k not in approvals:
+                errs.append(_err("INVALID_STATE_SCHEMA", f"approvals.{k} missing", file=sp))
+            elif not isinstance(approvals[k], bool):
+                errs.append(_err("INVALID_STATE_SCHEMA", f"approvals.{k} must be boolean", file=sp))
+    stage = st.get("stage")
+    if stage is not None and stage not in pst.STAGES:
+        errs.append(_err("INVALID_STATE_SCHEMA", f"unknown stage {stage!r}", file=sp))
     return errs
 
 
 def check_stage(project: str) -> list:
     errs = []
-    errs.extend(check_state_schema(project))
+    schema_errs = check_state_schema(project)
+    errs.extend(schema_errs)
+    fatal = {e["code"] for e in schema_errs}
+    if fatal & {"NO_STATE", "INVALID_STATE_JSON", "INVALID_STATE_SCHEMA"}:
+        return errs
     auth = pst.authoritative_approvals(project)
     if auth["source"] == "missing_log":
         errs.append(_err("MISSING_FILE", "log.md required for stage validation", file="log.md"))
         return errs
-    st = pst.load_state(project)
-    stage = st.get("stage", "prep")
+    st, load_err = pst.try_load_state(project)
+    if load_err:
+        errs.append(_err(load_err, "project-state.json unreadable", file=pst.state_path(project)))
+        return errs
+    stage = (st or {}).get("stage", "prep")
     rec = pst.reconcile(project)
     for issue in rec["issues"]:
         errs.append(
@@ -171,21 +192,34 @@ def check_subtitles(path: str, max_chars_per_line: int = 42, max_lines: int = 2)
     return errs + warns
 
 
-def check_render(path: str, expect: dict | None = None) -> list:
-    errs = []
-    if not os.path.isfile(path):
-        return [_err("MISSING_FILE", "Video not found", file=path)]
-    if os.path.getsize(path) < 256:
-        return [_err("RENDER_EMPTY", "Output file too small", file=path)]
+def parse_frame_rate(value: str | None) -> float | None:
+    if not value:
+        return None
+    if "/" in value:
+        num, den = value.split("/", 1)
+        try:
+            den_f = float(den)
+            if den_f == 0:
+                return None
+            return float(num) / den_f
+        except ValueError:
+            return None
     try:
-        out = subprocess.check_output(
+        return float(value)
+    except ValueError:
+        return None
+
+
+def ffprobe_json(path: str) -> dict:
+    return json.loads(
+        subprocess.check_output(
             [
                 "ffprobe",
                 "-v",
                 "error",
                 "-show_entries",
                 "format=duration,size:stream=codec_type,codec_name,width,height,"
-                "r_frame_rate,sample_rate,channels",
+                "r_frame_rate,pix_fmt,sample_rate,channels",
                 "-of",
                 "json",
                 path,
@@ -193,8 +227,89 @@ def check_render(path: str, expect: dict | None = None) -> list:
             text=True,
             timeout=60,
         )
-        data = json.loads(out)
-    except (subprocess.CalledProcessError, json.JSONDecodeError, subprocess.TimeoutExpired) as e:
+    )
+
+
+def ffmpeg_full_decode(path: str) -> None:
+    subprocess.run(
+        ["ffmpeg", "-v", "error", "-i", path, "-f", "null", "-"],
+        capture_output=True,
+        timeout=120,
+        check=True,
+    )
+
+
+def measure_loudness(path: str, expect: dict) -> tuple[list, float | None, float | None]:
+    """Return (issues, integrated_lufs, true_peak_db)."""
+    errs = []
+    try:
+        proc = subprocess.run(
+            [
+                "ffmpeg",
+                "-hide_banner",
+                "-i",
+                path,
+                "-af",
+                "ebur128=framelog=0",
+                "-f",
+                "null",
+                "-",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=180,
+        )
+    except (subprocess.TimeoutExpired, FileNotFoundError) as e:
+        if expect.get("lufs_required"):
+            errs.append(_err("LOUDNESS_SKIPPED", f"ffmpeg ebur128 unavailable: {e}", file=path))
+        else:
+            errs.append(_err("LOUDNESS_SKIPPED", "ffmpeg ebur128 unavailable", severity="warning"))
+        return errs, None, None
+    im = re.search(r"I:\s*(-?\d+\.\d+)\s*LUFS", proc.stderr)
+    pm = re.search(r"Peak:\s*(-?\d+\.\d+)\s*dBFS", proc.stderr)
+    lufs = float(im.group(1)) if im else None
+    peak = float(pm.group(1)) if pm else None
+    if expect.get("lufs_target") is not None:
+        if lufs is None:
+            sev = "error" if expect.get("lufs_required") else "warning"
+            errs.append(_err("LOUDNESS_UNMEASURED", "Could not parse ebur128 integrated loudness", severity=sev, file=path))
+        else:
+            target = expect["lufs_target"]
+            if abs(lufs - target) > expect.get("lufs_tolerance", 0.5):
+                errs.append(
+                    _err(
+                        "LOUDNESS_OUT_OF_RANGE",
+                        f"integrated {lufs:.1f} LUFS, target {target}",
+                        file=path,
+                        actual=lufs,
+                    )
+                )
+    if expect.get("true_peak_max") is not None:
+        if peak is None:
+            sev = "error" if expect.get("true_peak_required") else "warning"
+            errs.append(_err("TRUE_PEAK_UNMEASURED", "Could not parse ebur128 true peak", severity=sev, file=path))
+        elif peak > expect["true_peak_max"]:
+            errs.append(
+                _err(
+                    "TRUE_PEAK_EXCEEDED",
+                    f"true peak {peak:.2f} dBFS > max {expect['true_peak_max']}",
+                    file=path,
+                    actual=peak,
+                )
+            )
+    return errs, lufs, peak
+
+
+def check_render(path: str, expect: dict | None = None) -> list:
+    errs = []
+    if not os.path.isfile(path):
+        return [_err("MISSING_FILE", "Video not found", file=path)]
+    if os.path.getsize(path) < 256:
+        return [_err("RENDER_EMPTY", "Output file too small", file=path)]
+    expect = expect or {}
+    try:
+        data = ffprobe_json(path)
+    except (subprocess.CalledProcessError, json.JSONDecodeError, subprocess.TimeoutExpired, FileNotFoundError) as e:
         return [_err("FFPROBE_FAILED", str(e), file=path)]
     streams = data.get("streams") or []
     videos = [s for s in streams if s.get("codec_type") == "video" or ("width" in s and "codec_type" not in s)]
@@ -202,8 +317,8 @@ def check_render(path: str, expect: dict | None = None) -> list:
     if not videos:
         errs.append(_err("MISSING_VIDEO_STREAM", "No video stream", file=path))
     v = videos[0] if videos else {}
+    a = audios[0] if audios else {}
     dur = float((data.get("format") or {}).get("duration") or 0)
-    expect = expect or {}
     if expect.get("require_audio", True) and not audios:
         errs.append(_err("MISSING_AUDIO_STREAM", "No audio stream", file=path))
     if expect.get("width") and v.get("width") != expect["width"]:
@@ -219,51 +334,38 @@ def check_render(path: str, expect: dict | None = None) -> list:
         errs.append(_err("BAD_DURATION", f"duration {dur:.2f}s too long", file=path))
     if expect.get("video_codec") and v.get("codec_name") != expect["video_codec"]:
         errs.append(_err("BAD_CODEC", f"codec {v.get('codec_name')}", file=path))
+    if expect.get("pixel_format") and v.get("pix_fmt") != expect["pixel_format"]:
+        errs.append(_err("BAD_PIXEL_FORMAT", f"pix_fmt {v.get('pix_fmt')}", file=path))
+    if expect.get("fps") is not None:
+        actual_fps = parse_frame_rate(v.get("r_frame_rate"))
+        if actual_fps is None:
+            errs.append(_err("BAD_FRAME_RATE", f"unparseable fps {v.get('r_frame_rate')}", file=path))
+        elif abs(actual_fps - expect["fps"]) > expect.get("fps_tolerance", 0.02):
+            errs.append(
+                _err(
+                    "BAD_FRAME_RATE",
+                    f"fps {actual_fps:.3f} expected {expect['fps']}",
+                    file=path,
+                    actual=actual_fps,
+                )
+            )
+    if expect.get("audio_codec") and a.get("codec_name") != expect["audio_codec"]:
+        errs.append(_err("BAD_AUDIO_CODEC", f"audio codec {a.get('codec_name')}", file=path))
+    if expect.get("sample_rate") is not None:
+        try:
+            sr = int(a.get("sample_rate") or 0)
+        except (TypeError, ValueError):
+            sr = 0
+        if sr != expect["sample_rate"]:
+            errs.append(_err("BAD_SAMPLE_RATE", f"sample rate {sr}", file=path))
+    if expect.get("channels") is not None and a.get("channels") != expect["channels"]:
+        errs.append(_err("BAD_CHANNELS", f"channels {a.get('channels')}", file=path))
     try:
-        subprocess.run(
-            ["ffmpeg", "-v", "error", "-i", path, "-f", "null", "-"],
-            capture_output=True,
-            timeout=120,
-            check=True,
-        )
+        ffmpeg_full_decode(path)
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError) as e:
         errs.append(_err("FFMPEG_DECODE_FAILED", str(e)[:200], file=path))
-    if expect.get("lufs_target") is not None:
-        # ebur128 is slow; optional
-        try:
-            proc = subprocess.run(
-                [
-                    "ffmpeg",
-                    "-hide_banner",
-                    "-i",
-                    path,
-                    "-af",
-                    "ebur128=framelog=0",
-                    "-f",
-                    "null",
-                    "-",
-                ],
-                capture_output=True,
-                text=True,
-                timeout=180,
-            )
-            m = re.search(r"I:\s*(-?\d+\.\d+)\s*LUFS", proc.stderr)
-            if not m:
-                errs.append(_err("LOUDNESS_UNMEASURED", "Could not parse ebur128", severity="warning", file=path))
-            else:
-                lufs = float(m.group(1))
-                target = expect["lufs_target"]
-                if abs(lufs - target) > expect.get("lufs_tolerance", 0.5):
-                    errs.append(
-                        _err(
-                            "LOUDNESS_OUT_OF_RANGE",
-                            f"integrated {lufs:.1f} LUFS, target {target}",
-                            file=path,
-                            actual=lufs,
-                        )
-                    )
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-            errs.append(_err("LOUDNESS_SKIPPED", "ffmpeg ebur128 unavailable", severity="warning"))
+    loudness_errs, _, _ = measure_loudness(path, expect)
+    errs.extend(loudness_errs)
     return errs
 
 
@@ -346,6 +448,17 @@ def main():
     ap.add_argument("--max-duration", type=float)
     ap.add_argument("--duration", type=float)
     ap.add_argument("--lufs-target", type=float)
+    ap.add_argument("--lufs-tolerance", type=float, default=0.5)
+    ap.add_argument("--lufs-required", action="store_true")
+    ap.add_argument("--true-peak-max", type=float, help="Maximum allowed true peak (dBFS)")
+    ap.add_argument("--true-peak-required", action="store_true")
+    ap.add_argument("--fps", type=float)
+    ap.add_argument("--fps-tolerance", type=float, default=0.02)
+    ap.add_argument("--video-codec")
+    ap.add_argument("--audio-codec")
+    ap.add_argument("--pixel-format")
+    ap.add_argument("--sample-rate", type=int)
+    ap.add_argument("--channels", type=int)
     ap.add_argument("--no-audio-required", action="store_true")
     args = ap.parse_args()
 
@@ -372,6 +485,27 @@ def main():
                 expect["duration"] = args.duration
             if args.lufs_target is not None:
                 expect["lufs_target"] = args.lufs_target
+            if args.lufs_tolerance is not None:
+                expect["lufs_tolerance"] = args.lufs_tolerance
+            if args.lufs_required:
+                expect["lufs_required"] = True
+            if args.true_peak_max is not None:
+                expect["true_peak_max"] = args.true_peak_max
+            if args.true_peak_required:
+                expect["true_peak_required"] = True
+            if args.fps is not None:
+                expect["fps"] = args.fps
+            expect["fps_tolerance"] = args.fps_tolerance
+            if args.video_codec:
+                expect["video_codec"] = args.video_codec
+            if args.audio_codec:
+                expect["audio_codec"] = args.audio_codec
+            if args.pixel_format:
+                expect["pixel_format"] = args.pixel_format
+            if args.sample_rate:
+                expect["sample_rate"] = args.sample_rate
+            if args.channels:
+                expect["channels"] = args.channels
             e = check_render(args.video, expect)
         elif name == "phrases":
             tl = args.timeline or os.path.join(

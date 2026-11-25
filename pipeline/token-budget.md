@@ -7,7 +7,7 @@
 - Stage start: latest `### Handoff` in `log.md`, not the whole log (`pipeline/stages.md`).
 - `components/index.md` for intent + ✓; rows by `grep -i '^| \[<Name>\]' components/index-full.md`. Icons by `grep -i '<brand>' icons/icons.md`. Never read `index-full.md` or `icons.md` whole.
 - Images only in the Opus vision subagent (`pipeline/video-inspect.md`); the main session reads text.
-- Prompt, time and tokens are logged by hooks (`pipeline/project-log.md`).
+- Prompt, time and tokens are logged by hooks (`pipeline/project-log.md`). Stop-hook lines may include `; models: <id> in … out …` per transcript `message.model`. Aggregate with `vt-python tools/vt_log.py summary projects/<name>/log.md` (`by_model` in JSON).
 - Optional skill material lives in `references/`; load it only when that path is used.
 - Editing prompts follow `templates/editing-prompt.md`; fixed rules live in `/reel` and `/coding-video`.
 
