@@ -100,6 +100,20 @@ class ProjectStateTest(unittest.TestCase):
             auth = authoritative_approvals(proj)
             self.assertTrue(auth["approvals"]["rough_cut"]["approved"])
 
+    def test_sync_recovers_corrupt_state(self):
+        with tempfile.TemporaryDirectory() as td:
+            proj = os.path.join(td, "p")
+            os.makedirs(proj)
+            with open(os.path.join(proj, "log.md"), "w") as f:
+                f.write("**Approval:** rough_cut=rejected\n")
+            with open(os.path.join(proj, "project-state.json"), "w") as f:
+                f.write("{bad")
+            st = sync_handoff(proj)
+            self.assertFalse(st["approvals"]["rough_cut"])
+            with open(os.path.join(proj, "project-state.json")) as f:
+                repaired = json.load(f)
+            self.assertEqual(repaired["approval_evidence"]["rough_cut"], "**Approval:** rough_cut=rejected")
+
     def test_set_approval_deprecated(self):
         with tempfile.TemporaryDirectory() as td:
             proj = os.path.join(td, "p")
