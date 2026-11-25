@@ -219,7 +219,7 @@ def ffprobe_json(path: str) -> dict:
                 "error",
                 "-show_entries",
                 "format=duration,size:stream=codec_type,codec_name,width,height,"
-                "r_frame_rate,pix_fmt,sample_rate,channels",
+                "r_frame_rate,avg_frame_rate,pix_fmt,sample_rate,channels",
                 "-of",
                 "json",
                 path,
@@ -239,8 +239,40 @@ def ffmpeg_full_decode(path: str) -> None:
     )
 
 
+def _loudness_requested(expect: dict) -> bool:
+    return bool(
+        expect.get("lufs_target") is not None
+        or expect.get("true_peak_max") is not None
+        or expect.get("lufs_required")
+        or expect.get("true_peak_required")
+    )
+
+
+def _parse_loudnorm_json(stderr: str) -> tuple[float | None, float | None]:
+    lufs = peak = None
+    for line in reversed(stderr.splitlines()):
+        s = line.strip()
+        if not s.startswith("{"):
+            continue
+        try:
+            data = json.loads(s)
+        except json.JSONDecodeError:
+            continue
+        if "input_i" in data:
+            lufs = float(data["input_i"])
+            if "input_tp" in data:
+                peak = float(data["input_tp"])
+            return lufs, peak
+    im = re.search(r"I:\s*(-?\d+\.\d+)\s*LUFS", stderr)
+    if im:
+        lufs = float(im.group(1))
+    return lufs, peak
+
+
 def measure_loudness(path: str, expect: dict) -> tuple[list, float | None, float | None]:
-    """Return (issues, integrated_lufs, true_peak_db)."""
+    """Return (issues, integrated_lufs, true_peak_db). Uses loudnorm JSON for true peak (input_tp)."""
+    if not _loudness_requested(expect):
+        return [], None, None
     errs = []
     try:
         proc = subprocess.run(
@@ -250,7 +282,7 @@ def measure_loudness(path: str, expect: dict) -> tuple[list, float | None, float
                 "-i",
                 path,
                 "-af",
-                "ebur128=framelog=0",
+                "loudnorm=I=-16:TP=-2:LRA=11:print_format=json",
                 "-f",
                 "null",
                 "-",
@@ -260,15 +292,12 @@ def measure_loudness(path: str, expect: dict) -> tuple[list, float | None, float
             timeout=180,
         )
     except (subprocess.TimeoutExpired, FileNotFoundError) as e:
-        if expect.get("lufs_required"):
-            errs.append(_err("LOUDNESS_SKIPPED", f"ffmpeg ebur128 unavailable: {e}", file=path))
+        if expect.get("lufs_required") or expect.get("true_peak_required"):
+            errs.append(_err("LOUDNESS_SKIPPED", f"ffmpeg loudnorm unavailable: {e}", file=path))
         else:
-            errs.append(_err("LOUDNESS_SKIPPED", "ffmpeg ebur128 unavailable", severity="warning"))
+            errs.append(_err("LOUDNESS_SKIPPED", "ffmpeg loudnorm unavailable", severity="warning"))
         return errs, None, None
-    im = re.search(r"I:\s*(-?\d+\.\d+)\s*LUFS", proc.stderr)
-    pm = re.search(r"Peak:\s*(-?\d+\.\d+)\s*dBFS", proc.stderr)
-    lufs = float(im.group(1)) if im else None
-    peak = float(pm.group(1)) if pm else None
+    lufs, peak = _parse_loudnorm_json(proc.stderr)
     if expect.get("lufs_target") is not None:
         if lufs is None:
             sev = "error" if expect.get("lufs_required") else "warning"
@@ -338,6 +367,9 @@ def check_render(path: str, expect: dict | None = None) -> list:
         errs.append(_err("BAD_PIXEL_FORMAT", f"pix_fmt {v.get('pix_fmt')}", file=path))
     if expect.get("fps") is not None:
         actual_fps = parse_frame_rate(v.get("r_frame_rate"))
+        avg_fps = parse_frame_rate(v.get("avg_frame_rate"))
+        if actual_fps is None and avg_fps is not None:
+            actual_fps = avg_fps
         if actual_fps is None:
             errs.append(_err("BAD_FRAME_RATE", f"unparseable fps {v.get('r_frame_rate')}", file=path))
         elif abs(actual_fps - expect["fps"]) > expect.get("fps_tolerance", 0.02):

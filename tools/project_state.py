@@ -3,12 +3,17 @@
 from __future__ import annotations
 
 import argparse
-import fcntl
 import json
 import os
 import re
 import sys
+import tempfile
 from datetime import datetime, timezone
+
+_REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
+from tools.project_log_lock import project_log_lock  # noqa: E402
 
 APPROVAL_STATUSES = ("approved", "rejected", "pending")
 
@@ -80,9 +85,18 @@ def save_state(project: str, state: dict) -> None:
     state["schema_version"] = SCHEMA_VERSION
     p = state_path(project)
     os.makedirs(os.path.dirname(p) or ".", exist_ok=True)
-    with open(p, "w") as f:
-        json.dump(state, f, indent=2)
-        f.write("\n")
+    fd, tmp = tempfile.mkstemp(dir=os.path.dirname(p) or ".", prefix=".state-")
+    try:
+        with os.fdopen(fd, "w") as f:
+            json.dump(state, f, indent=2)
+            f.write("\n")
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, p)
+    except Exception:
+        if os.path.isfile(tmp):
+            os.remove(tmp)
+        raise
 
 
 def parse_approvals_from_log(text: str) -> dict[str, dict]:
@@ -129,7 +143,9 @@ def authoritative_approvals(project: str) -> dict:
 def reconcile(project: str) -> dict:
     """Compare log approvals to project-state.json."""
     auth = authoritative_approvals(project)
-    state = load_state(project)
+    state, err = try_load_state(project)
+    if err or state is None:
+        state = default_state(project)
     st_ap = state.get("approvals") or {}
     issues = []
     for k in APPROVALS:
@@ -172,13 +188,36 @@ def parse_last_handoff(log_file: str) -> dict | None:
     return info
 
 
-def sync_handoff(project: str) -> dict:
-    state = load_state(project)
+def sync_stage_from_state_file(state: dict, project: str) -> str:
+    """Current stage for hook attribution — from mirror when valid."""
+    st, err = try_load_state(project)
+    if not err and st and st.get("stage") in STAGES:
+        return st["stage"]
+    if state.get("stage") in STAGES:
+        return state["stage"]
+    return "unknown"
+
+
+def _sync_handoff_body(project: str) -> dict:
+    state, err = try_load_state(project)
+    if err or state is None:
+        state = default_state(project)
+        if err == "INVALID_STATE_JSON" and os.path.isfile(state_path(project)):
+            corrupt = state_path(project) + ".corrupt"
+            try:
+                os.replace(state_path(project), corrupt)
+            except OSError:
+                pass
+    elif state.get("schema_version") != SCHEMA_VERSION:
+        preserved = {k: state[k] for k in ("project", "project_path", "master_language") if k in state}
+        state = default_state(project)
+        state.update(preserved)
     handoff = parse_last_handoff(log_path(project))
     auth = authoritative_approvals(project)
     for k in APPROVALS:
-        state["approvals"][k] = auth["approvals"][k]["approved"]
-        state["approval_evidence"][k] = auth["approvals"][k].get("evidence", "none")
+        ev = auth["approvals"][k]
+        state["approvals"][k] = ev["approved"]
+        state["approval_evidence"][k] = ev.get("evidence", "none")
     if handoff:
         line = handoff.get("stage_line", "")
         m = re.search(r"(\d)\s*·\s*(\w+)", line)
@@ -194,6 +233,11 @@ def sync_handoff(project: str) -> dict:
         state["status"] = "in_progress"
     save_state(project, state)
     return state
+
+
+def sync_handoff(project: str) -> dict:
+    with project_log_lock(project):
+        return _sync_handoff_body(project)
 
 
 def cmd_init(args):
@@ -212,24 +256,16 @@ def cmd_set_stage(args):
     save_state(args.project, st)
 
 
-def _append_log_line(project: str, line: str) -> None:
+def append_log_line(project: str, line: str) -> None:
     lp = log_path(project)
     os.makedirs(os.path.dirname(lp) or ".", exist_ok=True)
-    lock = lp + ".lock"
-    with open(lock, "a") as lf:
-        fcntl.flock(lf, fcntl.LOCK_EX)
-        try:
-            lead = ""
-            if os.path.isfile(lp) and os.path.getsize(lp):
-                with open(lp, "rb") as f:
-                    if not f.read().endswith(b"\n"):
-                        lead = "\n"
-            else:
-                lead = ""
-            with open(lp, "a") as f:
-                f.write(f"{lead}{line}\n")
-        finally:
-            fcntl.flock(lf, fcntl.LOCK_UN)
+    lead = ""
+    if os.path.isfile(lp) and os.path.getsize(lp):
+        with open(lp, "rb") as f:
+            if not f.read().endswith(b"\n"):
+                lead = "\n"
+    with open(lp, "a") as f:
+        f.write(f"{lead}{line}\n")
 
 
 def cmd_record_approval(args):
@@ -238,9 +274,19 @@ def cmd_record_approval(args):
         sys.exit(f"status must be one of: {', '.join(APPROVAL_STATUSES)}")
     if not os.path.isfile(log_path(args.project)):
         sys.exit("log.md missing; create the project first")
-    _append_log_line(args.project, f"**Approval:** {args.name}={status}")
-    sync_handoff(args.project)
+    sync_warning = None
+    with project_log_lock(args.project):
+        append_log_line(args.project, f"**Approval:** {args.name}={status}")
+        try:
+            _sync_handoff_body(args.project)
+        except Exception as exc:
+            sync_warning = str(exc)
     print(log_path(args.project))
+    if sync_warning:
+        sys.stderr.write(
+            f"warning: approval recorded in log.md but project-state.json sync failed: {sync_warning}\n"
+        )
+        sys.exit(1)
 
 
 def cmd_set_approval(args):

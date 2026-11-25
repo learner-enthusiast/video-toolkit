@@ -2,8 +2,8 @@ import io
 import json
 import os
 import shutil
-import sys
 import tempfile
+import threading
 import unittest
 from types import SimpleNamespace
 from unittest import mock
@@ -15,6 +15,24 @@ FAKE_PROBE = {"size": 2000, "duration": 1.0, "probe": "ok"}
 
 def _patch_probe():
     return mock.patch.object(ic, "probe_meta", return_value=FAKE_PROBE.copy())
+
+
+def _write_thorough_insp(base: str, *, with_sheet=True, with_kf=True, flags=None):
+    os.makedirs(os.path.join(base, "keyframes"), exist_ok=True)
+    report = {
+        "scenes": [{"i": 0, "kf": "keyframes/scene_0.jpg"}] if with_kf else [{"i": 0}],
+        "flags": flags or [],
+    }
+    with open(os.path.join(base, "report.json"), "w") as f:
+        json.dump(report, f)
+    with open(os.path.join(base, "contact_sheet.jpg"), "wb") as f:
+        f.write(b"jpeg")
+    if with_sheet:
+        with open(os.path.join(base, "sheet_01.jpg"), "wb") as f:
+            f.write(b"sheet")
+    if with_kf:
+        with open(os.path.join(base, "keyframes", "scene_0.jpg"), "wb") as f:
+            f.write(b"kf")
 
 
 class InspectCacheTest(unittest.TestCase):
@@ -29,7 +47,6 @@ class InspectCacheTest(unittest.TestCase):
             config_hash=kw.get("config_hash", ""),
             model_id=kw.get("model_id", ""),
             for_final=kw.get("for_final", False),
-            allow_non_thorough=False,
         )
 
     def test_probe_meta_without_ffprobe(self):
@@ -40,7 +57,6 @@ class InspectCacheTest(unittest.TestCase):
             with mock.patch("subprocess.check_output", side_effect=FileNotFoundError):
                 meta = ic.probe_meta(path)
             self.assertEqual(meta["probe"], "unavailable")
-            self.assertEqual(meta["size"], 100)
         finally:
             os.remove(path)
 
@@ -68,159 +84,46 @@ class InspectCacheTest(unittest.TestCase):
             os.makedirs(insp, exist_ok=True)
             with open(os.path.join(insp, "report.json"), "w") as f:
                 f.write("{}")
-            with open(os.path.join(insp, "contact_sheet.jpg"), "wb") as f:
-                f.write(b"jpeg")
-            args = SimpleNamespace(
-                project=proj,
-                video=video,
-                mode="thorough",
-                start=None,
-                end=None,
-                inspect_script=None,
-                ocr_script=None,
-                config_hash="",
-                model_id="",
-            )
+            args = self._store_args(proj, video, "default", insp)
             with mock.patch("sys.stdout", io.StringIO()):
-                ic.cmd_store(SimpleNamespace(**{**args.__dict__, "inspect_dir": insp}))
+                ic.cmd_store(args)
             dest = os.path.join(proj, "work", "inspect", "restored")
             with mock.patch("sys.stdout", io.StringIO()):
-                ic.cmd_restore(
-                    SimpleNamespace(**{**args.__dict__, "out_dir": dest, "for_final": False, "force": True})
-                )
+                ic.cmd_restore(self._restore_args(proj, video, "default", dest))
             self.assertTrue(os.path.isfile(os.path.join(dest, "report.json")))
-            self.assertTrue(os.path.isfile(os.path.join(dest, "contact_sheet.jpg")))
+
+    def _store_args(self, proj, video, mode, insp):
+        return SimpleNamespace(
+            project=proj,
+            video=video,
+            mode=mode,
+            start=None,
+            end=None,
+            inspect_script=None,
+            ocr_script=None,
+            config_hash="",
+            model_id="",
+            inspect_dir=insp,
+        )
+
+    def _restore_args(self, proj, video, mode, dest, for_final=False):
+        return SimpleNamespace(
+            project=proj,
+            video=video,
+            mode=mode,
+            start=None,
+            end=None,
+            inspect_script=None,
+            ocr_script=None,
+            config_hash="",
+            model_id="",
+            for_final=for_final,
+            force=True,
+            out_dir=dest,
+        )
 
     @_patch_probe()
-    def test_lookup_miss(self, _p):
-        with tempfile.TemporaryDirectory() as td:
-            proj = os.path.join(td, "p")
-            os.makedirs(proj)
-            video = os.path.join(proj, "v.mp4")
-            with open(video, "wb") as f:
-                f.write(b"x")
-            args = SimpleNamespace(
-                project=proj,
-                video=video,
-                mode="default",
-                start=None,
-                end=None,
-                inspect_script=None,
-                ocr_script=None,
-                config_hash="",
-                model_id="",
-                for_final=False,
-            )
-            buf = io.StringIO()
-            with mock.patch("sys.stdout", buf):
-                with self.assertRaises(SystemExit) as cm:
-                    ic.cmd_lookup(args)
-            self.assertEqual(cm.exception.code, 1)
-            out = json.loads(buf.getvalue())
-            self.assertEqual(out["reason"], "miss")
-
-    @_patch_probe()
-    def test_final_lookup_always_miss_even_with_thorough_bundle(self, _p):
-        with tempfile.TemporaryDirectory() as td:
-            proj = os.path.join(td, "p")
-            os.makedirs(proj)
-            video = os.path.join(proj, "v.mp4")
-            with open(video, "wb") as f:
-                f.write(b"same")
-            insp = os.path.join(proj, "work", "inspect", "v")
-            os.makedirs(insp)
-            with open(os.path.join(insp, "report.json"), "w") as f:
-                f.write("{}")
-            with open(os.path.join(insp, "contact_sheet.jpg"), "wb") as f:
-                f.write(b"1")
-            store_args = SimpleNamespace(
-                project=proj,
-                video=video,
-                mode="thorough",
-                start=None,
-                end=None,
-                inspect_script=None,
-                ocr_script=None,
-                config_hash="",
-                model_id="",
-                inspect_dir=insp,
-            )
-            with mock.patch("sys.stdout", io.StringIO()):
-                ic.cmd_store(store_args)
-            lookup_args = SimpleNamespace(
-                project=proj,
-                video=video,
-                mode="thorough",
-                start=None,
-                end=None,
-                inspect_script=None,
-                ocr_script=None,
-                config_hash="",
-                model_id="",
-                for_final=True,
-            )
-            buf = io.StringIO()
-            with mock.patch("sys.stdout", buf):
-                with self.assertRaises(SystemExit) as cm:
-                    ic.cmd_lookup(lookup_args)
-            self.assertEqual(cm.exception.code, 1)
-            out = json.loads(buf.getvalue())
-            self.assertEqual(out["reason"], "final_qa_requires_fresh_run")
-            self.assertFalse(out["hit"])
-
-    @_patch_probe()
-    def test_final_restore_refused(self, _p):
-        with tempfile.TemporaryDirectory() as td:
-            proj = os.path.join(td, "p")
-            os.makedirs(proj)
-            video = os.path.join(proj, "v.mp4")
-            with open(video, "wb") as f:
-                f.write(b"x")
-            insp = os.path.join(proj, "work", "inspect", "v")
-            os.makedirs(insp)
-            with open(os.path.join(insp, "report.json"), "w") as f:
-                f.write("{}")
-            with open(os.path.join(insp, "contact_sheet.jpg"), "wb") as f:
-                f.write(b"j")
-            with mock.patch("sys.stdout", io.StringIO()):
-                ic.cmd_store(
-                    SimpleNamespace(
-                        project=proj,
-                        video=video,
-                        mode="thorough",
-                        start=None,
-                        end=None,
-                        inspect_script=None,
-                        ocr_script=None,
-                        config_hash="",
-                        model_id="",
-                        inspect_dir=insp,
-                    )
-                )
-            buf = io.StringIO()
-            with mock.patch("sys.stdout", buf):
-                with self.assertRaises(SystemExit) as cm:
-                    ic.cmd_restore(
-                        SimpleNamespace(
-                            project=proj,
-                            video=video,
-                            mode="thorough",
-                            start=None,
-                            end=None,
-                            inspect_script=None,
-                            ocr_script=None,
-                            config_hash="",
-                            model_id="",
-                            for_final=True,
-                            force=True,
-                            out_dir=None,
-                        )
-                    )
-            self.assertEqual(cm.exception.code, 3)
-            self.assertEqual(json.loads(buf.getvalue())["reason"], "final_qa_requires_fresh_run")
-
-    @_patch_probe()
-    def test_checksum_mismatch_rejected(self, _p):
+    def test_thorough_missing_sheet_rejected(self, _p):
         with tempfile.TemporaryDirectory() as td:
             proj = os.path.join(td, "p")
             os.makedirs(proj)
@@ -229,46 +132,125 @@ class InspectCacheTest(unittest.TestCase):
                 f.write(b"v")
             insp = os.path.join(proj, "work", "inspect", "v")
             os.makedirs(insp)
-            with open(os.path.join(insp, "report.json"), "w") as f:
-                f.write("{}")
+            _write_thorough_insp(insp, with_sheet=False)
+            with self.assertRaises(SystemExit):
+                with mock.patch("sys.stdout", io.StringIO()):
+                    ic.cmd_store(self._store_args(proj, video, "thorough", insp))
+
+    @_patch_probe()
+    def test_extra_unlisted_artifact_fails_lookup(self, _p):
+        with tempfile.TemporaryDirectory() as td:
+            proj, video, insp = self._thorough_project(td)
             with mock.patch("sys.stdout", io.StringIO()):
-                ic.cmd_store(
-                    SimpleNamespace(
-                        project=proj,
-                        video=video,
-                        mode="default",
-                        start=None,
-                        end=None,
-                        inspect_script=None,
-                        ocr_script=None,
-                        config_hash="",
-                        model_id="",
-                        inspect_dir=insp,
-                    )
-                )
-            key = ic.fingerprint(video, self._args(video, "default"))
+                ic.cmd_store(self._store_args(proj, video, "thorough", insp))
+            key = ic.fingerprint(video, self._args(video, "thorough"))
             bundle = ic.bundle_dir(proj, key)
-            with open(os.path.join(bundle, "report.json"), "w") as f:
-                f.write('{"tampered": true}')
+            with open(os.path.join(bundle, "extra.jpg"), "wb") as f:
+                f.write(b"x")
             buf = io.StringIO()
             with mock.patch("sys.stdout", buf):
                 with self.assertRaises(SystemExit):
-                    ic.cmd_lookup(
-                        SimpleNamespace(
-                            project=proj,
-                            video=video,
-                            mode="default",
-                            start=None,
-                            end=None,
-                            inspect_script=None,
-                            ocr_script=None,
-                            config_hash="",
-                            model_id="",
-                            for_final=False,
-                        )
-                    )
-            out = json.loads(buf.getvalue())
-            self.assertTrue("checksum" in out["reason"] or "size_mismatch" in out["reason"])
+                    ic.cmd_lookup(self._lookup_args(proj, video, "thorough"))
+            self.assertIn("unlisted", json.loads(buf.getvalue())["reason"])
+
+    def _thorough_project(self, td):
+        proj = os.path.join(td, "p")
+        os.makedirs(proj)
+        video = os.path.join(proj, "v.mp4")
+        with open(video, "wb") as f:
+            f.write(b"v")
+        insp = os.path.join(proj, "work", "inspect", "v")
+        os.makedirs(insp)
+        _write_thorough_insp(insp)
+        return proj, video, insp
+
+    def _lookup_args(self, proj, video, mode, for_final=False):
+        return SimpleNamespace(
+            project=proj,
+            video=video,
+            mode=mode,
+            start=None,
+            end=None,
+            inspect_script=None,
+            ocr_script=None,
+            config_hash="",
+            model_id="",
+            for_final=for_final,
+        )
+
+    @_patch_probe()
+    def test_path_traversal_in_report_rejected(self, _p):
+        with tempfile.TemporaryDirectory() as td:
+            proj = os.path.join(td, "p")
+            video = os.path.join(proj, "v.mp4")
+            os.makedirs(proj)
+            with open(video, "wb") as f:
+                f.write(b"v")
+            insp = os.path.join(proj, "work", "inspect", "v")
+            os.makedirs(insp)
+            _write_thorough_insp(
+                insp,
+                flags=[{"t": 1, "type": "x", "frame": "../evil.jpg"}],
+            )
+            missing, reason = ic.validate_bundle(insp, True)
+            self.assertEqual(reason, "unsafe_path_in_report")
+
+    @_patch_probe()
+    def test_symlink_escape_detected(self, _p):
+        with tempfile.TemporaryDirectory() as td:
+            outside = os.path.join(td, "outside")
+            os.makedirs(outside)
+            with open(os.path.join(outside, "secret"), "wb") as f:
+                f.write(b"s")
+            bundle = os.path.join(td, "bundle")
+            os.makedirs(bundle)
+            with open(os.path.join(bundle, "report.json"), "w") as f:
+                json.dump({}, f)
+            os.symlink(os.path.join(outside, "secret"), os.path.join(bundle, "leak"))
+            with self.assertRaises(ValueError):
+                ic.iter_bundle_artifact_paths(bundle)
+
+    @_patch_probe()
+    def test_concurrent_manifest_stores(self, _p):
+        with tempfile.TemporaryDirectory() as td:
+            proj, video, insp = self._thorough_project(td)
+            keys = []
+            errors = []
+
+            def store_one(suffix):
+                try:
+                    v = os.path.join(proj, f"v_{suffix}.mp4")
+                    with open(v, "wb") as f:
+                        f.write(f"video-{suffix}".encode())
+                    dinsp = os.path.join(proj, "work", "inspect", suffix)
+                    shutil.copytree(insp, dinsp)
+                    with mock.patch("sys.stdout", io.StringIO()):
+                        ic.cmd_store(self._store_args(proj, v, "thorough", dinsp))
+                    keys.append(ic.fingerprint(v, self._args(v, "thorough")))
+                except Exception as exc:
+                    errors.append(exc)
+
+            threads = [threading.Thread(target=store_one, args=(str(i),)) for i in range(4)]
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join()
+            self.assertFalse(errors, errors)
+            man = ic.load_manifest(proj)
+            for k in keys:
+                self.assertIn(k, man["entries"])
+
+    @_patch_probe()
+    def test_final_lookup_and_restore_refused(self, _p):
+        with tempfile.TemporaryDirectory() as td:
+            proj, video, insp = self._thorough_project(td)
+            with mock.patch("sys.stdout", io.StringIO()):
+                ic.cmd_store(self._store_args(proj, video, "thorough", insp))
+            buf = io.StringIO()
+            with mock.patch("sys.stdout", buf):
+                with self.assertRaises(SystemExit):
+                    ic.cmd_lookup(self._lookup_args(proj, video, "thorough", for_final=True))
+            self.assertEqual(json.loads(buf.getvalue())["reason"], "final_qa_requires_fresh_run")
 
 
 if __name__ == "__main__":

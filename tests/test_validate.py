@@ -87,6 +87,12 @@ class ValidateTest(unittest.TestCase):
         self.assertAlmostEqual(vt_validate.parse_frame_rate("30/1"), 30.0)
         self.assertIsNone(vt_validate.parse_frame_rate("0/0"))
 
+    def test_measure_loudness_skipped_without_expectation(self):
+        errs, lufs, peak = vt_validate.measure_loudness("dummy.mp4", {})
+        self.assertEqual(errs, [])
+        self.assertIsNone(lufs)
+        self.assertIsNone(peak)
+
     def test_check_render_mocked(self):
         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as vf:
             vf.write(b"\x00" * 512)

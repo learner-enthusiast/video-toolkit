@@ -55,19 +55,23 @@ def manifest_path(project: str) -> str:
     return os.path.join(project, MANIFEST)
 
 
-def load_manifest(project: str) -> dict:
+def _read_manifest_file(project: str) -> tuple[dict, str | None]:
     p = manifest_path(project)
-    if os.path.isfile(p):
+    if not os.path.isfile(p):
+        return {"version": CACHE_VERSION, "entries": {}}, None
+    try:
         with open(p) as f:
             data = json.load(f)
-        if data.get("version") != CACHE_VERSION:
-            return {"version": CACHE_VERSION, "entries": {}}
-        return data
-    return {"version": CACHE_VERSION, "entries": {}}
+    except json.JSONDecodeError:
+        return {"version": CACHE_VERSION, "entries": {}}, "corrupt_manifest"
+    if not isinstance(data, dict) or "entries" not in data:
+        return {"version": CACHE_VERSION, "entries": {}}, "invalid_manifest"
+    if data.get("version") != CACHE_VERSION:
+        return {"version": CACHE_VERSION, "entries": {}}, "schema_mismatch"
+    return data, None
 
 
-def save_manifest(project: str, manifest: dict) -> None:
-    manifest["version"] = CACHE_VERSION
+def manifest_transaction(project: str, mutate) -> dict:
     p = manifest_path(project)
     os.makedirs(os.path.dirname(p), exist_ok=True)
     lock_path = p + ".lock"
@@ -75,10 +79,16 @@ def save_manifest(project: str, manifest: dict) -> None:
     with open(lock_path, "a") as lf:
         fcntl.flock(lf, fcntl.LOCK_EX)
         try:
+            man, _ = _read_manifest_file(project)
+            mutate(man)
+            man["version"] = CACHE_VERSION
             with os.fdopen(fd, "w") as f:
-                json.dump(manifest, f, indent=2)
+                json.dump(man, f, indent=2)
                 f.write("\n")
+                f.flush()
+                os.fsync(f.fileno())
             os.replace(tmp, p)
+            return man
         except Exception:
             if os.path.isfile(tmp):
                 os.remove(tmp)
@@ -87,11 +97,20 @@ def save_manifest(project: str, manifest: dict) -> None:
             fcntl.flock(lf, fcntl.LOCK_UN)
 
 
+def load_manifest(project: str) -> dict:
+    man, _ = _read_manifest_file(project)
+    return man
+
+
 def bundle_root(project: str, key: str) -> str:
     return os.path.join(project, "work", "cache", "bundles", key)
 
 
-def verify_entry(project: str, ent: dict) -> tuple[bool, str]:
+def verify_entry(project: str, ent: dict, key: str | None = None) -> tuple[bool, str]:
+    if ent.get("schema") and ent["schema"] != CACHE_VERSION:
+        return False, "schema_mismatch"
+    if key and ent.get("cache_key") and ent["cache_key"] != key:
+        return False, "fingerprint_mismatch"
     path = os.path.join(project, ent["path"])
     if not os.path.isfile(path):
         return False, "missing_file"
@@ -114,11 +133,16 @@ def cmd_lookup(args):
         script_path=args.script,
         tool_version=args.tool_version,
     )
-    man = load_manifest(args.project)
+    man, man_err = _read_manifest_file(args.project)
+    if man_err:
+        out = {"hit": False, "key": key, "reason": man_err, "entry": None}
+        json.dump(out, sys.stdout, indent=2)
+        sys.stdout.write("\n")
+        sys.exit(1)
     ent = man["entries"].get(key)
     out = {"hit": False, "key": key, "reason": "miss", "entry": ent}
     if ent:
-        ok, reason = verify_entry(args.project, ent)
+        ok, reason = verify_entry(args.project, ent, key)
         out["hit"] = ok
         out["reason"] = reason
         if ok:
@@ -150,19 +174,23 @@ def cmd_store(args):
     shutil.copy2(args.output, tmp)
     os.replace(tmp, target)
     rel = os.path.relpath(target, args.project)
-    man = load_manifest(args.project)
-    man["entries"][key] = {
+    entry = {
         "op": args.op,
         "path": rel,
         "input": os.path.abspath(args.input),
         "params": params,
         "tool_version": args.tool_version or "unknown",
         "schema": CACHE_VERSION,
+        "cache_key": key,
         "size": out_size,
         "sha256": out_hash,
         "implementation": implementation_hash(),
     }
-    save_manifest(args.project, man)
+
+    def _add(man: dict) -> None:
+        man.setdefault("entries", {})[key] = entry
+
+    manifest_transaction(args.project, _add)
     print(target)
 
 
@@ -170,13 +198,14 @@ def cmd_probe_ffprobe(args):
     """Store ffprobe JSON for a media file if cache miss."""
     params = {"tool": "ffprobe", "entries": args.entries or "format,duration:stream=codec_type"}
     key = cache_key("ffprobe", args.input, params, tool_version=args.tool_version or "unknown")
-    man = load_manifest(args.project)
-    ent = man["entries"].get(key)
-    if ent and not args.force:
-        ok, reason = verify_entry(args.project, ent)
-        if ok:
-            print(os.path.join(args.project, ent["path"]))
-            return
+    man, man_err = _read_manifest_file(args.project)
+    if not man_err:
+        ent = man["entries"].get(key)
+        if ent and not args.force:
+            ok, reason = verify_entry(args.project, ent, key)
+            if ok:
+                print(os.path.join(args.project, ent["path"]))
+                return
     try:
         out = subprocess.check_output(
             ["ffprobe", "-v", "error", "-show_entries", params["entries"], "-of", "json", args.input],
@@ -184,25 +213,37 @@ def cmd_probe_ffprobe(args):
         )
     except FileNotFoundError:
         sys.exit("ffprobe not available")
+    try:
+        json.loads(out)
+    except json.JSONDecodeError:
+        sys.exit("ffprobe returned invalid JSON")
     dest = bundle_root(args.project, key)
     os.makedirs(dest, exist_ok=True)
     target = os.path.join(dest, "probe.json")
-    with open(target, "w") as f:
+    tmp = target + ".tmp"
+    with open(tmp, "w") as f:
         f.write(out)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, target)
     rel = os.path.relpath(target, args.project)
-    man = load_manifest(args.project)
-    man["entries"][key] = {
+    entry = {
         "op": "ffprobe",
         "path": rel,
         "input": os.path.abspath(args.input),
         "params": params,
         "tool_version": args.tool_version or "unknown",
         "schema": CACHE_VERSION,
+        "cache_key": key,
         "size": os.path.getsize(target),
         "sha256": sha256_file(target),
         "implementation": implementation_hash(),
     }
-    save_manifest(args.project, man)
+
+    def _add(man: dict) -> None:
+        man.setdefault("entries", {})[key] = entry
+
+    manifest_transaction(args.project, _add)
     print(target)
 
 

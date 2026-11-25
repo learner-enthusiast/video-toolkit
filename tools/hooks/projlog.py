@@ -10,7 +10,6 @@ conversation), never exits non-zero; errors go to <project>/work/logs/hooks.log
 """
 import contextlib
 import datetime as dt
-import fcntl
 import glob
 import json
 import os
@@ -18,6 +17,13 @@ import re
 import sys
 import time
 import traceback
+
+_HOOKS_DIR = os.path.dirname(os.path.abspath(__file__))
+_TOOLS_DIR = os.path.abspath(os.path.join(_HOOKS_DIR, ".."))
+if _TOOLS_DIR not in sys.path:
+    sys.path.insert(0, os.path.dirname(_TOOLS_DIR))
+
+from tools.project_log_lock import project_log_lock  # noqa: E402
 
 IST = dt.timezone(dt.timedelta(hours=5, minutes=30), "IST")
 PROJECT_MARKERS = ("log.md", "raw", "script.md", "work")
@@ -83,16 +89,22 @@ def current_project(root):
 
 @contextlib.contextmanager
 def log_lock(root, project):
-    """Exclusive lock on the project's log.md (work/logs/.log.lock), so the prompt
-    hook's append and the Stop hook's read-modify-write never interleave."""
-    d = os.path.join(root, project, "work", "logs")
-    os.makedirs(d, exist_ok=True)
-    with open(os.path.join(d, ".log.lock"), "a") as lf:
-        fcntl.flock(lf, fcntl.LOCK_EX)
-        try:
-            yield
-        finally:
-            fcntl.flock(lf, fcntl.LOCK_UN)
+    """Canonical project log lock (same as project_state.record-approval)."""
+    with project_log_lock(os.path.join(root, project)):
+        yield
+
+
+def capture_project_stage(root, project) -> str:
+    try:
+        from tools import project_state as pst
+
+        absp = os.path.join(root, project)
+        st, err = pst.try_load_state(absp)
+        if not err and st and st.get("stage") in pst.STAGES:
+            return st["stage"]
+    except Exception:
+        pass
+    return "unknown"
 
 
 def utc_now_iso():
@@ -141,9 +153,17 @@ def cmd_prompt(data, root):
     elif not mentioned:
         project = current_project(root)
     now = dt.datetime.now(IST)
-    st = {"prompt": prompt, "started_utc": utc_now_iso(), "started_local": now.isoformat(),
-          "mentioned": mentioned, "project": None, "prompt_ref": None}
+    st = {
+        "prompt": prompt,
+        "started_utc": utc_now_iso(),
+        "started_local": now.isoformat(),
+        "mentioned": mentioned,
+        "project": None,
+        "prompt_ref": None,
+        "stage": "unknown",
+    }
     if project:
+        st["stage"] = capture_project_stage(root, project)
         write_header(root, project, st)
     # else: a path to a project that doesn't exist yet; Stop retries once the turn created it
     with open(os.path.join(state_dir(root), f"{sid}.json"), "w") as f:
@@ -203,16 +223,26 @@ def fmt(t):
             f"cache read {t['cache_read']:,} · output {t['output']:,}")
 
 
-def fmt_models(by_model: dict) -> str:
-    if not by_model:
-        return ""
+def _fmt_model_bucket(by_model: dict) -> str:
     parts = []
     for model in sorted(by_model):
         t = by_model[model]
         parts.append(
             f"{model} in {t['input']:,} cw {t['cache_write']:,} cr {t['cache_read']:,} out {t['output']:,}"
         )
-    return "; models: " + " · ".join(parts)
+    return " · ".join(parts)
+
+
+def fmt_models_footer(main_models: dict, sub_models: dict) -> str:
+    chunks = []
+    if main_models:
+        chunks.append(f"main: {_fmt_model_bucket(main_models)}")
+    combined_sub = dict(sub_models or {})
+    if combined_sub:
+        chunks.append(f"sub: {_fmt_model_bucket(combined_sub)}")
+    if not chunks:
+        return ""
+    return "; models " + " | ".join(chunks)
 
 
 def insert_footer(log, prompt_ref, footer):
@@ -286,10 +316,10 @@ def cmd_tokens(data, root):
     )
     for k in sub:
         sub[k] += side[k] if side else 0
-    merged_models = dict(main_models or {})
+    sub_combined: dict[str, dict] = {}
     for src in (sub_models or {}, side_models or {}):
         for model, t in src.items():
-            dst = merged_models.setdefault(
+            dst = sub_combined.setdefault(
                 model, dict(input=0, cache_write=0, cache_read=0, output=0)
             )
             for key in dst:
@@ -302,10 +332,14 @@ def cmd_tokens(data, root):
     if n_main:
         tok = f"**Tokens:** {fmt(main)} (main session"
         tok += f"; subagents: {fmt(sub)})" if (n_sub or n_side) else "; subagents: none)"
-        tok += fmt_models(merged_models)
+        tok += fmt_models_footer(main_models or {}, sub_combined)
     else:
         tok = "**Tokens:** not available (no assistant usage found in the transcript)"
-    footer = (f"**Finished** {finished.astimezone(IST):%H:%M:%S} · **Took** {took}\n{tok}")
+    stage = st.get("stage") or "unknown"
+    footer = (
+        f"**Finished** {finished.astimezone(IST):%H:%M:%S} · **Took** {took}\n"
+        f"**Stage:** {stage}\n{tok}"
+    )
     with log_lock(root, project):
         insert_footer(os.path.join(root, project, "log.md"), st["prompt_ref"], footer)
     drop_state(sp, started_key)

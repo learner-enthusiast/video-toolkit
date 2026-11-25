@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import fcntl
 import fnmatch
+import glob
 import hashlib
 import json
 import os
@@ -12,6 +13,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import uuid
 
 CACHE_SCHEMA = 3
 MANIFEST = "work/inspect/.cache-manifest.json"
@@ -31,16 +33,11 @@ def sha256_file(path: str, chunk=1024 * 1024) -> str:
     return h.hexdigest()
 
 
-def sha256_bytes(data: bytes) -> str:
-    return hashlib.sha256(data).hexdigest()
-
-
 def implementation_hash() -> str:
     return sha256_file(os.path.abspath(__file__))[:16]
 
 
 def probe_meta(path: str) -> dict:
-    """Probe container metadata via ffprobe when available."""
     size = os.path.getsize(path) if os.path.isfile(path) else 0
     try:
         out = subprocess.check_output(
@@ -106,66 +103,182 @@ def manifest_path(project: str) -> str:
     return os.path.join(project, MANIFEST)
 
 
-def load_manifest(project: str) -> dict:
+def _read_manifest_file(project: str) -> dict:
     p = manifest_path(project)
-    if os.path.isfile(p):
+    if not os.path.isfile(p):
+        return {"schema": CACHE_SCHEMA, "entries": {}}
+    try:
         with open(p) as f:
             data = json.load(f)
-        if data.get("schema") != CACHE_SCHEMA:
-            return {"schema": CACHE_SCHEMA, "entries": {}}
-        return data
-    return {"schema": CACHE_SCHEMA, "entries": {}}
+    except json.JSONDecodeError:
+        return {"schema": CACHE_SCHEMA, "entries": {}, "_corrupt_previous": True}
+    if not isinstance(data, dict):
+        return {"schema": CACHE_SCHEMA, "entries": {}}
+    if data.get("schema") != CACHE_SCHEMA:
+        return {"schema": CACHE_SCHEMA, "entries": {}}
+    data.setdefault("entries", {})
+    return data
 
 
-def save_manifest_atomic(project: str, manifest: dict) -> None:
-    manifest["schema"] = CACHE_SCHEMA
+def manifest_transaction(project: str, mutate) -> dict:
+    """Lock → read → mutate → atomic write."""
     p = manifest_path(project)
     os.makedirs(os.path.dirname(p), exist_ok=True)
     lock_path = p + ".lock"
     fd, tmp = tempfile.mkstemp(dir=os.path.dirname(p), prefix=".manifest-")
-    try:
-        with open(lock_path, "a") as lf:
-            fcntl.flock(lf, fcntl.LOCK_EX)
-            try:
-                with os.fdopen(fd, "w") as f:
-                    json.dump(manifest, f, indent=2)
-                    f.write("\n")
-                os.replace(tmp, p)
-            finally:
-                fcntl.flock(lf, fcntl.LOCK_UN)
-    except Exception:
-        if os.path.isfile(tmp):
-            os.remove(tmp)
-        raise
+    with open(lock_path, "a") as lf:
+        fcntl.flock(lf, fcntl.LOCK_EX)
+        try:
+            man = _read_manifest_file(project)
+            mutate(man)
+            man["schema"] = CACHE_SCHEMA
+            man.pop("_corrupt_previous", None)
+            with os.fdopen(fd, "w") as f:
+                json.dump(man, f, indent=2)
+                f.write("\n")
+            os.replace(tmp, p)
+            return man
+        except Exception:
+            if os.path.isfile(tmp):
+                os.remove(tmp)
+            raise
+        finally:
+            fcntl.flock(lf, fcntl.LOCK_UN)
+
+
+def load_manifest(project: str) -> dict:
+    return _read_manifest_file(project)
 
 
 def bundle_dir(project: str, key: str) -> str:
     return os.path.join(project, "work", "inspect", ".cache", key)
 
 
-def _safe_relpath(root: str, path: str) -> str | None:
-    rel = os.path.relpath(path, root)
-    if rel.startswith("..") or os.path.isabs(rel):
+def normalize_relpath(rel: str) -> str | None:
+    if not rel or os.path.isabs(rel):
         return None
-    return rel.replace("\\", "/")
+    norm = os.path.normpath(rel).replace("\\", "/")
+    if norm in (".", "") or norm.startswith("../") or "/../" in f"/{norm}/":
+        return None
+    return norm
 
 
-def artifact_manifest(bundle_path: str) -> list[dict]:
-    rows = []
-    for dirpath, _, files in os.walk(bundle_path):
+def resolve_in_bundle(bundle_root: str, rel: str) -> str | None:
+    nrel = normalize_relpath(rel)
+    if not nrel:
+        return None
+    root = os.path.realpath(bundle_root)
+    candidate = os.path.realpath(os.path.join(bundle_root, nrel))
+    if candidate == root:
+        return None
+    if not candidate.startswith(root + os.sep):
+        return None
+    return candidate
+
+
+def iter_bundle_artifact_paths(bundle_root: str) -> list[str]:
+    """Relative paths of all non-metadata files (follows symlinks for listing)."""
+    found: list[str] = []
+    for dirpath, _, files in os.walk(bundle_root):
         for fn in files:
             if fn in METADATA_FILES:
                 continue
             ap = os.path.join(dirpath, fn)
-            rel = _safe_relpath(bundle_path, ap)
-            if not rel:
-                raise ValueError(f"unsafe bundle path: {ap}")
-            rows.append({"path": rel, "size": os.path.getsize(ap), "sha256": sha256_file(ap)})
-    rows.sort(key=lambda r: r["path"])
+            rel = os.path.relpath(ap, bundle_root).replace("\\", "/")
+            if not normalize_relpath(rel):
+                raise ValueError(f"unsafe_path:{rel}")
+            if os.path.islink(ap):
+                if resolve_in_bundle(bundle_root, rel) is None:
+                    raise ValueError(f"symlink_escape:{rel}")
+            found.append(rel)
+    found.sort()
+    return found
+
+
+def artifact_manifest(bundle_path: str) -> list[dict]:
+    rows = []
+    for rel in iter_bundle_artifact_paths(bundle_path):
+        fp = os.path.join(bundle_path, rel)
+        rows.append({"path": rel, "size": os.path.getsize(fp), "sha256": sha256_file(fp)})
     return rows
 
 
-def verify_integrity(bundle_path: str) -> tuple[bool, str]:
+def parse_report_requirements(bundle_path: str, thorough: bool) -> tuple[list[str], str | None]:
+    """Derive required artifact paths from report.json and mode."""
+    reqs = list(REQUIRED_FOR_VISUAL if thorough else REQUIRED_FOR_FULL)
+    report_path = os.path.join(bundle_path, "report.json")
+    if not os.path.isfile(report_path):
+        return reqs, None
+    try:
+        with open(report_path) as f:
+            rep = json.load(f)
+    except json.JSONDecodeError:
+        return [], "corrupt_report_json"
+    if not isinstance(rep, dict):
+        return [], "corrupt_report_json"
+
+    if thorough:
+        sheets = [
+            os.path.basename(p)
+            for p in glob.glob(os.path.join(bundle_path, "sheet_*.jpg"))
+        ]
+        sheets.sort()
+        if not sheets:
+            reqs.append("sheet_*.jpg")
+        else:
+            reqs.extend(sheets)
+
+        scenes = rep.get("scenes")
+        if scenes is None:
+            reqs.append("scenes[]")
+        elif isinstance(scenes, list):
+            for i, sc in enumerate(scenes):
+                if not isinstance(sc, dict):
+                    continue
+                kf = sc.get("kf")
+                if kf and isinstance(kf, str):
+                    rel = kf.replace("\\", "/")
+                    if normalize_relpath(rel):
+                        reqs.append(rel)
+                    else:
+                        return [], "unsafe_path_in_report"
+                elif thorough:
+                    fallback = f"keyframes/scene_{sc.get('i', i)}.jpg"
+                    if os.path.isfile(os.path.join(bundle_path, fallback)):
+                        reqs.append(fallback)
+                    else:
+                        idx = sc.get("i", i)
+                        reqs.append(f"keyframes/scene_{idx}.jpg")
+
+        for flag in rep.get("flags") or []:
+            if not isinstance(flag, dict):
+                continue
+            frame = flag.get("frame")
+            if not frame:
+                ftype = flag.get("type") or "flag"
+                t = flag.get("t", 0)
+                frame = f"keyframes/flag_{t}_{ftype}.jpg"
+            if isinstance(frame, str):
+                rel = frame.replace("\\", "/")
+                if not normalize_relpath(rel):
+                    return [], "unsafe_path_in_report"
+                reqs.append(rel)
+
+    seen = set()
+    out = []
+    for r in reqs:
+        if r not in seen:
+            seen.add(r)
+            out.append(r)
+    return out, None
+
+
+def verify_integrity(
+    bundle_path: str,
+    *,
+    expected_key: str | None = None,
+    expected_mode: str | None = None,
+) -> tuple[bool, str]:
     ipath = os.path.join(bundle_path, "integrity.json")
     if not os.path.isfile(ipath):
         return False, "missing_integrity_manifest"
@@ -174,59 +287,77 @@ def verify_integrity(bundle_path: str) -> tuple[bool, str]:
             data = json.load(f)
     except json.JSONDecodeError:
         return False, "corrupt_integrity_manifest"
+    if not isinstance(data, dict):
+        return False, "corrupt_integrity_manifest"
     if data.get("schema") != CACHE_SCHEMA:
         return False, "schema_mismatch"
-    for row in data.get("artifacts") or []:
+    if expected_key and data.get("fingerprint") != expected_key:
+        return False, "fingerprint_mismatch"
+    if expected_mode and data.get("mode") != expected_mode:
+        return False, "mode_mismatch"
+
+    listed = data.get("artifacts")
+    if not isinstance(listed, list) or len(listed) == 0:
+        on_disk = iter_bundle_artifact_paths(bundle_path)
+        if on_disk:
+            return False, "empty_integrity_manifest"
+        return True, "ok"
+
+    listed_paths = set()
+    for row in listed:
+        if not isinstance(row, dict):
+            return False, "corrupt_integrity_manifest"
         rel = row.get("path")
-        if not rel or ".." in rel:
+        nrel = normalize_relpath(str(rel)) if rel else None
+        if not nrel:
             return False, "unsafe_path"
-        fp = os.path.join(bundle_path, rel)
-        if not os.path.isfile(fp):
-            return False, f"missing_file:{rel}"
-        if os.path.getsize(fp) != row.get("size"):
-            return False, f"size_mismatch:{rel}"
-        if sha256_file(fp) != row.get("sha256"):
-            return False, f"checksum_mismatch:{rel}"
+        listed_paths.add(nrel)
+        resolved = resolve_in_bundle(bundle_path, nrel)
+        if not resolved or not os.path.isfile(resolved):
+            return False, f"missing_file:{nrel}"
+        if os.path.getsize(resolved) != row.get("size"):
+            return False, f"size_mismatch:{nrel}"
+        if sha256_file(resolved) != row.get("sha256"):
+            return False, f"checksum_mismatch:{nrel}"
+
+    on_disk = set(iter_bundle_artifact_paths(bundle_path))
+    extra = on_disk - listed_paths
+    if extra:
+        return False, f"unlisted_artifact:{sorted(extra)[0]}"
+    missing = listed_paths - on_disk
+    if missing:
+        return False, f"missing_file:{sorted(missing)[0]}"
     return True, "ok"
 
 
-def required_artifacts(bundle_path: str, thorough: bool) -> list[str]:
-    reqs = list(REQUIRED_FOR_VISUAL if thorough else REQUIRED_FOR_FULL)
-    report_path = os.path.join(bundle_path, "report.json")
-    if os.path.isfile(report_path):
-        try:
-            with open(report_path) as f:
-                rep = json.load(f)
-            for flag in rep.get("flags") or []:
-                if not isinstance(flag, dict):
-                    continue
-                for key in ("frame", "path", "image"):
-                    img = flag.get(key)
-                    if img and isinstance(img, str) and ".." not in img:
-                        reqs.append(img)
-        except (json.JSONDecodeError, OSError):
-            pass
-    # de-dupe preserving order
-    seen = set()
-    out = []
-    for r in reqs:
-        if r not in seen:
-            seen.add(r)
-            out.append(r)
-    return out
-
-
-def validate_bundle(path: str, thorough: bool) -> tuple[list[str], str | None]:
+def validate_bundle(
+    path: str,
+    thorough: bool,
+    *,
+    cache_key: str | None = None,
+    mode: str | None = None,
+) -> tuple[list[str], str | None]:
     missing = []
-    for req in required_artifacts(path, thorough):
-        if not os.path.isfile(os.path.join(path, req)):
+    reqs, report_err = parse_report_requirements(path, thorough)
+    if report_err:
+        return [], report_err
+    for req in reqs:
+        if req.startswith("sheet_") and req.endswith("*.jpg"):
+            if not glob.glob(os.path.join(path, "sheet_*.jpg")):
+                missing.append(req)
+            continue
+        if not os.path.isfile(os.path.join(path, req)) and not os.path.isfile(
+            resolve_in_bundle(path, req) or ""
+        ):
             missing.append(req)
     for meta in ("bundle.json", "integrity.json"):
         if not os.path.isfile(os.path.join(path, meta)):
             missing.append(meta)
     if missing:
         return missing, "incomplete_bundle"
-    ok, reason = verify_integrity(path)
+    ok, reason = verify_integrity(
+        path, expected_key=cache_key, expected_mode=mode if thorough else mode
+    )
     if not ok:
         return [], reason
     return [], None
@@ -251,6 +382,38 @@ def write_integrity_manifest(bundle: str, fingerprint_key: str, mode: str) -> No
         f.write("\n")
 
 
+def atomic_install_bundle(src: str, dest: str) -> None:
+    """Stage copy, then promote under per-bundle lock; keep prior bundle on failure."""
+    parent = os.path.dirname(dest)
+    os.makedirs(parent, exist_ok=True)
+    token = uuid.uuid4().hex[:12]
+    staged = os.path.join(parent, f".bundle-staging-{token}")
+    if os.path.exists(staged):
+        shutil.rmtree(staged)
+    shutil.copytree(src, staged)
+    lock_path = dest + ".lock"
+    bak = dest + ".bak"
+    with open(lock_path, "a") as lf:
+        fcntl.flock(lf, fcntl.LOCK_EX)
+        try:
+            if os.path.isdir(dest):
+                if os.path.isdir(bak):
+                    shutil.rmtree(bak)
+                os.rename(dest, bak)
+            try:
+                os.rename(staged, dest)
+            except OSError:
+                if os.path.isdir(bak) and not os.path.isdir(dest):
+                    os.rename(bak, dest)
+                if os.path.isdir(staged):
+                    shutil.rmtree(staged)
+                raise
+            if os.path.isdir(bak):
+                shutil.rmtree(bak)
+        finally:
+            fcntl.flock(lf, fcntl.LOCK_UN)
+
+
 def cmd_lookup(args):
     key = fingerprint(args.video, args)
     if getattr(args, "for_final", False):
@@ -273,9 +436,16 @@ def cmd_lookup(args):
     hit = False
     if ent:
         bpath = os.path.join(project, ent["bundle_dir"])
-        missing, integrity_reason = validate_bundle(bpath, thorough_required)
+        missing, integrity_reason = validate_bundle(
+            bpath,
+            thorough_required,
+            cache_key=key,
+            mode=args.mode,
+        )
         if ent.get("fingerprint") and ent["fingerprint"] != key:
             reason = "fingerprint_mismatch"
+        elif ent.get("mode") and ent["mode"] != args.mode:
+            reason = "mode_mismatch"
         elif missing:
             reason = f"incomplete_bundle:{','.join(missing)}"
         elif integrity_reason and integrity_reason != "ok":
@@ -297,18 +467,6 @@ def cmd_lookup(args):
     sys.exit(0 if hit else 1)
 
 
-def _atomic_copy_tree(src: str, dest: str) -> None:
-    parent = os.path.dirname(dest)
-    os.makedirs(parent, exist_ok=True)
-    tmp = dest + ".tmp"
-    if os.path.exists(tmp):
-        shutil.rmtree(tmp)
-    shutil.copytree(src, tmp)
-    if os.path.exists(dest):
-        shutil.rmtree(dest)
-    os.rename(tmp, dest)
-
-
 def cmd_store(args):
     key = fingerprint(args.video, args)
     project = args.project
@@ -324,25 +482,26 @@ def cmd_store(args):
             "video": os.path.abspath(args.video),
             "mode": args.mode,
             "stored_at": __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat(),
-            "artifacts": sorted(
-                n for n in os.listdir(bundle) if not fnmatch.fnmatch(n, ".*")
-            ),
         }
         write_bundle_meta(bundle, meta)
         write_integrity_manifest(bundle, key, args.mode)
-        missing, _ = validate_bundle(bundle, args.mode == "thorough")
-        if missing:
-            sys.exit(f"cannot store incomplete bundle: {missing}")
-        _atomic_copy_tree(bundle, dest)
-    man = load_manifest(project)
-    man.setdefault("entries", {})[key] = {
+        missing, err = validate_bundle(bundle, args.mode == "thorough", cache_key=key, mode=args.mode)
+        if missing or err:
+            sys.exit(f"cannot store incomplete bundle: {missing or err}")
+        atomic_install_bundle(bundle, dest)
+
+    entry = {
         "bundle_dir": os.path.relpath(dest, project),
         "mode": args.mode,
         "video": os.path.abspath(args.video),
         "fingerprint": key,
         "reason": "stored",
     }
-    save_manifest_atomic(project, man)
+
+    def _add(man: dict) -> None:
+        man.setdefault("entries", {})[key] = entry
+
+    manifest_transaction(project, _add)
     json.dump({"cache_key": key, "bundle": dest}, sys.stdout, indent=2)
     sys.stdout.write("\n")
 
@@ -361,7 +520,10 @@ def cmd_restore(args):
     if not ent:
         sys.exit(2)
     src = os.path.join(project, ent["bundle_dir"])
-    missing, integrity_reason = validate_bundle(src, args.mode == "thorough")
+    thorough = args.mode == "thorough"
+    missing, integrity_reason = validate_bundle(
+        src, thorough, cache_key=key, mode=args.mode
+    )
     if missing:
         sys.exit(f"bundle incomplete: {missing}")
     if integrity_reason and integrity_reason != "ok":
