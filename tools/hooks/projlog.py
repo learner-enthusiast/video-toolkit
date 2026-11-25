@@ -156,6 +156,7 @@ def usage_since(paths, since, main_only=None, seen=None):
     seen = set() if seen is None else seen
     n0 = len(seen)
     tot = dict(input=0, cache_write=0, cache_read=0, output=0)
+    by_model: dict[str, dict] = {}
     last = None
     for p in paths:
         try:
@@ -180,17 +181,38 @@ def usage_since(paths, since, main_only=None, seen=None):
                     continue
                 seen.add(mid)
                 u = m.get("usage") or {}
-                tot["input"] += u.get("input_tokens") or 0
-                tot["cache_write"] += u.get("cache_creation_input_tokens") or 0
-                tot["cache_read"] += u.get("cache_read_input_tokens") or 0
-                tot["output"] += u.get("output_tokens") or 0
+                model = m.get("model") or "unknown"
+                mt = by_model.setdefault(
+                    model, dict(input=0, cache_write=0, cache_read=0, output=0)
+                )
+                for key, src in (
+                    ("input", "input_tokens"),
+                    ("cache_write", "cache_creation_input_tokens"),
+                    ("cache_read", "cache_read_input_tokens"),
+                    ("output", "output_tokens"),
+                ):
+                    v = u.get(src) or 0
+                    tot[key] += v
+                    mt[key] += v
                 last = max(last or "", e["timestamp"])
-    return tot, last, len(seen) - n0
+    return tot, last, len(seen) - n0, by_model
 
 
 def fmt(t):
     return (f"input {t['input']:,} · cache write {t['cache_write']:,} · "
             f"cache read {t['cache_read']:,} · output {t['output']:,}")
+
+
+def fmt_models(by_model: dict) -> str:
+    if not by_model:
+        return ""
+    parts = []
+    for model in sorted(by_model):
+        t = by_model[model]
+        parts.append(
+            f"{model} in {t['input']:,} cw {t['cache_write']:,} cr {t['cache_read']:,} out {t['output']:,}"
+        )
+    return "; models: " + " · ".join(parts)
 
 
 def insert_footer(log, prompt_ref, footer):
@@ -253,15 +275,25 @@ def cmd_tokens(data, root):
         time.sleep(1.0)  # let Claude Code flush the last assistant message
     tp = data.get("transcript_path") or ""
     since = st["started_utc"]
-    main, last, n_main = usage_since([tp], since, main_only=True) if tp else (None, None, 0)
+    main, last, n_main, main_models = usage_since([tp], since, main_only=True) if tp else (None, None, 0, {})
     sub_paths = []
     if tp:
         sub_paths = glob.glob(os.path.join(tp[:-len(".jsonl")] if tp.endswith(".jsonl") else tp, "subagents", "*.jsonl"))
     sub_seen = set()  # one id set across subagents/*.jsonl and main-transcript sidechain entries
-    sub, slast, n_sub = usage_since(sub_paths, since, seen=sub_seen)
-    side, sdlast, n_side = usage_since([tp], since, main_only=False, seen=sub_seen) if tp else (None, None, 0)
+    sub, slast, n_sub, sub_models = usage_since(sub_paths, since, seen=sub_seen)
+    side, sdlast, n_side, side_models = (
+        usage_since([tp], since, main_only=False, seen=sub_seen) if tp else (None, None, 0, {})
+    )
     for k in sub:
         sub[k] += side[k] if side else 0
+    merged_models = dict(main_models or {})
+    for src in (sub_models or {}, side_models or {}):
+        for model, t in src.items():
+            dst = merged_models.setdefault(
+                model, dict(input=0, cache_write=0, cache_read=0, output=0)
+            )
+            for key in dst:
+                dst[key] += t[key]
     started = parse_iso(since)
     fin_iso = max([x for x in (last, slast, sdlast) if x] or [utc_now_iso()])
     finished = parse_iso(fin_iso)
@@ -270,6 +302,7 @@ def cmd_tokens(data, root):
     if n_main:
         tok = f"**Tokens:** {fmt(main)} (main session"
         tok += f"; subagents: {fmt(sub)})" if (n_sub or n_side) else "; subagents: none)"
+        tok += fmt_models(merged_models)
     else:
         tok = "**Tokens:** not available (no assistant usage found in the transcript)"
     footer = (f"**Finished** {finished.astimezone(IST):%H:%M:%S} · **Took** {took}\n{tok}")

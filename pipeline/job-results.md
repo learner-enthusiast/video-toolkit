@@ -46,8 +46,11 @@ vt-python tools/inspect_cache.py store projects/<name> out/main.mp4 work/inspect
 # Before intermediate QA:
 vt-python tools/inspect_cache.py lookup projects/<name> out/main.mp4 --mode default
 
-# Final QA: lookup must hit a thorough bundle (or run fresh inspect)
+# Final QA: lookup ALWAYS misses (run fresh thorough inspect)
 vt-python tools/inspect_cache.py lookup projects/<name> out/main.mp4 --mode thorough --for-final
+# → {"hit": false, "reason": "final_qa_requires_fresh_run", ...}
 ```
 
-`restore` copies the full bundle to `work/inspect/<deliverable>/`. Cache does not replace Opus vision QA.
+`restore` copies a bundle for **intermediate** work only. `restore --for-final` is refused (`final_qa_requires_fresh_run`). Cache does not replace Opus vision QA or human approval.
+
+Lookup miss reasons include: `miss`, `hit`, `final_qa_requires_fresh_run`, `incomplete_bundle`, `checksum_mismatch`, `size_mismatch`, `fingerprint_mismatch`, `schema_mismatch`.

@@ -6,6 +6,8 @@ import unittest
 from tools.project_state import (
     APPROVALS,
     authoritative_approvals,
+    cmd_record_approval,
+    cmd_set_approval,
     default_state,
     parse_approvals_from_log,
     parse_last_handoff,
@@ -35,7 +37,8 @@ class ProjectStateTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             proj = os.path.join(td, "p")
             os.makedirs(proj)
-            open(os.path.join(proj, "log.md"), "w").write("# log\n")
+            with open(os.path.join(proj, "log.md"), "w") as f:
+                f.write("# log\n")
             auth = authoritative_approvals(proj)
             self.assertFalse(auth["approvals"]["rough_cut"]["approved"])
             self.assertEqual(auth["approvals"]["rough_cut"]["status"], "unverified")
@@ -72,7 +75,7 @@ class ProjectStateTest(unittest.TestCase):
             rec = reconcile(proj)
             self.assertTrue(any(i.get("approval") == "rough_cut" for i in rec["issues"]))
 
-    def test_malformed_state_schema(self):
+    def test_malformed_state_json(self):
         with tempfile.TemporaryDirectory() as td:
             proj = os.path.join(td, "p")
             os.makedirs(proj)
@@ -81,7 +84,30 @@ class ProjectStateTest(unittest.TestCase):
             from tools.validate.vt_validate import check_state_schema
 
             errs = check_state_schema(proj)
-            self.assertTrue(any(e["code"] == "INVALID_STATE_SCHEMA" for e in errs))
+            self.assertTrue(any(e["code"] == "INVALID_STATE_JSON" for e in errs))
+
+    def test_record_approval_writes_log_and_syncs(self):
+        with tempfile.TemporaryDirectory() as td:
+            proj = os.path.join(td, "p")
+            os.makedirs(proj)
+            save_state(proj, default_state(proj))
+            with open(os.path.join(proj, "log.md"), "w") as f:
+                f.write("# log\n")
+            cmd_record_approval(type("A", (), {"project": proj, "name": "rough_cut", "status": "approved"})())
+            with open(os.path.join(proj, "log.md")) as f:
+                body = f.read()
+            self.assertIn("**Approval:** rough_cut=approved", body)
+            auth = authoritative_approvals(proj)
+            self.assertTrue(auth["approvals"]["rough_cut"]["approved"])
+
+    def test_set_approval_deprecated(self):
+        with tempfile.TemporaryDirectory() as td:
+            proj = os.path.join(td, "p")
+            os.makedirs(proj)
+            save_state(proj, default_state(proj))
+            with self.assertRaises(SystemExit) as cm:
+                cmd_set_approval(type("A", (), {"project": proj, "name": "rough_cut", "value": "true"})())
+            self.assertEqual(cm.exception.code, 2)
 
 
 if __name__ == "__main__":
