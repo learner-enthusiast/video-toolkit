@@ -1,6 +1,6 @@
 ---
 name: cut-video
-description: Tighten a long recording aggressively — remove silences, fillers, hedges, false starts, and repetitions while preserving laughs and comedic pauses. Cuts are driven by Montreal Forced Aligner (MFA) word boundaries (auto-installs on first run), not raw Whisper timestamps. Use when the user pastes a video and says "cut this", "tighten this video", "remove silences", "strip ums", "clean this up", or any variant of "make this video shorter without losing the good parts".
+description: Take selection and pause tightening for talking-head recordings in this toolkit, the cutting engine behind /reel and /coding-video. Keeps the last complete take of each paragraph and cuts on Montreal Forced Aligner (MFA) word boundaries. Use during the Cut stage of a video project, or when the user asks for take selection or to tighten a talking-head recording for a reel or coding video.
 ---
 
 # Cut Video
@@ -16,7 +16,7 @@ Changed from upstream for this machine; these notes win over anything below.
 - **Priority:** `CLAUDE.md` and `brand.md` win over this skill's defaults (colors, fonts, caption style, pacing, motion).
 - **MFA:** installed once by `/setup` (Miniforge + conda env `mfa`, launcher `~/bin/mfa`). This skill no longer auto-installs it. MFA runs on the CPU by design.
 - **Never upload** the cut to Tella or any service. Cross-check with a second local ASR.
-- **Pacing:** keep-last-take matches CLAUDE.md, but the pause lengths in `pipeline/take-selection.md` (and `/reel`'s tighter ones) override this skill's `aggressive` gap table. Use `balanced` for tutorials unless I ask for aggressive.
+- **Pacing:** keep-last-take matches CLAUDE.md, but the pause lengths in `CLAUDE.md` → House numbers override this skill's `aggressive` gap table. Use `balanced` for tutorials unless I ask for aggressive.
 - **Checkpoint:** render the cut, then stop at the rough cut and wait for my OK (CLAUDE.md). The "don't wait for approval" advice below only means don't ask before rendering it.
 
 Tighten a long-form recording **aggressively**: remove silences, fillers, hedges, weak transitions, false starts, and repetitions; preserve laughs and comedic pauses. Cuts are driven by **MFA** word boundaries (~10–20 ms, true silences as empty intervals); Whisper only supplies the transcript *text*. **MFA times are a draft, not ground truth:** on retake-heavy footage Whisper collapses repeated lines and MFA drifts 1–6 s, so every keep boundary is ground-truthed in Step 2.5 before rendering.
@@ -128,7 +128,7 @@ ffmpeg -i audio.wav -af silencedetect=noise=${THRESH}dB:d=0.14 -f null - 2>&1 | 
 **No-MFA fallback:** silencedetect is the trustworthy gap source ONLY when the guard passes (full-file whisper embeds pauses inside word durations, so gap-based trimming does nothing). Use **`small.en`, not `tiny.en`**, for this path. Parse `silence_start`/`silence_end`, remove those intervals (pad ~0.04 s; MFA-precision boundaries allow ~0.02 s). "Almost no pauses" → `d=0.12`, pad 0.03. Combine with 2c/2d by removing `silences ∪ dropped-word-ranges`.
 - **Stutters whisper hides** (collapsed repetitions, run-to-run variation) are invisible to transcript-based cutting: MFA drift + silencedetect disagreement marks the region; re-inspect it, or ask the user for the timecode and cut a precise window.
 
-**Gap table** (still live; in this toolkit `pipeline/take-selection.md` / `/reel` pause lengths override it):
+**Gap table** (still live; in this toolkit the `CLAUDE.md` → House numbers pause lengths override it):
 
 | Gap | `aggressive` (default) | `balanced` | `sentimental` | `documentary` |
 |---|---|---|---|---|
@@ -209,7 +209,7 @@ Rules for reading the windows:
 - **Stretched words inside a window hide audio too:** re-window tighter around any word ≳1 s. What's inside may be a complete clean take; check before splicing from fragments.
 - **Two windows disagree** about the same words → resolve with a third window placing the disputed moment mid-window.
 - **Final keep times:** pad onset −0.03 s, offset +0.04–0.08 s (stacked +0.10 pads add mush).
-- **Trim pauses INSIDE kept takes too:** inter-word gaps > 0.2 s in the ground-truth words → trim each to ~0.1 s (cut `[gap_start+0.05, gap_end−0.05]`). Leave deliberate rhetorical beats no shorter than ~0.15 s.
+- **Trim pauses INSIDE kept takes too:** inter-word gaps in the ground-truth words that are longer than the pause length in `CLAUDE.md` → House numbers → trim each down to it, leaving ≥ 0.05 s on each side of the cut. Keep deliberate rhetorical beats.
 - **Stretched-word trap, keep-side:** a drawn-out word looks like word+pause. Before trimming into a stretched word at a keep boundary, re-window tightly to find where the voice stops; if the post-render verify transcript lost a word, the trim ate it: push the boundary back out.
 
 Cost on a 5-min video: ~10–15 windows ≈ 2 minutes.

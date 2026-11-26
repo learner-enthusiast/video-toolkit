@@ -1,6 +1,6 @@
 ---
 name: add-zooms
-description: Add emphasis motion to a flat talking-head video file — dramatic hard-cut punch-zooms on emphasised words + listicles, and subtle Ken Burns slow-pushes on insightful lines. Transcript-driven, ffmpeg-based (zoompan), non-destructive. Use when the user says "add zooms", "/add-zooms", "punch in on the emphasised words", "add motion/energy to this clip", or has an already-cut .mp4 (e.g. a LinkedIn hot-take) that needs zoom emphasis. The file-based sibling of /tella-edit and /tella-cut.
+description: Add emphasis motion to a flat talking-head video file — dramatic hard-cut punch-zooms on emphasised words + listicles, and subtle Ken Burns slow-pushes on insightful lines. Transcript-driven, ffmpeg-based (zoompan), non-destructive. Use when the user says "add zooms", "/add-zooms", "punch in on the emphasised words", "add motion/energy to this clip", or has an already-cut .mp4 (e.g. a LinkedIn hot-take) that needs zoom emphasis.
 ---
 
 # Add Zooms
@@ -19,11 +19,10 @@ Changed from upstream for this machine; these notes win over anything below.
   `ffmpeg -y -i INPUT -filter_complex_script work/add-zooms/zoom.filter.txt -map "[v]" -map 0:a -c:v h264_nvenc -preset p5 -rc vbr -cq 19 -b:v 0 -pix_fmt yuv420p -c:a copy -movflags +faststart OUTPUT`.
 - **Use punches and ratchets only.** Hard-cut punches are framing changes that also hide jump cuts (CLAUDE.md's 100% / ~108% rule). Skip `kenburns`: the engine ramps it linearly, and CLAUDE.md bans linear motion. Do slow pushes in the Remotion composition with ease-in-out instead.
 - **Focal point:** use the face position from `components/specs/FaceTrackedCrop.md` for `--cx/--cy`, and never let a zoom crop the face.
-- **Tella:** the `/tella-*` siblings aren't installed. Ignore those references.
 
 Add emphasis motion to a **flat talking-head video file** (usually a 9:16 vertical clip already cut for social): **dramatic punch-zooms** on emphasised words + listicles, and **Ken Burns slow-pushes** on insightful lines. Transcript-driven, ffmpeg-based, non-destructive (writes a new file).
 
-This is the file-based sibling of `/tella-edit` and `/tella-cut` (which zoom *inside* Tella). Use `/add-zooms` when the video is already an `.mp4` on disk and you just want to add punch + push motion — e.g. a cut LinkedIn hot-take.
+Use `/add-zooms` when the video is already an `.mp4` on disk and you just want to add punch + push motion, e.g. a cut LinkedIn hot-take.
 
 ## Inputs
 - A path to a video file (ask if not given). Works best on a fairly static talking-head.

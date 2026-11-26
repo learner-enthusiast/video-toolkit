@@ -17,7 +17,7 @@
 
 | Kind | Examples | Who runs it |
 |---|---|---|
-| Low-stakes tasks | scaffolding, renames, ffprobe reads, proxies, logo downloads + `SOURCES.md`, SRT wrapping, social JSON scaffold, `log.md`, boilerplate from a final spec | CLI chain: Copilot → Codex → cursor-agent (canary) → Haiku |
+| Low-stakes tasks | scaffolding, renames, ffprobe reads, proxies, logo downloads into `icons/` + `icons/icons.md` rows, SRT wrapping, social JSON scaffold, `log.md`, boilerplate from a final spec | CLI chain: Copilot → Codex → cursor-agent (canary) → Haiku |
 | Heavy jobs | voice-cleaning runs (`tools/clean_audio.py`, exact command from `pipeline/voice-cleaning.md`), final renders, Whisper, final encodes, video-inspect runs, installs | Haiku runner (section 6); Claude only observes |
 
 Heavy jobs never go through the CLI chain: command timeouts, sandboxes and quota limits can kill a long GPU job midway.

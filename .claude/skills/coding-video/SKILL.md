@@ -18,15 +18,16 @@ Run this as four stages, one session each (`pipeline/stages.md`). Start each sta
 
 Prompts follow `templates/editing-prompt.md` (topic, path, speed-up cap, notes/special assets, `# Script`, `## 60-second cut`). Everything below applies without being repeated in the prompt; the prompt's notes win where they are more specific.
 
+- **House numbers.** Opener, close, pace and loudness: `CLAUDE.md` → House numbers.
 - **Quality bar.** `CLAUDE.md` → Quality bar, with no exceptions. The video should feel like a premium explainer, not a slideshow.
 - **Footage and layout.** Talking head is portrait phone video unless the prompt says otherwise. Every beat is HEAD, FULL or SPLIT (`brand.md` Layout, `components/specs/layout-states.md`); the script's state tags are the plan, and switch points may move by a beat or two (`CLAUDE.md`, Creative direction). In SPLIT the graphic sits on top and the face is docked below.
 - **Script into the project.** Save the prompt's `# Script` as `projects/<name>/script.md` in the style of `templates/script-tutorial.md` or `templates/script-project-demo.md` (≤ 2:59: `templates/script-reel.md`), with a Glossary.
 - **Caption prep (Prep).** Record in the `script.md` Glossary: caption spellings (names, APIs and code terms exactly as written), number formatting (spoken numbers → digits, ₹, %, separators) and the orange-highlight words. Take them from the prompt's notes; where it gives none, derive them from the script and list them in the handoff. Captions follow the actual words (`CLAUDE.md`, Workflow).
 - **Web captures (Prep).** Take every capture in the script's `## Web captures` list yourself with Playwright (`pipeline/web-capture.md`): framed for its beat, cleaned, focus boxes saved. Never ask me for public pages.
-, including one-word lines, the greeting, the recap and the sign-off. Only retakes, fillers and dead pauses go.
+- **Never cut any script line**, including one-word lines, the greeting, the recap and the sign-off. Only retakes, fillers and dead pauses go.
 - **HARD RULE: length (final ≤ 2:59, or the prompt's limit).** In this order, and stop at the first step that fits:
   1. Cut retakes: keep the last complete, clean take of each paragraph (`/cut-video`, `pipeline/take-selection.md`).
-  2. Tighten pauses to 0.2–0.3 s and remove fillers and restarts. Keep the deliberate pauses the script or prompt marks (e.g. after "Namoshkar!", before "Bye bye, sayonara!").
+  2. Tighten pauses (`CLAUDE.md` → House numbers) and remove fillers and restarts. Keep the deliberate pauses the script or prompt marks (e.g. after "Namoshkar!", before "Bye bye, sayonara!").
   3. Still over: pitch-preserved speed-up from 1.05x, rising in 0.05 steps, up to the prompt's cap. Use the sync-safe chain (`setpts=PTS/k,fps=30` + `atempo=k`, `pipeline/qa.md`).
   4. Still over at the cap: **stop and ask me.** Never cut a line.
 - **Checkpoints.**
@@ -43,7 +44,7 @@ Prompts follow `templates/editing-prompt.md` (topic, path, speed-up cap, notes/s
 
 **Stage 2 · Cut** (steps 10–11)
 
-10. **Take selection:** `pipeline/take-selection.md`, using `/cut-video` as the cutting engine (MFA word boundaries, ground-truthed windows, trim+concat render) with `balanced` tone. The pause lengths and the keep-last-take rule in `take-selection.md` win. Write `work/cutlist.md`.
+10. **Take selection:** `pipeline/take-selection.md`, using `/cut-video` as the cutting engine (MFA word boundaries, ground-truthed windows, trim+concat render) with `balanced` tone. The House numbers pause lengths and the keep-last-take rule in `take-selection.md` win. Write `work/cutlist.md`.
 11. **CHECKPOINT:** render a 720p rough cut (talking head + verified clean audio) to `out/roughcut_preview.mp4`. Show me the cutlist summary and any weak or missing lines. **Wait for my OK.** Write the handoff and end the session here.
 
 **Stage 3 · Compose** (steps 12–13; only after my OK is recorded in `log.md`)
@@ -58,6 +59,6 @@ Prompts follow `templates/editing-prompt.md` (topic, path, speed-up cap, notes/s
 16. **QA:** `pipeline/qa.md`, on the main video and every trailer render. Every contact sheet is looked at by the vision subagent (`pipeline/video-inspect.md`, Vision subagent) before delivering. Fix what fails before reporting.
 17. **Thumbnail:** `pipeline/thumbnail.md`. Always.
 18. **Social copy:** `pipeline/social-copy.md`. Always write `out/<name>_social.json`.
- `CLAUDE.md` (Components, Deliver): clean up every new or extended component that worked, save it to `components/code/` with a `preview.png`, update its spec, its `components/index-full.md` row and the ✓ in `components/index.md`, set `last_used` on every component the video used. Logos: confirm every icon used is in `icons/` with its `icons/icons.md` row and "Used in" updated.
+19. **Save components:** `CLAUDE.md` (Components, Deliver): clean up every new or extended component that worked, save it to `components/code/` with a `preview.png`, update its spec, its `components/index-full.md` row and the ✓ in `components/index.md`, set `last_used` on every component the video used. Logos: confirm every icon used is in `icons/` with its `icons/icons.md` row and "Used in" updated.
 20. **Report:** list every file in `out/`, plus durations, loudness, choices made, lines worth re-recording, and anything you couldn't do. Then fold any lessons back into the toolkit `.md` files.
 21. **Text posts (extra, after the report):** `/text-posts <name>` (`pipeline/text-posts.md`): the LinkedIn hook photo + post, the X post and the X Article in `out/text-posts/`, with its two approval stops. The video's LinkedIn/X captions in the social JSON stay as they are.

@@ -7,7 +7,7 @@
 **Look**
 - Split card, two columns with a thin divider. Left header: official Git logo + "commit"; right header: "Scion changeset".
 - Left: a commit node with an arrow to a full tree diagram (root → 3 dirs → ~12 leaf files), drawn line by line.
-- Right: a list card "3 files changed" with rows `docs/guide.md`, `src/legacy.rs` (deleted), `tools/build.sh`, each with a mono content-hash chip (orange text, e.g. `3e1f…a2c4`).
+- Right: a list card "3 files changed" with rows "docs/guide.md", "src/legacy.rs" (deleted), "tools/build.sh", each with a mono content-hash chip (orange text, e.g. `3e1f…a2c4`).
 - "nothing to push": a push arrow (client → server) gets an orange strike-through and dims.
 - "not the repo": two horizontal bars under the columns: "cost" stays short (orange), "repo size" grows long (grey).
 

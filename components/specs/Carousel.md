@@ -28,7 +28,7 @@
 **Look**
 - Off-white page with the ~40 px notebook grid (`#DCD8D0`), cards white with the brand 2 px border, 14 px radius and the one soft shadow (`brand.md`). The hook's dark style has no shadow.
 - Emphasis from `brand.md` only: an orange block behind a key word, or orange text. At most 2 highlights a slide.
-- Logos only from `assets/logos/` (copied to `public/`), `object-fit: contain`, on a white tile on the dark slide.
+- Logos only from `icons/` (`staticFile('icons/logos/<file>')`; `CLAUDE.md`, Icons), `object-fit: contain`, on a white tile on the dark slide.
 
 **Gotchas**
 - No red/green, no emojis; bad = warm grey + orange warning mark, good = orange.

@@ -5,7 +5,7 @@
 **Props:** `bundleAt`, `configLines` (3 strings), `steps` (`[{text, at}]`), `exitAt`, `out`.
 
 **Look**
-- Folder card `bundle/` (tab-shaped top, 2 px border) with two entries: `rootfs/` (folder icon) and `config.json` (file icon) that opens into a 3-line code block in JetBrains Mono 500 on white: `"args": ["node","index.js"]`, `"namespaces"`, `"linux.resources.memory"`.
+- Folder card `bundle/` (tab-shaped top, 2 px border) with two entries: `rootfs/` (folder icon) and a config.json file (file icon) that opens into a 3-line code block in JetBrains Mono 500 on white: `"args": ["node","index.js"]`, `"namespaces"`, `"linux.resources.memory"`.
 - runc chip: official runc logo + `runc` mono label + small OCI badge.
 - Steps as a vertical checklist: "create namespaces" → "apply cgroups" → "start process"; the active one on an orange block.
 - Process box `node index.js` with a soft pulsing orange dot (it's running).

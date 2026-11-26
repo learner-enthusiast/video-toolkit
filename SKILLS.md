@@ -25,22 +25,25 @@ Upstream license files are kept inside each vendored skill folder.
 - `/tmp/...` and `<source_dir>/..._out/` → `projects/<name>/work/<skill>/`, because `raw/` is read-only.
 
 **add-zooms**
+- Removed the references to the sibling Tella skills, which aren't installed.
 - Encodes on the GPU by printing the filtergraph (`zoom_lib.py filter`) and running ffmpeg with NVENC, because `zoom_lib.py render` hard-codes libx264. The scripts are unchanged.
 - Uses punches and ratchets only. Ken Burns is skipped (the engine ramps it linearly, which CLAUDE.md bans); slow pushes are done in Remotion with ease-in-out.
 - Left out `install.sh` (it symlinks into the global `~/.claude/skills`) and the 4 MB `docs/comparison.gif`. README updated to match.
 
 **cut-video**
+- Frontmatter `description` narrowed to toolkit terms (take selection and tightening for `/reel` and `/coding-video`), so generic edit requests don't trigger it.
 - MFA is no longer auto-installed via brew + conda. `/setup` installs it once (Miniforge in batch mode, conda env `mfa`, `~/bin/mfa` launcher, `english_mfa` models), and the skill checks for it and stops if it's missing.
 - The Tella-upload cross-check is replaced with a second local ASR. Nothing is uploaded.
 - "Render without approval" is kept, but the toolkit's rough-cut checkpoint still applies.
-- The pause lengths in `pipeline/take-selection.md` (and `/reel`) override the skill's gap table. Default tone for tutorials is `balanced`.
+- The pause lengths in `CLAUDE.md` → House numbers override the skill's gap table and its inside-take trim rule. Default tone for tutorials is `balanced`.
 - Token diet (2026-11-20): `SKILL.md` keeps every rule, threshold, padding and order but drops the incident stories. Moved to `references/`: `upstream-notes.md` (the stories and reasoning, verbatim), `manual-editor.md` (Step 3.5, only when I ask), `benchmark.md` (calibration video), `2a-legacy.md` (history; the gap table itself stays in 2a).
 
 **clipify**
+- `disable-model-invocation: true`: only I start it (`/setup` has the same setting).
 - Choose components from `components/index.md` first (every spec by intent, ✓ = saved code in `components/code/`); single rows from `grep -i '^| \[<Name>\]' components/index-full.md`, never the whole `index-full.md`; open only the specs you will use.
 - Captions follow `components/specs/Captions.md` instead of the opus/karaoke presets.
 - 16:9 → 9:16 reframing (of a landscape source) prefers `components/specs/FaceTrackedCrop.md`.
-- Output is 9:16 only (clips are reels, ≤ 2:59); the 9:16 / 16:9 / 1:1 question is skipped unless I ask for another format.
+- Output is 9:16 only (clips are reels, `CLAUDE.md` → House numbers); the 9:16 / 16:9 / 1:1 question is skipped unless I ask for another format.
 - Each clip continues through `/reel`.
 - Token diet (2026-11-20): action mode (Step 1B), split-screen (4b) and time-warp (4c) moved verbatim to `references/` (`action-mode.md`, `split-screen.md`, `time-warp.md`), with a one-line pointer each. Step 1.5 verify frames go through the vision subagent.
 
@@ -54,9 +57,8 @@ Upstream license files are kept inside each vendored skill folder.
 - New "Toolkit adaptation (video-toolkit)" section right after the frontmatter, which wins over the rest of the skill:
   - Priority: `CLAUDE.md`, `brand.md`, `series/<playlist>.md` and the `templates/script-*.md` format win.
   - Reads `SKILL.md`, `hooks.md` and `craft.md` always; `structures.md` only to choose a structure, `formats.md` only for a beat sheet (replaces upstream's "read every file" rule).
-  - Fixed opener: "Namoshkar!" (~1 s hold, half-second pause), then the hook; the greetings anti-hook rule applies to the line after it. Text hook (≤ 6 words) from frame 0; spoken hook by ~1.5 s, landing within 3 s.
-  - Fixed closer: a one-line recap, then "Bye bye, sayonara!" with a wave (replaces the CTA and loopable-ending rules).
-  - Pace ~140 wpm (~2.3 words/s) with word caps per length (30 s ~60 … 3 min ~390, hard cap ~420); cut points, never speed up.
+  - Fixed opener and closer: `CLAUDE.md` → House numbers (hook first). The greetings anti-hook rule applies to the hook line, never to the greeting; the closer replaces the CTA and loopable-ending rules.
+  - Pace and word cap: `CLAUDE.md` → House numbers; cut points when over.
   - Short-form path for every video (≤ 3 min), but research and the facts file (`work/facts.md`) are never skipped.
   - Story with depth; AI System Design episodes map the series format onto ABT (normal flow / where it breaks with LLMs / the fix).
   - Toolkit template format with `[mm:ss–mm:ss | HEAD|FULL|SPLIT]` cues instead of the A/V two-column format; `**Message:**` line at the top of `script.md`.
