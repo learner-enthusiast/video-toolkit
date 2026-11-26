@@ -92,3 +92,7 @@ These files are separate from `<name>_social.json`: never copy them into it or c
 - X post: 280–1,000 chars counted in code, the first 280 a complete thought (≤ 280 total if Premium is no); line 1 has a number or concrete result; no engagement asks; ≤ 1 hashtag; no link in the body.
 - Article: title specific; first sentence a hook; no paragraph over 4 lines; a subheading at least every 5 paragraphs; a bold insight per section; every claim backed by an example from the script; ends with summary + question/CTA; header 1500x600.
 - Facts: diff every number, name and claim in all files against `script.md`.
+
+**Standing rules**
+- Every video (reel and long-form) also gets its text posts in `projects/<name>/out/text-posts/`: the LinkedIn hook photo (content, never my face) with the full LinkedIn post, and the X post, all ready to paste as they are (`/text-posts`, `pipeline/text-posts.md`). These are **extras**: I still post the video on LinkedIn and X with its captions from `<name>_social.json`. Nothing in the video pipeline changes or waits for them.
+- X Premium: **yes**. The video's X caption stays ≤ 280 chars with a `post_long` version (`pipeline/social-copy.md`); the extra X text post may run past 280 chars, and every video also gets an X Article (`pipeline/text-posts.md`).

@@ -87,3 +87,5 @@ If the environment cannot play audio for you to listen to (the usual case for Cl
 ## Handoff
 
 Record a table in the Prep handoff with one row per recording: ID, source path, cleaned WAV, report, run_id, stage statuses, LUFS/true peak/duration delta, warnings, listening result (or the user's approval of the exception), and transcript path. Only recordings with a passed gate may be used for Whisper or editing.
+
+**Files:** Originals in `raw/` stay untouched; each recording gets its own cleaned WAV and report (`--mode quality` only).

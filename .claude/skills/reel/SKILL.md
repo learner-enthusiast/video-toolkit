@@ -6,59 +6,41 @@ argument-hint: <name>
 
 # Reel (9:16, 1080x1920, 30 fps)
 
-**Length, pace, opener, close and loudness: `CLAUDE.md` → House numbers.**
+**Length, pace, opener, close and loudness: `CLAUDE.md` → House numbers.** Read only what the current stage needs (`pipeline/stages.md`).
 
-**Read only what the current stage needs (`pipeline/stages.md`). `CLAUDE.md` is already loaded — never Read it again.**
+**Stage 1 · Prep:** probe the footage (`pipeline/probe-and-trim.md`), then **Before any Whisper/ASR on talking-head audio, pass the gate in `pipeline/voice-cleaning.md`. No exceptions without my explicit approval.** It has the exact `clean_audio.py` command. Then Whisper on the verified WAVs (`pipeline/transcribe.md`) and the per-recording handoff table; `/clipify`, `/cut-video` and `/add-zooms` reuse those WAVs.
 
-Choose components from `components/index.md` first (rows: `grep -i '^| \[<Name>\]' components/index-full.md`); open only the specs you will use. If a component has saved code (✓), import it from `shared/` and set props. Logos come from `icons/` (look up with `grep -i '<brand>' icons/icons.md` (never Read it whole)).
+## Brief rules (fixed for every video)
 
-Use the same four stages and delegation/vision rules as `/coding-video` (`pipeline/stages.md`, `pipeline/delegation.md`, `pipeline/video-inspect.md`). **Stage 1 · Prep:** probe the footage (`pipeline/probe-and-trim.md`), then **Before any Whisper/ASR on talking-head audio, pass the gate in `pipeline/voice-cleaning.md`. No exceptions without my explicit approval.** Its exact command, per recording:
-```bash
-vt-python tools/clean_audio.py "projects/<name>/raw/<recording>" \
-  "projects/<name>/work/audio/cleaned/<recording-id>.wav" \
-  --preset studio --mode quality \
-  --report "projects/<name>/work/audio/reports/<recording-id>-clean-report.json"
-```
-Then Whisper on the verified WAVs (`pipeline/transcribe.md`) and the per-recording handoff table. `/clipify`, `/cut-video` and `/add-zooms` reuse these verified WAVs; they don't clean again.
+Prompts follow `templates/editing-prompt.md`. These rules apply without being repeated there; the prompt's notes win where more specific. `CLAUDE.md` (Quality bar, Creative direction) applies in full: it should feel like a premium explainer, not a slideshow.
 
-## Brief rules (fixed for every video; the prompt adds only the specifics)
-
-Prompts follow `templates/editing-prompt.md` (topic, path, speed-up cap, notes/special assets, `# Script`, `## 60-second cut`). Everything below applies without being repeated in the prompt; the prompt's notes win where they are more specific.
-
-- **Quality bar.** `CLAUDE.md` → Quality bar, with no exceptions. The video should feel like a premium explainer, not a slideshow.
-- **Footage and layout.** Talking head is portrait phone video unless the prompt says otherwise. Every beat is HEAD, FULL or SPLIT (`brand.md` Layout, `components/specs/layout-states.md`); the script's state tags are the plan, and switch points may move by a beat or two (`CLAUDE.md`, Creative direction). In SPLIT the graphic sits on top and the face is docked below.
-- **Script into the project.** Save the prompt's `# Script` as `projects/<name>/script.md` in the style of `templates/script-reel.md`, with a Glossary.
-- **Caption prep (Prep).** Record in the `script.md` Glossary: caption spellings (names, APIs and code terms exactly as written), number formatting (spoken numbers → digits, ₹, %, separators) and the orange-highlight words. Take them from the prompt's notes; where it gives none, derive them from the script and list them in the handoff. Captions follow the actual words (`CLAUDE.md`, Workflow).
-- **Web captures (Prep).** Take every capture in the script's `## Web captures` list yourself with Playwright (`pipeline/web-capture.md`): framed for its beat (mobile viewport for FULL beats), cleaned, focus boxes saved. Never ask me for public pages.
+- **Footage and layout.** Talking head is portrait phone video unless the prompt says otherwise. Every beat is HEAD, FULL or SPLIT (`brand.md` Layout, `components/specs/layout-states.md`); no default, mix all three. The script's `[mm:ss–mm:ss | STATE]` tags are the plan; switch points may move by a beat or two. HEAD uses the portrait recording natively; keep the face out of the top ~12% and bottom ~20%. Switch by hard cut or brand wipe only where a concept starts or ends.
+- **Script into the project.** The prompt's `# Script` → `projects/<name>/script.md` in the style of `templates/script-reel.md`, with a Glossary.
+- **Caption prep (Prep).** In the `script.md` Glossary: caption spellings, number formatting (digits, ₹, %, separators) and orange-highlight words, from the prompt's notes, else derived from the script and listed in the handoff. Captions follow my actual words.
+- **Web captures (Prep).** Take everything in `## Web captures` yourself (`pipeline/web-capture.md`). Frame FULL beats with a mobile viewport.
 - **Never cut any script line**, including one-word lines, the greeting, the recap and the sign-off. Only retakes, fillers and dead pauses go.
-- **HARD RULE: length (final ≤ 2:59, or the prompt's limit).** In this order, and stop at the first step that fits:
+- **HARD RULE: length (final ≤ 2:59, or the prompt's limit).** In this order, stop at the first step that fits:
   1. Cut retakes: keep the last complete, clean take of each paragraph (`/cut-video`, `pipeline/take-selection.md`).
-  2. Tighten pauses (`CLAUDE.md` → House numbers) and remove fillers and restarts. Keep the deliberate pauses the script or prompt marks (e.g. after "Namoshkar!", before "Bye bye, sayonara!").
-  3. Still over: pitch-preserved speed-up from 1.05x, rising in 0.05 steps, up to the prompt's cap. Use the sync-safe chain (`setpts=PTS/k,fps=30` + `atempo=k`, `pipeline/qa.md`).
+  2. Tighten pauses (House numbers); remove fillers and restarts; keep the deliberate pauses the script or prompt marks (e.g. around "Namoshkar!" and before the sign-off).
+  3. Pitch-preserved speed-up from 1.05x in 0.05 steps, up to the prompt's cap, with the sync-safe chain (`setpts=PTS/k,fps=30` + `atempo=k`).
   4. Still over at the cap: **stop and ask me.** Never cut a line.
-- **Checkpoints.**
-  1. Stages, one session each (`pipeline/stages.md`): Prep (voice gate → Whisper → handoff) · Cut (take selection + rough cut; report measured length and speed-up factor; **stop for my OK**) · Compose (storyboard, build, render) · Deliver.
-  2. Storyboard (by the `creative-director` subagent, `pipeline/composition.md`): a scene table with measured length per beat, plus the "Creative take" list (idea, beat, why). Then **3 approval stills** (the prompt names them; otherwise the hook frame and the two strongest beats); wait for my OK on any bigger change.
-  3. Build scene by scene, render through `gpu-run`, run video-inspect (`--thorough` on the final) and QA (`pipeline/qa.md`).
-  4. Deliver: main `out/<name>_9x16.mp4` + SRT; trailer = the prompt's `## 60-second cut` if given, else the default (`pipeline/trailer.md`), 9:16 + SRT; cover/thumbnail + ChatGPT kit (`pipeline/thumbnail.md`); `<name>_social.json` (`pipeline/social-copy.md`); carousel twin (`/carousel`).
-  5. Save components (`CLAUDE.md`, Components → Deliver) and apply any series-file update the prompt asks for.
-  6. Project log every turn (`pipeline/project-log.md`).
+- **Opener and hook.** House numbers. The hook line is the boldest claim or result; the on-screen text hook is 2–5 words. If the strongest line is mid-recording, move it to the very start.
+- **Fast pace.** The visual changes every 1.5–3 s. No beat holds still.
+- **Captions.** `components/specs/Captions.md` (reel mode): 1–3 words, ~80 px, placed per state. Text stays clear of the right ~15% and bottom ~20%.
+- **Ending.** The House numbers close (the recap pays off the hook); an `EndCard` ≤ 2 s may follow.
+- **Playlists.** Also follow `series/<playlist>.md`.
+- **Skills.** Cut with `/cut-video` (`aggressive`; House numbers pauses win); punch with `/add-zooms` (punches and ratchets only). For a long source, ask me to run `/clipify` (I start it; dialogue mode) for 3–5 candidates, show them, then build each chosen one.
 
-- **Skills.** Cut with `/cut-video` (`aggressive` tone, but the House numbers pause lengths win), and punch in with `/add-zooms` (punches and ratchets only). If the source is a long video, ask me to run `/clipify` (I start it myself; dialogue mode) to pick 3–5 candidate moments. Show them to me, then build each chosen one as a reel with the rules below.
-
-- **Opener and hook.** `CLAUDE.md` → House numbers. The hook line is the boldest claim or result, and the on-screen text hook is 2–5 words, so muted viewers get it at once. If the strongest line is mid-recording, move it to the very start.
-- **Fast pace.** The visual changes every 1.5–3 s (punch-in, a screen, a graphic, a card). No beat holds still.
-- **Layout.** There is no default layout. Every beat is HEAD (my face fills the frame), FULL (graphic fills the frame, my face hidden, voice continues) or SPLIT (graphic on top, me docked below), per `brand.md` Layout and `components/specs/layout-states.md`. Read the script's `[mm:ss–mm:ss | HEAD|FULL|SPLIT]` tags as the plan, mix all three, and switch by hard cut or brand wipe only where a concept starts or ends. HEAD uses the portrait recording natively. Keep the face out of the top ~12% and bottom ~20% UI zones.
-- **Creative direction.** Script cues are the baseline, not a limit: bring a better visual take where it explains better, within the rules in `CLAUDE.md` (never change spoken lines, facts or code, `brand.md`, the length limit, or a cue's intent). List a "Creative take" in the storyboard; small changes just do and log, bigger ones go to 3 approval stills for my OK.
-- **Playlists.** If the project sits in a playlist (`projects/<playlist>/<NN>-<topic>/`), also follow `series/<playlist>.md`.
-- **Big captions.** See `components/specs/Captions.md` (reel mode): 1–3 words at a time, ~80 px, placed per state (HEAD lower third clear of the face, SPLIT in the strip, FULL in a band clear of the graphic's key element).
-- **Safe zones.** Keep text clear of the right ~15% (platform buttons) and the bottom ~20% (description overlay).
-- **Ending.** The close in `CLAUDE.md` → House numbers (the recap is the payoff of the hook). A short `EndCard` (≤ 2 s) may follow.
-- **Deliver.** `out/<name>_9x16.mp4` plus an SRT, at House numbers loudness. Always make a cover/thumbnail with `pipeline/thumbnail.md`: 1080x1920 only, no 1280x720. Then save new or extended components to `components/code/` and update `icons/icons.md` "Used in" (`CLAUDE.md`, Icons and Components).
-- **9:16 only.** A reel never builds, previews, stills, QAs or renders anything in 16:9: no landscape layout, composition, trailer or thumbnail (`CLAUDE.md`, Deliverables).
-- **Trailer.** Always make exactly one short cut, rendered in 9:16 only: `out/<name>_trailer_9x16.mp4` (`pipeline/trailer.md`). If the prompt defines a short cut, that is the trailer; otherwise the default 15–20 s trailer. Never both.
-- **Carousel twin.** After the final render's QA, run `/carousel <name>` (`pipeline/carousel.md`): 6–8 slides in `out/carousel/`, with its outline and slide-1 approval stops.
-- **Text posts (extra).** Last, after the video deliverables are done and reported, run `/text-posts <name>` (`pipeline/text-posts.md`): the LinkedIn hook photo, the full LinkedIn post, the X post and the X Article in `out/text-posts/`, with its draft and photo approval stops. The video's LinkedIn/X captions in the social JSON stay as they are.
-- **Social copy.** Always write `out/<name>_social.json` per `pipeline/social-copy.md`. YouTube chapters don't apply to a reel; use the `shorts_title` and a short description instead.
-
-Stop at the rough cut for my OK, as always.
+## Checkpoints
+1. One session per stage: Prep · Cut (take selection + rough cut; report length and speed-up; **stop for my OK**) · Compose · Deliver.
+2. Storyboard by the `creative-director` subagent (`pipeline/composition.md`): scene table with measured length per beat plus the "Creative take" list. Then **3 approval stills** (the prompt's, else the hook frame and the two strongest beats); wait for my OK on any bigger change.
+3. Build scene by scene, render through `gpu-run`, then video-inspect (`--thorough` on the final) and QA (`pipeline/qa.md`).
+4. Deliver, **9:16 only** (never build, still, QA or render 16:9):
+   - `out/<name>_9x16.mp4` + SRT at House numbers loudness.
+   - Exactly one trailer, `out/<name>_trailer_9x16.mp4` + SRT: the prompt's `## 60-second cut` if given, else the default 15–20 s one (`pipeline/trailer.md`).
+   - Cover 1080x1920 + ChatGPT kit (`pipeline/thumbnail.md`).
+   - `out/<name>_social.json` (`pipeline/social-copy.md`; no YouTube chapters: `shorts_title` and a short description).
+   - Carousel twin after final QA: `/carousel <name>` (its two approval stops).
+5. Save components (`components/code/README.md`, Library rules), update "Used in" in `icons/icons.md`, apply any series-file update the prompt asks for.
+6. Last, after reporting: text posts (extra) with `/text-posts <name>` (its approval stops).
+7. Project log every turn (`pipeline/project-log.md`).
