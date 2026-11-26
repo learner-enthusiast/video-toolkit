@@ -83,14 +83,27 @@ class HookConcurrencyTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             root = td
             sid = "sess"
+            touch_path = os.path.join(td, "touch.jsonl")
+            with open(touch_path, "wb") as f:
+                f.write(b"\n")
+            st = os.stat(touch_path)
             barrier = threading.Barrier(2)
-            counters = []
 
             def one_pass():
                 barrier.wait()
                 with tck.checkpoint_lock(root, sid):
                     ck = tck.load_checkpoint(root, sid)
-                    ck.setdefault("files", {})["_touch"] = ck.get("files", {}).get("_touch", 0) + 1
+                    rec = ck.setdefault("files", {}).get(touch_path) or {
+                        "offset": 0,
+                        "identity": {
+                            "dev": st.st_dev,
+                            "ino": st.st_ino,
+                            "size": st.st_size,
+                            "mtime_ns": st.st_mtime_ns,
+                        },
+                    }
+                    rec["touches"] = int(rec.get("touches") or 0) + 1
+                    ck["files"][touch_path] = rec
                     tck.save_checkpoint(root, sid, ck)
 
             t1 = threading.Thread(target=one_pass)
@@ -100,7 +113,37 @@ class HookConcurrencyTest(unittest.TestCase):
             t1.join()
             t2.join()
             ck = tck.load_checkpoint(root, sid)
-            self.assertEqual(ck["files"]["_touch"], 2)
+            self.assertEqual(ck["files"][touch_path]["touches"], 2)
+
+
+    def test_checkpoint_lock_multiprocess(self):
+        import multiprocessing
+
+        with tempfile.TemporaryDirectory() as td:
+            root = td
+            sid = "mp-sess"
+            counter_path = os.path.join(td, "ctr.txt")
+            with open(counter_path, "w") as f:
+                f.write("0")
+
+            def worker():
+                with tck.checkpoint_lock(root, sid):
+                    with open(counter_path) as f:
+                        n = int(f.read().strip())
+                    import time
+
+                    time.sleep(0.05)
+                    with open(counter_path, "w") as f:
+                        f.write(str(n + 1))
+
+            ps = [multiprocessing.Process(target=worker) for _ in range(4)]
+            for p in ps:
+                p.start()
+            for p in ps:
+                p.join()
+                self.assertEqual(p.exitcode, 0)
+            with open(counter_path) as f:
+                self.assertEqual("4", f.read().strip())
 
 
 if __name__ == "__main__":
