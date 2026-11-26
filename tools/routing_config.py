@@ -114,6 +114,14 @@ def validate_config(config: dict) -> list[dict]:
     ids = [i for i in ids if i]
     if len(ids) != len(set(ids)):
         errs.append({"code": "DUPLICATE_ID", "message": "Duplicate model ids across tiers"})
+    weights = (config.get("cost") or {}).get("weights") or {}
+    for key in ("input", "cache_write", "cache_read", "output"):
+        if not isinstance(weights.get(key), (int, float)) or weights[key] <= 0:
+            errs.append({"code": "BAD_COST_WEIGHT", "message": f"cost.weights.{key} must be positive", "field": key})
+    for tier, block in models.items():
+        price = block.get("input_price_usd_per_mtok") if isinstance(block, dict) else None
+        if not isinstance(price, (int, float)) or price <= 0:
+            errs.append({"code": "MISSING_PRICE", "message": f"{tier} needs input_price_usd_per_mtok", "field": tier})
     subs = config.get("subagents") or {}
     vqa = subs.get("vision_qa") or {}
     if vqa.get("same_as_main") is True:

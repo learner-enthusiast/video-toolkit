@@ -287,7 +287,8 @@ class AssetCacheTest(unittest.TestCase):
                 with self.assertRaises(RuntimeError):
                     ac.cmd_store(store)
             self.assertTrue(os.path.isfile(mp))
-            self.assertEqual(corrupt_body, open(mp).read())
+            with open(mp) as f:
+                self.assertEqual(corrupt_body, f.read())
             self.assertFalse(any(n.startswith("asset-manifest.json.corrupt") for n in os.listdir(os.path.dirname(mp))))
             man, err = ac._read_manifest_file(proj)
             self.assertIn(err, ("invalid_manifest", "corrupt_json"))

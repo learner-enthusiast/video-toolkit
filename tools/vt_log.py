@@ -4,8 +4,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
+
+_REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
 
 TOKEN_RE = re.compile(
     r"\*\*Tokens:\*\*\s*input\s*([\d,]+)\s*·\s*cache write\s*([\d,]+)\s*·\s*cache read\s*([\d,]+)\s*·\s*output\s*([\d,]+)",
@@ -26,6 +31,11 @@ TOOK_RE = re.compile(
     r"\*\*Took\*\*\s*(?:(\d+)\s*m\s+(\d+)\s*s|(\d+)\s*s)",
     re.I,
 )
+CALLS_RE = re.compile(
+    r"\*\*Calls:\*\*\s*main\s*(\d+)\s*·\s*sidechain\s*(\d+)\s*·\s*subagents\s*(\d+)(?:;\s*by model:\s*(.+))?", re.I
+)
+COST_RE = re.compile(r"\*\*Cost:\*\*\s*weighted USD\s*([\d.]+)", re.I)
+HEADER_RE = re.compile(r"^## (\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}) IST\b", re.M)
 MSG_ID_RE = re.compile(r"\*\*Message(?:\s+ID)?:\*\*\s*(\S+)", re.I)
 
 
@@ -129,6 +139,24 @@ def timing_stats(vals: list[int]) -> dict | None:
     }
 
 
+def _parse_calls(footer: str) -> dict | None:
+    m = CALLS_RE.search(footer)
+    if not m:
+        return None
+    by_model = {}
+    for part in (m.group(4) or "").split("·"):
+        bits = part.split()
+        if len(bits) == 2 and bits[1].isdigit():
+            by_model[bits[0]] = int(bits[1])
+    return {"main": int(m.group(1)), "sidechain": int(m.group(2)), "subagents": int(m.group(3)), "by_model": by_model}
+
+
+def _started_at(before: str) -> str | None:
+    """ISO start of the entry that owns a footer: its `## date time IST` header."""
+    headers = HEADER_RE.findall(before)
+    return f"{headers[-1][0]}T{headers[-1][1]}:00+05:30" if headers else None
+
+
 def parse_token_lines(log_path: str) -> list[dict]:
     if not log_path or not __import__("os").path.isfile(log_path):
         return []
@@ -144,7 +172,10 @@ def parse_token_lines(log_path: str) -> list[dict]:
             seen_ids.add(mid)
         stage = _stage_for_entry(text, m.start())
         main = dict(zip(("input", "cache_write", "cache_read", "output"), _ints(*m.groups())))
-        tail = text[m.end() : m.end() + 800]
+        # The rest of the Tokens line, and the footer lines under it (up to the blank line):
+        # looking further would read the next entry, and `$` would never match this one.
+        tail, _, rest = text[m.end() :].partition("\n")
+        footer = rest.split("\n\n", 1)[0].split("**Tokens:**", 1)[0]
         sm = SUB_RE.search(tail)
         sub = (
             dict(zip(("input", "cache_write", "cache_read", "output"), _ints(*sm.groups())))
@@ -152,6 +183,7 @@ def parse_token_lines(log_path: str) -> list[dict]:
             else None
         )
         main_models, sub_models = _parse_models(tail)
+        cost = COST_RE.search(footer)
         entries.append(
             {
                 "stage": stage,
@@ -161,9 +193,32 @@ def parse_token_lines(log_path: str) -> list[dict]:
                 "subagents": sub,
                 "models_main": main_models,
                 "models_subagents": sub_models,
+                "calls": _parse_calls(footer),
+                "cost_weighted_usd": float(cost.group(1)) if cost else None,
+                "started_at": _started_at(text[: m.start()]),
             }
         )
     return entries
+
+
+def call_totals(entries: list[dict]) -> dict | None:
+    """None unless every entry has a Calls line: a partial total would look like a saving."""
+    if not entries or any(not e.get("calls") for e in entries):
+        return None
+    out = {"main": 0, "sidechain": 0, "subagents": 0, "by_model": {}}
+    for e in entries:
+        for key in ("main", "sidechain", "subagents"):
+            out[key] += e["calls"][key]
+        for model, n in e["calls"]["by_model"].items():
+            out["by_model"][model] = out["by_model"].get(model, 0) + n
+    return out
+
+
+def cost_total(entries: list[dict]) -> float | None:
+    costs = [e.get("cost_weighted_usd") for e in entries]
+    if not costs or any(c is None for c in costs):
+        return None
+    return round(sum(costs), 4)
 
 
 def summarize(entries: list[dict]) -> dict:
@@ -226,6 +281,10 @@ def summarize(entries: list[dict]) -> dict:
             "main": by_stage_model_main or None,
             "subagents": by_stage_model_sub or None,
         },
+        "calls": call_totals(entries),
+        "cost_weighted_usd": cost_total(entries),
+        "cost_weighted_usd_by_stage": {st: cost_total([e for e in entries if e["stage"] == st]) for st in stage_counts},
+        "entries_without_calls_or_cost": sum(1 for e in entries if not e.get("calls") or e.get("cost_weighted_usd") is None),
         "timing": timing_stats(timings),
         "timing_by_stage": stage_timing,
         "timing_note": "Summed prompt-turn **Took** durations; not total wall-clock production time.",
@@ -377,6 +436,22 @@ def compare_logs(base_path: str, cand_path: str) -> dict:
             )
             for k in _zero()
         },
+        "baseline_calls": base.get("calls"),
+        "candidate_calls": cand.get("calls"),
+        "delta_calls": (
+            {k: cand["calls"][k] - base["calls"][k] for k in ("main", "sidechain", "subagents")}
+            if base.get("calls") and cand.get("calls") else None
+        ),
+        "baseline_cost_weighted_usd": base.get("cost_weighted_usd"),
+        "candidate_cost_weighted_usd": cand.get("cost_weighted_usd"),
+        "delta_cost_weighted_usd": (
+            round(cand["cost_weighted_usd"] - base["cost_weighted_usd"], 4)
+            if base.get("cost_weighted_usd") is not None and cand.get("cost_weighted_usd") is not None else None
+        ),
+        "delta_cost_weighted_pct": (
+            _pct_delta(base["cost_weighted_usd"], cand["cost_weighted_usd"])
+            if base.get("cost_weighted_usd") is not None and cand.get("cost_weighted_usd") is not None else None
+        ),
         "baseline_timing": base.get("timing"),
         "candidate_timing": cand.get("timing"),
         "timing_by_stage_compare": _stage_timing_compare(base, cand),
@@ -440,6 +515,16 @@ def _diff_stage_model(a: dict | None, b: dict | None) -> dict:
     return out
 
 
+def cmd_record(args):
+    from tools import stage_record
+
+    path = stage_record.write_record(
+        args.project, args.stage, since=args.since,
+        validators=args.validators, final_qa=args.final_qa,
+    )
+    print(path)
+
+
 def cmd_summary(args):
     entries = parse_token_lines(args.log_md)
     json.dump(summarize(entries), sys.stdout, indent=2)
@@ -457,6 +542,13 @@ def main():
     s = sub.add_parser("summary")
     s.add_argument("log_md")
     s.set_defaults(func=cmd_summary)
+    s = sub.add_parser("record", help="write work/metrics/<stage>-<run_id>.json (stage handoff step)")
+    s.add_argument("project")
+    s.add_argument("--stage", required=True, choices=("prep", "cut", "compose", "deliver"))
+    s.add_argument("--since", help="only turns started at or after this IST time, 'YYYY-MM-DD HH:MM'")
+    s.add_argument("--validators", choices=("pass", "fail"), help="result of the validators you ran; omit if not run")
+    s.add_argument("--final-qa", choices=("pass", "fail"), help="result of the fresh final QA; omit if not run")
+    s.set_defaults(func=cmd_record)
     s = sub.add_parser("breakdown")
     s.add_argument("log_md")
     s.set_defaults(func=cmd_breakdown)

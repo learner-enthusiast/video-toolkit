@@ -15,7 +15,11 @@ import sys
 import tempfile
 import uuid
 
-from tools import path_safety as ps
+_REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
+
+from tools import cache_events, path_safety as ps  # noqa: E402
 
 CACHE_SCHEMA = 3
 MANIFEST = "work/inspect/.cache-manifest.json"
@@ -556,6 +560,14 @@ def atomic_install_bundle(src: str, dest: str) -> None:
             fcntl.flock(lf, fcntl.LOCK_UN)
 
 
+def _finish_lookup(args, out, result=None):
+    cache_events.record(args.project, "inspect", args.mode,
+                        result or ("hit" if out["hit"] else "miss"), out["reason"])
+    json.dump(out, sys.stdout, indent=2)
+    sys.stdout.write("\n")
+    sys.exit(0 if out["hit"] else 1)
+
+
 def cmd_lookup(args):
     key = fingerprint(args.video, args)
     if getattr(args, "for_final", False):
@@ -566,17 +578,13 @@ def cmd_lookup(args):
             "for_final_qa": True,
             "entry": None,
         }
-        json.dump(out, sys.stdout, indent=2)
-        sys.stdout.write("\n")
-        sys.exit(1)
+        _finish_lookup(args, out, "bypass")
 
     project = args.project
     man = load_manifest(project)
     if man.get("_manifest_error"):
         out = {"cache_key": key, "hit": False, "reason": man["_manifest_error"], "entry": None}
-        json.dump(out, sys.stdout, indent=2)
-        sys.stdout.write("\n")
-        sys.exit(1)
+        _finish_lookup(args, out)
     ent = man.get("entries", {}).get(key)
     thorough_required = args.mode == "thorough"
     reason = "miss"
@@ -585,9 +593,7 @@ def cmd_lookup(args):
         entry_err = validate_cache_entry(project, key, ent)
         if entry_err and entry_err != "miss":
             out = {"cache_key": key, "hit": False, "reason": entry_err, "entry": ent}
-            json.dump(out, sys.stdout, indent=2)
-            sys.stdout.write("\n")
-            sys.exit(1)
+            _finish_lookup(args, out)
         bpath = os.path.join(project, ent["bundle_dir"])
         missing, integrity_reason = validate_bundle(
             bpath,
@@ -615,9 +621,7 @@ def cmd_lookup(args):
         "for_final_qa": False,
         "entry": ent,
     }
-    json.dump(out, sys.stdout, indent=2)
-    sys.stdout.write("\n")
-    sys.exit(0 if hit else 1)
+    _finish_lookup(args, out)
 
 
 def cmd_store(args):
@@ -714,10 +718,11 @@ def add_common(sp):
     sp.add_argument("--mode", default="default")
     sp.add_argument("--start", type=float)
     sp.add_argument("--end", type=float)
-    sp.add_argument("--inspect-script", help="work/scripts/video_inspect.py for hash")
+    sp.add_argument("--inspect-script", help="tools/inspect/video_inspect.py, for its hash")
     sp.add_argument("--ocr-script")
     sp.add_argument("--config-hash", default="")
     sp.add_argument("--model-id", default="", help="ML model id when inspection uses local models")
+    return sp
 
 
 def main():

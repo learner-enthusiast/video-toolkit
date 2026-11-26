@@ -40,6 +40,10 @@ vt-python tools/validate/vt_validate.py projects/<name> --check project --check 
 
 Failures return exit 1 and a JSON `errors[]` with `code`, `message`, `file`.
 
+## Asset cache
+
+`tools/asset_cache.py` caches deterministic preprocessing per project, by content hash: `ffprobe` (`probe-and-trim.md`), `voice-lookup` / `voice-store` (`voice-cleaning.md`), and Whisper passes through `tools/captions/transcribe.py`. Every cache logs hits and misses to `work/cache/events.jsonl`.
+
 ## Video inspect cache
 
 ```bash

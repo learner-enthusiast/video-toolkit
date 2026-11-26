@@ -4,7 +4,7 @@
 
 **Do**
 - **Before any Whisper/ASR on talking-head audio, pass the gate in `pipeline/voice-cleaning.md`. No exceptions without my explicit approval.**
-- Use local faster-whisper (or the whisper-ctranslate2 CLI) with `large-v3`, language set explicitly, word timestamps on, through `gpu-run`. Never use the paid API.
+- Use local Whisper `large-v3`, language set explicitly, word timestamps on. Never use the paid API. Run each pass through the cache wrapper from `work/` (toolkit-root tool path): `vt-python tools/captions/transcribe.py .. <wav> --out-dir transcript/<pass> -- <whisper-ctranslate2 flags>`. It calls `gpu-run` itself, fails when no JSON appears, and reuses a pass only when the WAV hash, model, flags and wrapper all match.
 - Run it on the verified cleaned WAV mapped to that recording in the Prep handoff. `work/audio/clean.wav` is valid only when it is a working copy of a specific verified cleaned WAV. For multiple recordings, maintain distinct cleaned WAVs and reports, and write transcript outputs under `work/transcripts/<recording-id>/` (for example, `transcript.json` and `.srt`); do not reuse one generic input or overwrite prior outputs. Combine transcripts only after preserving each recording's identity and timestamps.
 - Run 2–3 passes and compare them:
   - a plain pass

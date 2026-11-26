@@ -23,6 +23,7 @@ _TOOLS_DIR = os.path.abspath(os.path.join(_HOOKS_DIR, ".."))
 if _TOOLS_DIR not in sys.path:
     sys.path.insert(0, os.path.dirname(_TOOLS_DIR))
 
+from tools import pricing, routing_config  # noqa: E402
 from tools.project_log_lock import project_log_lock  # noqa: E402
 from tools.hooks import transcript_ckpt as tck  # noqa: E402
 
@@ -236,6 +237,31 @@ def fmt_models_footer(main_models: dict, sub_models: dict) -> str:
     return "; models " + " | ".join(chunks)
 
 
+def fmt_calls_footer(n_main: int, n_side: int, n_sub: int, by_model: dict) -> str:
+    line = f"**Calls:** main {n_main} · sidechain {n_side} · subagents {n_sub}"
+    called = {m: n for m, n in by_model.items() if n}
+    if called:
+        line += "; by model: " + " · ".join(f"{m} {called[m]}" for m in sorted(called))
+    return line
+
+
+def fmt_cost_footer(main_models: dict, sub_models: dict) -> str:
+    """Cost-weighted total of the turn; prices and weights come from config/model-routing.json."""
+    try:
+        combined: dict[str, dict] = {}
+        for bucket in (main_models, sub_models):
+            for model, t in bucket.items():
+                dst = combined.setdefault(model, dict(input=0, cache_write=0, cache_read=0, output=0))
+                for key in dst:
+                    dst[key] += t.get(key, 0)
+        total, unpriced = pricing.weighted_cost(combined, routing_config.load_config())
+    except Exception:
+        return "**Cost:** not available (routing config unreadable)"
+    if total is None:
+        return "**Cost:** not available (no price for " + ", ".join(unpriced) + ")"
+    return f"**Cost:** weighted USD {total:.4f}"
+
+
 def _entry_has_committed_tokens(lines: list[str], prompt_ref: str) -> bool:
     start = None
     for i, ln in enumerate(lines):
@@ -295,10 +321,15 @@ def insert_footer(log, prompt_ref, footer):
         f.write(text if text.endswith("\n") else text + "\n")
 
 
+def read_json(path):
+    with open(path) as f:
+        return json.load(f)
+
+
 def drop_state(sp, started_utc):
     """Remove this turn's state file, unless the next prompt already replaced it."""
     try:
-        if json.load(open(sp)).get("started_utc") == started_utc:
+        if read_json(sp).get("started_utc") == started_utc:
             os.remove(sp)
     except (OSError, ValueError):
         pass
@@ -308,7 +339,7 @@ def cmd_tokens(data, root):
     sid = data.get("session_id") or "nosession"
     sp = os.path.join(state_dir(root), f"{sid}.json")
     try:
-        st = json.load(open(sp))
+        st = read_json(sp)
     except (OSError, ValueError):
         return  # no prompt recorded for this turn (no project)
     if not st.get("project"):
@@ -396,6 +427,9 @@ def cmd_tokens(data, root):
             tok = f"**Tokens:** {fmt(main)} (main session"
             tok += f"; subagents: {fmt(sub)})" if (n_sub or n_side) else "; subagents: none)"
             tok += fmt_models_footer(main_models or {}, sub_combined)
+            tok += "\n" + fmt_calls_footer(n_main or 0, n_side or 0, n_sub or 0,
+                                           scan_stats.get("calls_by_model") or {})
+            tok += "\n" + fmt_cost_footer(main_models or {}, sub_combined)
         else:
             tok = "**Tokens:** not available (no assistant usage found in the transcript)"
         stage = st.get("stage") or "unknown"

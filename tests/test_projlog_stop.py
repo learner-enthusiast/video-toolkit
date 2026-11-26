@@ -75,6 +75,11 @@ def _scaffold(root, sid, since, main_msgs=None, side_msgs=None, sub_msgs=None):
     return tp, log_path, prompt_ref
 
 
+def read_text(path):
+    with open(path) as f:
+        return f.read()
+
+
 def _run_tokens(root, sid, tp):
     data = {"session_id": sid, "transcript_path": tp}
     os.environ["PROJLOG_NO_WAIT"] = "1"
@@ -98,7 +103,7 @@ class ProjlogStopTest(unittest.TestCase):
                 side_msgs=[_assistant(since, "s1", 42, True)],
             )
             _run_tokens(td, sid, tp)
-            log = open(log_path).read()
+            log = read_text(log_path)
             self.assertIn("**Tokens:**", log)
             self.assertNotIn("not available", log)
             self.assertIn("42", log)
@@ -115,7 +120,7 @@ class ProjlogStopTest(unittest.TestCase):
             )
             state_path = os.path.join(td, ".hook-state", f"{sid}.json")
             _run_tokens(td, sid, tp)
-            first = open(log_path).read()
+            first = read_text(log_path)
             with open(state_path, "w") as f:
                 json.dump(
                     {
@@ -127,7 +132,7 @@ class ProjlogStopTest(unittest.TestCase):
                     f,
                 )
             _run_tokens(td, sid, tp)
-            second = open(log_path).read()
+            second = read_text(log_path)
             self.assertEqual(first, second)
             self.assertEqual(1, second.count("**Tokens:**"))
 
@@ -158,7 +163,7 @@ class ProjlogStopTest(unittest.TestCase):
             t1.join()
             t2.join()
             self.assertFalse(errors, errors)
-            log = open(log_path).read()
+            log = read_text(log_path)
             self.assertEqual(1, log.count("**Tokens:**"))
             self.assertIn("20", log)
 
@@ -175,7 +180,7 @@ class ProjlogStopTest(unittest.TestCase):
             state_path = os.path.join(td, ".hook-state", f"{sid}.json")
             with mock.patch.object(tck, "save_checkpoint", side_effect=OSError("disk")):
                 _run_tokens(td, sid, tp)
-            log1 = open(log_path).read()
+            log1 = read_text(log_path)
             self.assertIn("15", log1)
             with open(state_path, "w") as f:
                 json.dump(
@@ -188,7 +193,7 @@ class ProjlogStopTest(unittest.TestCase):
                     f,
                 )
             _run_tokens(td, sid, tp)
-            log2 = open(log_path).read()
+            log2 = read_text(log_path)
             self.assertIn("15", log2)
             self.assertNotIn("not available", log2)
 
@@ -228,7 +233,7 @@ class ProjlogStopTest(unittest.TestCase):
             with open(tp, "a") as f:
                 f.write(json.dumps(_assistant(since2, "b", 8, False)) + "\n")
             _run_tokens(td, sid, tp)
-            log = open(log_path).read()
+            log = read_text(log_path)
             self.assertIn("**Tokens:**", log)
             self.assertEqual(2, log.count("**Tokens:**"))
             self.assertIn("8", log.split(pref2)[1])

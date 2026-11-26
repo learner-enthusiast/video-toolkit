@@ -1,5 +1,18 @@
 # Post-hardening status
 
+## Update: token-efficiency pass, PRs #10–#14 (2026-11-26)
+
+| Area | Status |
+|---|---|
+| Doc drift and size budgets | Enforced in CI (`tests/test_doc_lint.py`) |
+| Model routing | Session model and two subagents set in config and validated; stage-start brief and Read guard are hooks |
+| Pipeline scripts and heavy jobs | Tracked in `tools/`; `tools/jobs/batch.sh` replaces the Haiku runner |
+| Asset and inspect caches | **Wired** into probe, voice reuse and Whisper from PR #14. Before it, neither cache CLI could run from the command line |
+| Measurement | Call counts, weighted cost and per-stage JSON records from PR #14 |
+| Benchmark | Instrumented, **not yet run** ([`benchmark-results.md`](benchmark-results.md)) |
+
+The sections below are the earlier gap-closure snapshot, kept as history.
+
 **`main` @ gap-closure start:** `9cf4a5473eec86f2ab444a488467ba9bea6334e4` (includes PR #4).  
 **Follow-up:** PR from branch `final-gap-closure` (inspect/asset symlink fixes, state recovery, `vt_log` compare, branch protection).
 

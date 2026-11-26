@@ -18,7 +18,13 @@ Before cleaning anything, run `vt-python tools/voice_preflight.py` (about 5 s, r
 
 ## Reuse before re-cleaning
 
-If the project's Prep handoff in `log.md` already maps a recording to a cleaned WAV whose gate passed (report checks and listening), reuse that WAV. Don't clean it again into a skill-specific folder. Clean only recordings without a passed mapping.
+A cleaned WAV is reused only on a cache hit, never on the handoff text alone. Before cleaning (toolkit-root paths):
+```bash
+vt-python tools/asset_cache.py voice-lookup projects/<name> <raw recording> <cleaned WAV> --report <report JSON> [--preset studio --mode quality]
+```
+A hit (exit 0) means the same source, `clean_audio.py`, preset and mode (and `--config`, if used), with the cached WAV and report still in place: reuse it, and don't clean again into a skill-specific folder. Any miss: clean that recording and run the whole gate again.
+
+**Only after a recording passes the whole gate, listening included,** cache it with `voice-store` (same arguments). It refuses a report that failed, belongs to another recording or WAV, or used another preset or mode.
 
 ## Run once for each recording
 
