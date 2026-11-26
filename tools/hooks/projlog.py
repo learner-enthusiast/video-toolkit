@@ -219,6 +219,26 @@ def fmt_models_footer(main_models: dict, sub_models: dict) -> str:
     return "; models " + " | ".join(chunks)
 
 
+def _entry_has_committed_tokens(lines: list[str], prompt_ref: str) -> bool:
+    start = None
+    for i, ln in enumerate(lines):
+        if ln.strip() == f"**Prompt:** {prompt_ref}":
+            start = i
+            break
+    if start is None:
+        return False
+    end = len(lines)
+    for i in range(start + 1, len(lines)):
+        if lines[i].startswith("### Handoff") or lines[i].startswith("## "):
+            end = i
+            break
+    for i in range(start + 1, end):
+        ln = lines[i]
+        if ln.startswith("**Tokens:**") and "not available" not in ln:
+            return True
+    return False
+
+
 def insert_footer(log, prompt_ref, footer):
     with open(log) as f:
         lines = f.read().split("\n")
@@ -298,10 +318,17 @@ def cmd_tokens(data, root):
         base = tp[:-len(".jsonl")] if tp.endswith(".jsonl") else tp
         sub_paths = glob.glob(os.path.join(base, "subagents", "*.jsonl"))
 
+    idem = tck.turn_idempotency_key(st["started_utc"], st.get("prompt_ref"))
+    log_path = os.path.join(root, project, "log.md")
+
     with tck.checkpoint_lock(root, sid):
         ckpt = tck.load_checkpoint(root, sid)
         if ckpt.pop("_invalid", None):
             ckpt["files"] = {}
+            ckpt["logged_ids_global"] = []
+        if tck.is_turn_committed(ckpt, idem):
+            drop_state(sp, started_key)
+            return
         seen: set[str] = set()
         scan_stats: dict = {}
         if tp:
@@ -346,8 +373,10 @@ def cmd_tokens(data, root):
         finished = parse_iso(fin_iso)
         secs = max(0, int((finished - started).total_seconds()))
         took = f"{secs // 60} m {secs % 60:02d} s" if secs >= 60 else f"{secs} s"
-        counted_main = n_main > 0
-        if counted_main:
+        usage_msgs = (n_main or 0) + (n_side or 0) + (n_sub or 0)
+        usage_tokens = sum(main.values()) + sum(sub.values())
+        has_usage = usage_msgs > 0 or usage_tokens > 0
+        if has_usage:
             tok = f"**Tokens:** {fmt(main)} (main session"
             tok += f"; subagents: {fmt(sub)})" if (n_sub or n_side) else "; subagents: none)"
             tok += fmt_models_footer(main_models or {}, sub_combined)
@@ -358,12 +387,38 @@ def cmd_tokens(data, root):
             f"**Finished** {finished.astimezone(IST):%H:%M:%S} · **Took** {took}\n"
             f"**Stage:** {stage}\n{tok}"
         )
+        tck.merge_global_logged_ids(ckpt, seen)
+        footer_durable = False
         with log_lock(root, project):
-            insert_footer(os.path.join(root, project, "log.md"), st["prompt_ref"], footer)
             try:
-                tck.save_checkpoint(root, sid, ckpt)
-            except Exception as exc:
-                log_err(root, project, f"checkpoint save failed: {exc}")
+                with open(log_path) as f:
+                    lines = f.read().split("\n")
+            except OSError:
+                lines = []
+            already_tokens = _entry_has_committed_tokens(lines, st["prompt_ref"])
+            if already_tokens and not has_usage:
+                footer_durable = True
+            else:
+                insert_footer(log_path, st["prompt_ref"], footer)
+                footer_durable = True
+            if footer_durable:
+                tck.mark_turn_committed(
+                    ckpt,
+                    idem,
+                    started_utc=st["started_utc"],
+                    prompt_ref=st.get("prompt_ref"),
+                    session_id=sid,
+                )
+                try:
+                    tck.save_checkpoint(root, sid, ckpt)
+                except Exception as exc:
+                    log_err(root, project, f"checkpoint save failed: {exc}")
+                    if not already_tokens:
+                        log_err(
+                            root,
+                            project,
+                            "turn footer written but checkpoint not saved; retry will reconcile",
+                        )
     if os.environ.get("PROJLOG_VERIFY") == "1" and tp:
         rmain, rsub, _, _, _, _, _, _ = tck.collect_usage_reference(tp, sub_paths, since)
         if rmain != main or rsub != sub:

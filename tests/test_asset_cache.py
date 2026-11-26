@@ -261,8 +261,9 @@ class AssetCacheTest(unittest.TestCase):
             os.makedirs(proj)
             mp = ac.manifest_path(proj)
             os.makedirs(os.path.dirname(mp))
+            corrupt_body = "{bad"
             with open(mp, "w") as f:
-                f.write("{bad")
+                f.write(corrupt_body)
             inp = os.path.join(proj, "in.bin")
             out = os.path.join(proj, "out.bin")
             with open(inp, "wb") as f:
@@ -284,7 +285,12 @@ class AssetCacheTest(unittest.TestCase):
             )()
             with mock.patch.object(ac.shutil, "copy2", side_effect=OSError("perm")):
                 with self.assertRaises(RuntimeError):
-                    ac.manifest_transaction(proj, lambda m: m.setdefault("entries", {}))
+                    ac.cmd_store(store)
+            self.assertTrue(os.path.isfile(mp))
+            self.assertEqual(corrupt_body, open(mp).read())
+            self.assertFalse(any(n.startswith("asset-manifest.json.corrupt") for n in os.listdir(os.path.dirname(mp))))
+            man, err = ac._read_manifest_file(proj)
+            self.assertIn(err, ("invalid_manifest", "corrupt_json"))
 
     def test_corrupt_manifest_quarantined_on_write(self):
         with tempfile.TemporaryDirectory() as td:
@@ -315,6 +321,87 @@ class AssetCacheTest(unittest.TestCase):
             )()
             ac.cmd_store(store)
             self.assertTrue(os.path.isfile(mp + ".corrupt"))
+
+
+    def test_ffprobe_cache_hit_skips_second_probe(self):
+        with tempfile.TemporaryDirectory() as td:
+            proj = os.path.join(td, "p")
+            os.makedirs(proj)
+            inp = os.path.join(proj, "vid.bin")
+            with open(inp, "wb") as f:
+                f.write(b"fake-media")
+            probe_json = json.dumps({"format": {"duration": "1.0"}})
+            args = type(
+                "A",
+                (),
+                {
+                    "project": proj,
+                    "input": inp,
+                    "entries": None,
+                    "force": False,
+                    "tool_version": "1",
+                },
+            )()
+            calls = {"n": 0}
+
+            def fake_probe(cmd, **kw):
+                calls["n"] += 1
+                return probe_json
+
+            with mock.patch("subprocess.check_output", side_effect=fake_probe):
+                buf = io.StringIO()
+                with mock.patch("sys.stdout", buf):
+                    ac.cmd_probe_ffprobe(args)
+                first = buf.getvalue().strip()
+                self.assertEqual(1, calls["n"])
+                buf2 = io.StringIO()
+                with mock.patch("sys.stdout", buf2):
+                    ac.cmd_probe_ffprobe(args)
+                self.assertEqual(1, calls["n"])
+                self.assertTrue(first)
+                self.assertEqual(first, buf2.getvalue().strip())
+
+    def test_ffprobe_input_changed_during_probe(self):
+        with tempfile.TemporaryDirectory() as td:
+            proj = os.path.join(td, "p")
+            os.makedirs(proj)
+            inp = os.path.join(proj, "vid.bin")
+            with open(inp, "wb") as f:
+                f.write(b"aa")
+            args = type(
+                "A",
+                (),
+                {
+                    "project": proj,
+                    "input": inp,
+                    "entries": None,
+                    "force": False,
+                    "tool_version": "1",
+                },
+            )()
+
+            def mutate_then_probe(cmd, **kw):
+                with open(inp, "ab") as f:
+                    f.write(b"b")
+                return "{}"
+
+            with mock.patch("subprocess.check_output", side_effect=mutate_then_probe):
+                with self.assertRaises(SystemExit) as e:
+                    ac.cmd_probe_ffprobe(args)
+                self.assertIn("changed", str(e.exception))
+
+    def test_ffprobe_invalid_json_exits(self):
+        with tempfile.TemporaryDirectory() as td:
+            proj = os.path.join(td, "p")
+            os.makedirs(proj)
+            inp = os.path.join(proj, "v.bin")
+            with open(inp, "wb") as f:
+                f.write(b"x")
+            args = type("A", (), {"project": proj, "input": inp, "entries": None, "force": False, "tool_version": "1"})()
+            with mock.patch("subprocess.check_output", return_value="not-json"):
+                with self.assertRaises(SystemExit) as e:
+                    ac.cmd_probe_ffprobe(args)
+                self.assertIn("invalid JSON", str(e.exception))
 
 
 if __name__ == "__main__":
