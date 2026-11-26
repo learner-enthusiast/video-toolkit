@@ -13,7 +13,7 @@ Third-party skills used by this toolkit, at project level in `.claude/skills/`. 
 
 Upstream license files are kept inside each vendored skill folder.
 
-**Toolkit skills** (written here, not third-party): `/setup`, `/new-video`, `/coding-video`, `/reel`, `/carousel` (turns a reel's `script.md` into a 6–8 slide 1080x1350 Instagram carousel with PDF, caption and alt text), and `/text-posts` (writes the ready-to-paste LinkedIn post and X post from `script.md` and renders the 1080x1350 LinkedIn hook photo).
+**Toolkit skills** (written here, not third-party): `/setup`, `/new-video`, `/coding-video`, `/reel`, `/carousel` (turns a reel's `script.md` into a 6–8 slide 1080x1350 Instagram carousel with PDF, caption and alt text), and `/text-posts` (writes the ready-to-paste LinkedIn post and X post from `script.md` and renders the 1080x1350 LinkedIn hook photo), and `/hindi-twin` (the Hindi twin of a delivered reel, `pipeline/hindi-twin.md`; `disable-model-invocation: true`).
 
 ## How the skills fit together
 - `/coding-video` and `/reel` use `/cut-video` as the cutting engine for take selection, and `/add-zooms` for punch-ins on emphasised words that also hide jump cuts.

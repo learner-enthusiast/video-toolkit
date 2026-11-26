@@ -1,6 +1,6 @@
 # Standing rules
 
-Per-video code is built inside `projects/<name>/work/`, never in the toolkit. The toolkit holds two shared, git-tracked libraries every video checks first: `icons/` (logos and icons) and `components/` (specs plus approved Remotion code).
+Per-video code lives in `projects/<name>/work/`, never in the toolkit. Every video first checks the git-tracked `icons/` (logos, icons) and `components/` (specs and approved Remotion code).
 
 ## House numbers
 The only copy of these values; other files point here.
@@ -53,7 +53,7 @@ The only copy of these values; other files point here.
 - If an OpenAI model is truly needed, pick a smaller, cheaper model, never the flagship, and tell me which one and why.
 - Load keys from `.env`. Never print, log or copy them.
 
-## Voice Recording Cleanup
+## Voice cleanup
 - **Before any Whisper/ASR on talking-head audio, pass the gate in `pipeline/voice-cleaning.md`. No exceptions without my explicit approval.**
 
 ## Installs
@@ -87,6 +87,6 @@ The only copy of these values; other files point here.
 ## Deliverables
 - **Reels (see House numbers) are 9:16 only, start to finish:** the main video in 9:16 (1080x1920), exactly one trailer in 9:16 (a short cut defined in the prompt IS the trailer; otherwise the default from `pipeline/trailer.md`; never both), an SRT for each, a 9:16 cover/thumbnail (1080x1920) in `out/thumbnail/` plus the ChatGPT kit (`pipeline/thumbnail.md`), `<name>_social.json` (`pipeline/social-copy.md`), the carousel twin and the text posts (`pipeline/text-posts.md`). No 16:9 renders, stills, QA or layouts for a reel. Don't wait to be asked.
 - Long-form (> 3:00): the 16:9 + 9:16 set in `/coding-video`.
-- Every reel also gets a carousel twin (`pipeline/carousel.md`); every video also gets text posts, extras that change nothing else (`pipeline/text-posts.md`).
+- Hindi twins (`/hindi-twin`) ship only video, trailer and SRTs. Other reels also get a carousel twin (`pipeline/carousel.md`); other videos get text posts, extras (`pipeline/text-posts.md`).
 - X Premium: **yes**.
 - All final files go in `projects/<name>/out/`. Intermediates stay in `work/`.

@@ -156,6 +156,7 @@ def scaffold(project: str, aspect: str, force: bool = False) -> str:
         write(os.path.join(src, "lib", "cues.ts"), f.read())
     for name in ("cues.json", "cue_frames.json"):
         write(os.path.join(pub, "data", name), "{}\n")
+    write(os.path.join(pub, "data", "trailer_ranges.json"), '{"ranges": []}\n')
     write(os.path.join(pub, "data", ".gitkeep"), "")
     return remotion
 

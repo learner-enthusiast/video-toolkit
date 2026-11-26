@@ -4,7 +4,11 @@
 import argparse, json, os, re, subprocess, sys, base64, urllib.request
 ap = argparse.ArgumentParser(); ap.add_argument('video'); ap.add_argument('--start', type=float, default=0); ap.add_argument('--end', type=float)
 ap.add_argument('--thorough', action='store_true'); ap.add_argument('--glossary', default='../script.md')
-ap.add_argument('--out-dir', default='inspect'); ap.add_argument('--cpu-test', action='store_true'); a = ap.parse_args()
+ap.add_argument('--out-dir', default='inspect'); ap.add_argument('--cpu-test', action='store_true')
+ap.add_argument('--language', default='en', help='spoken language for the Whisper transcript (a Hindi twin: hi); OCR stays en')
+ap.add_argument('--captions', help='caption timeline.json: check on-screen captions against it instead of Whisper and script.md')
+ap.add_argument('--caption-ranges', help='trailer_ranges.json, when --captions is the main timeline and VIDEO is the trailer')
+a = ap.parse_args()
 ML = not a.cpu_test
 if a.cpu_test: print('CPU TEST MODE (CI only): no Whisper/OCR/face/VLM. Not a QA result.', file=sys.stderr)
 V = a.video; stem = os.path.splitext(os.path.basename(V))[0]; OUT = f'{a.out_dir}/{stem}'; os.makedirs(f'{OUT}/keyframes', exist_ok=True)
@@ -57,7 +61,7 @@ if ML:
     wav = f'{OUT}/a16.wav'; subprocess.run(['ffmpeg', '-v', 'error', '-y', *rng, '-i', V, '-vn', '-ac', '1', '-ar', '16000', wav])
     from faster_whisper import WhisperModel
     m = WhisperModel('large-v3', device='cuda', compute_type='int8')
-    segs, _ = m.transcribe(wav, language='en', word_timestamps=True, vad_filter=True, best_of=1, condition_on_previous_text=False)
+    segs, _ = m.transcribe(wav, language=a.language, word_timestamps=True, vad_filter=True, best_of=1, condition_on_previous_text=False)
     words = [[round(w.start, 2), round(w.end, 2), w.word.strip()] for s_ in segs for w in s_.words]
     del m
     import gc; gc.collect()
@@ -104,14 +108,22 @@ for i, (t0, t1) in enumerate(scenes):
     scene_out.append({'i': i, 't': [t0, t1], 'kf': p, 'vlm': d, 'ocr': ocr.get(p, []), 'face': face(p)})
 if ML: ollama({'model': 'qwen2.5vl:3b', 'keep_alive': 0})
 # ---- captions from band OCR
-spoken = [re.sub(r'[^a-z0-9]', '', w[2].lower()) for w in words]
+# what captions are compared with: Whisper's words, or the caption timeline itself (times on the inspected range's clock)
+if a.captions:
+    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')))
+    from tools.inspect import caption_reference
+    ref = [[s - S, e - S, w] for s, e, w in caption_reference.load(a.captions, a.caption_ranges) if S <= s < E]
+    notes_ref = [f'caption checks use {os.path.basename(a.captions)}, not Whisper']
+else:
+    ref, notes_ref = words, []
+spoken = [re.sub(r'[^a-z0-9]', '', w[2].lower()) for w in ref]
 captions = []
 for k, b in enumerate(bands):
     t = S + k / cf
     txt = ' '.join(x[0] for x in ocr.get(f'{band}/{b}', []) if x[1] >= 0.6).strip()
     toks = [re.sub(r'[^a-z0-9]', '', x.lower()) for x in txt.split()]; toks = [x for x in toks if x]
     if len(txt) < 3 or not toks: continue
-    near = {spoken[j] for j, w in enumerate(words) if abs(w[0] - (t - S)) <= 2}
+    near = {spoken[j] for j, w in enumerate(ref) if abs(w[0] - (t - S)) <= 2}
     if sum(x in near for x in toks) / len(toks) < 0.5: continue
     if captions and captions[-1][2] == txt: captions[-1][1] = round(t, 2)
     else: captions.append([round(t, 2), round(t, 2), txt])
@@ -146,7 +158,7 @@ for (i, k, t, p) in samples:
         if fc['blink'][0] > 0.5 and fc['blink'][1] > 0.5: flag(t, 'eyes_closed', str(fc['blink']), p)
 for c0, c1, txt in captions:
     t0 = re.sub(r'[^a-z0-9]', '', txt.split()[0].lower())
-    cand = [w[0] + S for w in words if re.sub(r'[^a-z0-9]', '', w[2].lower()) == t0 and abs(w[0] + S - c0) < 2]
+    cand = [w[0] + S for w in ref if re.sub(r'[^a-z0-9]', '', w[2].lower()) == t0 and abs(w[0] + S - c0) < 2]
     if not cand: continue
     d = c0 - min(cand, key=lambda x: abs(x - c0))
     if d > 0.4 + 1 / cf or d < -0.6 - 1 / cf: flag(c0, 'caption_desync', f'{txt!r} seen {d:+.2f}s vs speech')
@@ -160,7 +172,7 @@ vf = (f"fps=48/{dur:.3f},scale=-2:320," if portrait else f"fps=48/{dur:.3f},scal
 subprocess.run(['ffmpeg', '-v', 'error', '-y', *rng, '-i', V, '-vf', vf, '-frames:v', '1', '-q:v', '3', f'{OUT}/contact_sheet.jpg'])
 from collections import Counter
 rep = {'summary': {'duration': round(DUR, 2), 'range': [S, E], 'resolution': f'{Wd}x{Hd}', 'fps': vs['r_frame_rate'], 'lufs': float(I.group(1)) if I else None, 'tp': float(TP.group(1)) if TP else None, 'lra': float(LRA.group(1)) if LRA else None,
-       'scenes': len(scenes), 'flags': dict(Counter(f['type'] for f in flags)), 'notes': notes},
+       'scenes': len(scenes), 'flags': dict(Counter(f['type'] for f in flags)), 'notes': notes + notes_ref},
        'scenes': scene_out, 'words': words, 'captions': captions, 'black': black, 'freeze': freeze, 'silence': silence, 'flags': flags}
 json.dump(rep, open(f'{OUT}/report.json', 'w'), separators=(',', ':'))
 print(json.dumps(rep['summary']))

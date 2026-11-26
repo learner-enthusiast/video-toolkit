@@ -177,6 +177,7 @@ class CuesTsTest(unittest.TestCase):
                     open(os.path.join(REPO, "templates", "remotion", "cues.ts")) as g:
                 self.assertEqual(f.read(), g.read())
             self.assertEqual(read_json(os.path.join(root, "public", "data", "cues.json")), {})
+            self.assertEqual(read_json(os.path.join(root, "public", "data", "trailer_ranges.json")), {"ranges": []})
             self.assertTrue(read_json(os.path.join(root, "tsconfig.json"))["compilerOptions"]["resolveJsonModule"])
 
     def test_typescript_beat_spans_match_python(self):
@@ -185,7 +186,8 @@ class CuesTsTest(unittest.TestCase):
             self.skipTest("node without TypeScript type stripping")
         with open(os.path.join(REPO, "templates", "remotion", "cues.ts")) as f:
             source = f.read()
-        data = (f"const timeline = {json.dumps({'words': WORDS})};\nconst cueFrames = {{'B07.scan': 123}};\n")
+        data = (f"const timeline = {json.dumps({'words': WORDS})};\nconst cueFrames = {{'B07.scan': 123}};\n"
+                "const trailerData = {ranges: [[0, 10]]};\n")
         source = "\n".join(l for l in source.splitlines() if not l.startswith("import ")) + "\n"
         calls = [("B01", 0), ("B01", 0.5), ("B07", 0.4), ("B08", 1)]
         source = data + source + ("console.log(JSON.stringify([cue('B07.scan'), "

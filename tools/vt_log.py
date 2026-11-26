@@ -525,6 +525,35 @@ def cmd_record(args):
     print(path)
 
 
+def _side(project_or_log: str) -> dict:
+    path = os.path.join(project_or_log, "log.md") if os.path.isdir(project_or_log) else project_or_log
+    summary = summarize(parse_token_lines(path))
+    totals = summary.get("totals")
+    calls = summary.get("calls")
+    return {
+        "path": project_or_log,
+        "turns": summary.get("entries"),
+        "tokens": ({k: totals["main"][k] + totals["subagents"][k] for k in totals["main"]} if totals else None),
+        "api_calls": (calls["main"] + calls["sidechain"] + calls["subagents"]) if calls else None,
+        "cost_weighted_usd": summary.get("cost_weighted_usd"),
+        "turn_seconds": (summary.get("timing") or {}).get("total_seconds"),
+    }
+
+
+def side_by_side(first: str, second: str) -> dict:
+    """English project vs its Hindi twin: both columns and the second as a share of the first.
+    Anything either side didn't measure stays null."""
+    a, b = _side(first), _side(second)
+
+    def share(x, y):
+        return round(y / x, 3) if x and y is not None else None
+
+    ratio = {k: share(a[k], b[k]) for k in ("turns", "api_calls", "cost_weighted_usd", "turn_seconds")}
+    ratio["tokens"] = ({k: share(a["tokens"][k], b["tokens"][k]) for k in a["tokens"]}
+                       if a["tokens"] and b["tokens"] else None)
+    return {"first": a, "second": b, "second_over_first": ratio}
+
+
 def cmd_summary(args):
     entries = parse_token_lines(args.log_md)
     json.dump(summarize(entries), sys.stdout, indent=2)
@@ -554,12 +583,16 @@ def main():
     s.set_defaults(func=cmd_breakdown)
 
     def cmd_compare(args):
-        json.dump(compare_logs(args.baseline, args.candidate), sys.stdout, indent=2)
+        result = (side_by_side(args.baseline, args.candidate) if args.side_by_side
+                  else compare_logs(args.baseline, args.candidate))
+        json.dump(result, sys.stdout, indent=2)
         sys.stdout.write("\n")
 
     s = sub.add_parser("compare")
     s.add_argument("baseline")
     s.add_argument("candidate")
+    s.add_argument("--side-by-side", action="store_true",
+                   help="two project folders or logs in two columns, e.g. English and its Hindi twin")
     s.set_defaults(func=cmd_compare)
     args = ap.parse_args()
     args.func(args)

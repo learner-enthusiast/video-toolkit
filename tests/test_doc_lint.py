@@ -141,13 +141,14 @@ BUDGETS = {
     ".claude/skills/reel/SKILL.md": 7 * KB,
     ".claude/skills/coding-video/SKILL.md": 7 * KB,
     "components/index.md": 7 * KB,
+    ".claude/skills/hindi-twin/SKILL.md": 5 * KB,
 }
 PIPELINE_BUDGET = 10 * KB
 OVER_BUDGET_REASONS = {
     "pipeline/clean-audio.md": "reference for tools/clean_audio.py internals; read only to debug the cleaner, not by a stage",
 }
 # Files whose Gotchas are one-line rules, with the evidence in docs/lessons.md.
-LEAN_GOTCHAS = ("take-selection", "qa", "composition", "delegation", "transcribe", "video-inspect",
+LEAN_GOTCHAS = ("hindi-twin", "take-selection", "qa", "composition", "delegation", "transcribe", "video-inspect",
                 "render", "gpu", "thumbnail", "trailer", "subtitles")
 MAX_RULE = 200
 

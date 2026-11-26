@@ -127,6 +127,7 @@ Skills live under `.claude/skills/`. They route work; they do **not** override `
 | `/scriptwriting` | Tighten `script.md`, hooks, timing |
 | `/coding-video` | Long-form pipeline (16:9 + portrait deliverables where applicable) |
 | `/reel` | 9:16-only pipeline ≤ 2:59 |
+| `/hindi-twin` | Hindi version of a delivered reel: same composition, Hindi voice and footage, tool-made Roman Hindi captions |
 | `/cut-video` | Take selection and tight cut (used by coding-video and reel) |
 | `/add-zooms` | Emphasis punch-ins on transcript words |
 | `/clipify` | Find clips in a long recording → per-clip `/reel` |

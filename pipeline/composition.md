@@ -12,6 +12,8 @@
 - A build script turns the EDL into `public/data/timeline.json`: segments (source in/out → output frames), beats (by script beat ID: `### B07` headings in `caption_text.md`, in output order), and every kept word with its output time. Add `face.json` from `components/specs/FaceTrackedCrop.md`.
 - Every visual triggers on a word's output frame, never on a typed number. Scenes call `cue('B07.tableScan')` (`src/lib/cues.ts`); `beatAt('B07', 0.4)` covers a moment no word marks. No spoken words in TSX, and saved components take frames as props.
 - Cue phrases live in `public/data/cues.json`: `{"B07.tableScan": {"beat": "B07", "phrase": "full table"}}`, with optional `from` (a frame or `"B07.other+5"`) and `"edge": "end"`.
+- The trailer composition reads its ranges from `trailerRanges` (`public/data/trailer_ranges.json`, written by `tools/twin/trailer_ranges.py --beats "B01, B02, B05–B07"` or from the cue frames), and `export_cues.ts` uses the same ones.
+- The video's one light grade is recorded in `work/config/grade.json` (`{"filter": "<ffmpeg filter>"}`) and applied to the working copy; a Hindi twin copies it.
 - After every timeline step, from `work/remotion/`: `vt-python tools/captions/resolve_cues.py --src src`. It writes `cue_frames.json` and fails on a missing or ambiguous phrase. Projects made before named cues keep `at()` and `tools/captions/check_phrases.py`.
 - The voice plays as one continuous WAV laid out on the output timeline. Picture segments are cut separately, which makes J/L cuts easy.
 
