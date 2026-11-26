@@ -13,13 +13,21 @@ import subprocess
 import sys
 import tempfile
 
-from tools import path_safety as ps
+_REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
+
+from tools import cache_events, path_safety as ps  # noqa: E402
 
 _SHA256_RE = re.compile(r"^[a-f0-9]{64}$")
 
 CACHE_VERSION = 2
 MANIFEST = "work/cache/asset-manifest.json"
 SCRIPT_SELF = os.path.abspath(__file__)
+CLEAN_AUDIO = os.path.join(os.path.dirname(SCRIPT_SELF), "clean_audio.py")
+# What pipeline/probe-and-trim.md reports for every source.
+PROBE_ENTRIES = ("format=duration:stream=codec_type,codec_name,width,height,r_frame_rate,avg_frame_rate,"
+                 "nb_frames,sample_rate,channels:stream_side_data=rotation:stream_tags=rotate")
 
 # Test instrumentation: increment on each input file hash (see tests).
 _INPUT_HASH_CALLS = 0
@@ -322,59 +330,43 @@ def _atomic_install_output(project: str, key: str, src_file: str, dest_name: str
     return target
 
 
-def cmd_lookup(args):
-    params = json.loads(args.params) if args.params else None
-    try:
-        fp = build_operation_fingerprint(
-            args.op, args.input, params, script_path=args.script, tool_version=args.tool_version
-        )
-    except MissingScriptFingerprintError as exc:
-        out = {"hit": False, "key": None, "reason": str(exc), "entry": None}
-        json.dump(out, sys.stdout, indent=2)
-        sys.stdout.write("\n")
-        sys.exit(1)
+def lookup(project, inp, op, params=None, *, script=None, tool_version=None) -> dict:
+    """{hit, key, reason, entry[, path]}. Raises MissingScriptFingerprintError."""
+    fp = build_operation_fingerprint(op, inp, params, script_path=script, tool_version=tool_version)
     key = cache_key_from_fingerprint(fp)
-    man, man_err = _read_manifest_file(args.project)
+    out = {"hit": False, "key": key, "reason": "miss", "entry": None}
+    man, man_err = _read_manifest_file(project)
     if man_err:
-        out = {"hit": False, "key": key, "reason": man_err, "entry": None}
-        json.dump(out, sys.stdout, indent=2)
-        sys.stdout.write("\n")
-        sys.exit(1)
-    ent = man["entries"].get(key)
-    op_expect = fp
-    out = {"hit": False, "key": key, "reason": "miss", "entry": ent}
+        out["reason"] = man_err
+        return out
+    ent = out["entry"] = man["entries"].get(key)
     if ent:
-        ok, reason = verify_entry(args.project, ent, key, operation=op_expect)
-        out["hit"] = ok
-        out["reason"] = reason
+        ok, reason = verify_entry(project, ent, key, operation=fp)
+        out["hit"], out["reason"] = ok, reason
         if ok:
-            out["path"] = os.path.join(args.project, ent["path"])
-    json.dump(out, sys.stdout, indent=2)
-    sys.stdout.write("\n")
-    sys.exit(0 if out.get("hit") else 1)
+            out["path"] = os.path.join(project, ent["path"])
+    return out
 
 
-def cmd_store(args):
-    params = json.loads(args.params) if args.params else None
+def store(project, inp, op, output, params=None, *, script=None, tool_version=None, meta=None) -> str:
+    """Copy `output` into the cache under the operation's fingerprint; returns the cached path."""
     try:
-        fp = build_operation_fingerprint(
-            args.op, args.input, params, script_path=args.script, tool_version=args.tool_version
-        )
+        fp = build_operation_fingerprint(op, inp, params, script_path=script, tool_version=tool_version)
     except MissingScriptFingerprintError as exc:
         sys.exit(str(exc))
     key = cache_key_from_fingerprint(fp)
-    if not os.path.isfile(args.output):
+    if not os.path.isfile(output):
         sys.exit("output file missing")
-    out_size = os.path.getsize(args.output)
+    out_size = os.path.getsize(output)
     if out_size < 1:
         sys.exit("output file empty")
-    if fp.get("input_size") is not None and os.path.isfile(args.input):
-        st = os.stat(args.input)
+    if fp.get("input_size") is not None and os.path.isfile(inp):
+        st = os.stat(inp)
         if st.st_size != fp["input_size"] or st.st_mtime_ns != fp["input_mtime_ns"]:
             sys.exit("input changed during operation")
-    out_hash = sha256_file(args.output)
-    target = _atomic_install_output(args.project, key, args.output, os.path.basename(args.output))
-    rel = os.path.relpath(target, args.project).replace("\\", "/")
+    out_hash = sha256_file(output)
+    target = _atomic_install_output(project, key, output, os.path.basename(output))
+    rel = os.path.relpath(target, project).replace("\\", "/")
     entry = {
         "op": fp["op"],
         "path": rel,
@@ -389,17 +381,86 @@ def cmd_store(args):
         "implementation": fp["implementation"],
         "script_hash": fp.get("script_hash"),
     }
+    if meta:
+        entry["meta"] = meta
 
     def _add(man: dict) -> None:
         man.setdefault("entries", {})[key] = entry
 
-    manifest_transaction(args.project, _add)
-    print(target)
+    manifest_transaction(project, _add)
+    return target
+
+
+def _finish_lookup(project, op, out):
+    cache_events.record(project, "asset", op, "hit" if out["hit"] else "miss", out["reason"])
+    json.dump(out, sys.stdout, indent=2)
+    sys.stdout.write("\n")
+    sys.exit(0 if out.get("hit") else 1)
+
+
+def cmd_lookup(args):
+    params = json.loads(args.params) if args.params else None
+    try:
+        out = lookup(args.project, args.input, args.op, params, script=args.script, tool_version=args.tool_version)
+    except MissingScriptFingerprintError as exc:
+        out = {"hit": False, "key": None, "reason": str(exc), "entry": None}
+    _finish_lookup(args.project, args.op, out)
+
+
+def cmd_store(args):
+    params = json.loads(args.params) if args.params else None
+    print(store(args.project, args.input, args.op, args.output, params,
+                script=args.script, tool_version=args.tool_version))
+
+
+def _voice_params(args) -> dict:
+    return {"preset": args.preset, "mode": args.mode,
+            "config_sha256": sha256_file(args.config) if args.config else None}
+
+
+def _voice_report_problem(args) -> str | None:
+    """Why this report can't vouch for this WAV, or None."""
+    report, err = ps.load_json_dict(args.report)
+    if err:
+        return f"report_{err}"
+    gate = report.get("production_gate") or {}
+    checks = (
+        (report.get("status") == "succeeded", "report_not_succeeded"),
+        (gate.get("automated_checks_passed") is True, "report_gate_not_passed"),
+        (report.get("preset") == args.preset and report.get("mode") == args.mode, "report_preset_or_mode_differs"),
+        (os.path.realpath(str(report.get("input"))) == os.path.realpath(args.input), "report_is_for_another_source"),
+        (os.path.realpath(str(report.get("output"))) == os.path.realpath(args.wav), "report_is_for_another_wav"),
+    )
+    return next((reason for ok, reason in checks if not ok), None)
+
+
+def cmd_voice_store(args):
+    """Run only after the recording passed the whole gate, listening included."""
+    problem = _voice_report_problem(args)
+    if problem:
+        sys.exit(f"not cached: {problem}")
+    print(store(args.project, args.input, "voice_clean", args.wav, _voice_params(args), script=CLEAN_AUDIO,
+                meta={"report_sha256": sha256_file(args.report)}))
+
+
+def cmd_voice_lookup(args):
+    """Hit only for the same source, cleaner, preset, mode and config, with the cached WAV and report still in place."""
+    out = lookup(args.project, args.input, "voice_clean", _voice_params(args), script=CLEAN_AUDIO)
+    if out["hit"]:
+        entry = out["entry"]
+        if not os.path.isfile(args.wav) or sha256_file(args.wav) != entry["sha256"]:
+            out.update(hit=False, reason="wav_differs")
+        elif (not os.path.isfile(args.report)
+              or sha256_file(args.report) != (entry.get("meta") or {}).get("report_sha256")):
+            out.update(hit=False, reason="report_differs")
+        else:
+            out["wav"] = args.wav
+    _finish_lookup(args.project, "voice_clean", out)
 
 
 def cmd_probe_ffprobe(args):
     """Store ffprobe JSON for a media file if cache miss."""
-    params = {"tool": "ffprobe", "entries": args.entries or "format,duration:stream=codec_type"}
+    params = {"tool": "ffprobe", "entries": args.entries or PROBE_ENTRIES}
     fp = build_operation_fingerprint(
         "ffprobe", args.input, params, script_path=None, tool_version=args.tool_version or "unknown"
     )
@@ -411,8 +472,10 @@ def cmd_probe_ffprobe(args):
         if ent and not args.force:
             ok, reason = verify_entry(args.project, ent, key, operation=op_expect)
             if ok:
+                cache_events.record(args.project, "asset", "ffprobe", "hit", reason)
                 print(os.path.join(args.project, ent["path"]))
                 return
+    cache_events.record(args.project, "asset", "ffprobe", "miss", "forced" if args.force else "miss")
     try:
         out = subprocess.check_output(
             ["ffprobe", "-v", "error", "-show_entries", params["entries"], "-of", "json", args.input],
@@ -470,6 +533,7 @@ def main():
         sp.add_argument("--params", default="")
         sp.add_argument("--script", help="Implementation script to fingerprint")
         sp.add_argument("--tool-version", default="")
+        return sp
 
     s = common(sub.add_parser("lookup"))
     s.set_defaults(func=cmd_lookup)
@@ -485,6 +549,17 @@ def main():
     s.add_argument("--force", action="store_true")
     s.add_argument("--tool-version", default="")
     s.set_defaults(func=cmd_probe_ffprobe)
+
+    for name, func in (("voice-store", cmd_voice_store), ("voice-lookup", cmd_voice_lookup)):
+        s = sub.add_parser(name)
+        s.add_argument("project")
+        s.add_argument("input", help="source recording")
+        s.add_argument("wav", help="cleaned WAV at its canonical path")
+        s.add_argument("--report", required=True)
+        s.add_argument("--preset", default="studio")
+        s.add_argument("--mode", default="quality")
+        s.add_argument("--config", help="clean_audio --config file, if one was used")
+        s.set_defaults(func=func)
 
     args = ap.parse_args()
     args.func(args)

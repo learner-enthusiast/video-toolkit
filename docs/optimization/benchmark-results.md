@@ -1,45 +1,31 @@
-# Token/time benchmark — status
+# Token/time benchmark: status
 
-## Automated microbenchmarks (this pass)
+**Status after PRs #10–#14 (2026-11-26): the instrumentation is in place; no production benchmark has been run.** No paired baseline and candidate `log.md` files exist, so no measured token or time saving is claimed.
 
-Run locally:
+## What is measured so far
+- **Fixed repo reads per stage:** 27–33% smaller after PR #13 (`pipeline/token-budget.md`). This is a `bytes/4` estimate of file sizes, not usage.
+- **Script equivalence:** the tracked tools in `tools/` reproduced one delivered episode's timeline and SRTs exactly, and an identical video-inspect report (PR #12). That shows behaviour was kept; it measures no saving.
 
-```bash
-python3 -m unittest tests.test_transcript_incremental.TranscriptIncrementalTest.test_benchmark_table -v
-```
+## What the next benchmark can use (new in PR #14)
+- Per turn: tokens by model, API call counts and a cost-weighted total in `log.md`.
+- Per stage: `work/metrics/<stage>-<run_id>.json` (`benchmark-protocol.md`, Per-stage record), with cache hits and misses, delegated-CLI usage and quality results.
+- Logs written before PR #14 have no `**Calls:**` or `**Cost:**` lines: their totals for those are `null`. A baseline from before PR #10 can be compared on tokens and time only.
+- Before PR #14, `vt_log.py` also returned no per-model breakdown for any log entry except one at the very end of the file.
 
-The test prints JSON with full-scan vs incremental bytes read and wall time on a 500-line history fixture. Token totals must match exactly.
-
-Asset-cache: `tests.test_asset_cache.AssetCacheTest.test_single_input_hash_per_store` asserts one input SHA-256 per store command.
-
-Real production A/B logs remain **pending** (no paired `log.md` with hook tokens in the repo).
-
-# Token/time benchmark — status (historical)
-
-**As of gap-closure pass (`main` @ `9cf4a54`):** no paired baseline/candidate `log.md` files with hook `**Tokens:**` / `**Took**` lines were found in this repository clone. A valid A/B comparison cannot be reported without fabricated numbers.
-
-## Baseline commit (pre-optimization reference)
-
-| Commit | Role |
-|--------|------|
-| `63da975` | Pre–reliability-pass `main` (audit baseline) |
-| `9cf4a54` | Post–PR #4 merge (`main` at gap-closure start) |
-
-Use `git log --oneline 63da975..9cf4a54` for intervening hardening commits.
-
-## How to record the next benchmark
-
-1. Pick one project and one stage (e.g. Compose) per [`benchmark-protocol.md`](benchmark-protocol.md).
-2. Run two fresh sessions on the **same** media and instructions with the **same** model IDs (cache-cold vs cache-warm noted separately).
-3. Ensure hooks emit `**Stage:**`, `**Tokens:**`, and `**Took**` in `log.md`.
-4. Compare:
-
-   ```bash
-   vt-python tools/vt_log.py compare projects/<name>/log.md.baseline projects/<name>/log.md
-   ```
-
-5. Judge quality with the checklist in `benchmark-protocol.md` (separate from token deltas).
+## How to record it
+1. Pick one project and one stage, and follow [`benchmark-protocol.md`](benchmark-protocol.md): at least 3 fresh sessions per arm, same media, instructions and models.
+2. At each stage end run `vt-python tools/vt_log.py record projects/<name> --stage <stage>`.
+3. Compare the logs: `vt-python tools/vt_log.py compare <baseline-log.md> <candidate-log.md>`.
+4. Judge quality with the protocol's checklist, separately from tokens.
 
 ## Quality gate
+Lower usage without the same editing, audio, subtitle and fresh final visual QA is a **failed** optimization.
 
-Lower token usage without maintaining editing, audio, subtitle, and final fresh visual QA is a **failed** optimization.
+## Microbenchmarks
+`python3 -m unittest tests.test_transcript_incremental.TranscriptIncrementalTest.test_benchmark_table -v` prints full-scan vs incremental bytes read and wall time; token totals must match exactly. `tests.test_asset_cache` asserts one input hash per store.
+
+## Baseline commits
+| Commit | Role |
+|---|---|
+| `3a4738b` | `main` before PR #10 (token-efficiency baseline) |
+| `63da975`, `9cf4a54` | earlier reliability-pass references |

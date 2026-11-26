@@ -11,6 +11,7 @@ import tempfile
 CHECKPOINT_SCHEMA = 2
 _BOUNDARY_LEN = 64
 _GLOBAL_ID_CAP = 50_000
+_FILE_ID_CAP = 5_000
 _CONTENT_FP_CHUNK = 256 * 1024
 
 _LOCK_ORDER_DOC = "Acquire session checkpoint lock before project log.md lock when both are needed."
@@ -80,11 +81,32 @@ def global_logged_ids(ckpt: dict | None) -> set[str]:
     return set(ids)
 
 
-def merge_global_logged_ids(ckpt: dict, seen: set[str]) -> None:
-    merged = global_logged_ids(ckpt) | set(seen)
-    if len(merged) > _GLOBAL_ID_CAP:
-        merged = set(sorted(merged)[-(_GLOBAL_ID_CAP):])
-    ckpt["logged_ids_global"] = sorted(merged)
+class OrderedIds(dict):
+    """A set of message ids that remembers insertion order, so caps drop the oldest."""
+
+    def __init__(self, ids=()):
+        super().__init__(dict.fromkeys(ids))
+
+    def add(self, item: str) -> None:
+        self.setdefault(item, None)
+
+    def update(self, ids) -> None:
+        for item in ids:
+            self.add(item)
+
+    def newest(self, cap: int) -> list[str]:
+        return list(self)[-cap:]
+
+
+def ordered_logged_ids(ckpt: dict | None) -> list[str]:
+    """Stored ids, oldest first."""
+    return (_normalize_id_list((ckpt or {}).get("logged_ids_global")) or [])
+
+
+def merge_global_logged_ids(ckpt: dict, seen) -> None:
+    merged = OrderedIds(ordered_logged_ids(ckpt))
+    merged.update(seen)
+    ckpt["logged_ids_global"] = merged.newest(_GLOBAL_ID_CAP)
 
 
 def validate_file_record(path: str, ck: object, *, require_boundary: bool = False) -> bool:
@@ -261,37 +283,37 @@ def _validate_file_ckpt(path: str, ck: object) -> bool:
     return validate_file_record(path, ck, require_boundary=False)
 
 
-def _resolve_start(path: str, ck: dict | None, stats: dict) -> tuple[int, set[str], bool]:
+def _resolve_start(path: str, ck: dict | None, stats: dict) -> tuple[int, list[str], bool]:
     """Return (start_offset, logged_ids, incremental_ok)."""
     if not ck or not _validate_file_ckpt(path, ck):
         stats["mode"] = "full_rescan"
-        return 0, set(), False
+        return 0, [], False
     cur = _file_identity(path)
     prev = ck.get("identity") or {}
     if not cur:
         stats["mode"] = "full_rescan"
-        return 0, set(), False
+        return 0, [], False
     off = int(ck.get("offset") or 0)
     if cur["ino"] != prev.get("ino") or cur["dev"] != prev.get("dev"):
         stats["mode"] = "full_rescan"
-        return 0, set(), False
+        return 0, [], False
     if cur["size"] < off:
         stats["mode"] = "full_rescan"
-        return 0, set(), False
+        return 0, [], False
     boundary = ck.get("boundary_fp")
     if off > 0 and boundary:
         if _boundary_fingerprint(path, off) != boundary:
             stats["mode"] = "full_rescan"
-            return 0, set(), False
+            return 0, [], False
     stored_content = ck.get("content_fp")
     if off > 0 and stored_content:
         live = _content_fingerprint(path, off)
         if live is None or live != stored_content:
             stats["mode"] = "full_rescan"
-            return 0, set(), False
+            return 0, [], False
     if cur["size"] == prev.get("size") and cur["mtime_ns"] != prev.get("mtime_ns"):
         stats["mode"] = "full_rescan"
-        return 0, set(), False
+        return 0, [], False
     if cur["size"] > prev.get("size", 0) and cur["size"] > off and off > 0:
         # Append-only growth is allowed when boundary + content_fp matched; residual risk:
         # in-place edits solely beyond offset without mtime change are not always detectable
@@ -302,8 +324,8 @@ def _resolve_start(path: str, ck: dict | None, stats: dict) -> tuple[int, set[st
     ids_norm = _normalize_id_list(logged_raw)
     if logged_raw is not None and ids_norm is None:
         stats["mode"] = "full_rescan"
-        return 0, set(), False
-    logged = set(ids_norm or [])
+        return 0, [], False
+    logged = list(ids_norm or [])
     return off, logged, True
 
 
@@ -379,6 +401,11 @@ def _message_id(e: dict) -> str | None:
     return str(mid) if mid else None
 
 
+def _count_call(stats: dict, model: str) -> None:
+    calls = stats.setdefault("calls_by_model", {})
+    calls[model] = calls.get(model, 0) + 1
+
+
 def _accumulate_usage(
     e: dict,
     since: str,
@@ -418,6 +445,7 @@ def _accumulate_usage(
         tot[key] += v
         mt[key] += v
     stats["messages_counted"] = stats.get("messages_counted", 0) + 1
+    _count_call(stats, model)
     return e.get("timestamp"), True
 
 
@@ -449,8 +477,8 @@ def scan_parent_transcript(
 
     files_ckpt = (checkpoint or {}).get("files", {}) if incremental and checkpoint else {}
     use_inc = bool(incremental and checkpoint is not None and session_id)
-    global_ids = global_logged_ids(checkpoint) if use_inc else set()
-    seen.update(global_ids)
+    ordered_global = ordered_logged_ids(checkpoint) if use_inc else []
+    seen.update(ordered_global)
 
     try:
         fh = open(path, "rb")
@@ -459,11 +487,11 @@ def scan_parent_transcript(
 
     with fh:
         start = 0
-        logged_ids: set[str] = set(global_ids)
+        logged_ids = OrderedIds(ordered_global)
         ck = files_ckpt.get(path) if use_inc else None
         if use_inc:
             start, file_ids, _ = _resolve_start(path, ck, stats)
-            logged_ids |= file_ids
+            logged_ids.update(file_ids)
         fh.seek(0, os.SEEK_END)
         size = fh.tell()
         stats["bytes_read"] += size - start
@@ -502,7 +530,7 @@ def scan_parent_transcript(
                 "offset": new_off,
                 "boundary_fp": _boundary_fingerprint(path, new_off),
                 "content_fp": _content_fingerprint(path, new_off),
-                "logged_ids": sorted(logged_ids)[-5000:],
+                "logged_ids": logged_ids.newest(_FILE_ID_CAP),
             }
             merge_global_logged_ids(checkpoint, logged_ids)
 
@@ -529,8 +557,8 @@ def scan_subagent_files(
     n_sub = 0
     files_ckpt = (checkpoint or {}).get("files", {}) if incremental and checkpoint else {}
     use_inc = bool(incremental and checkpoint is not None and session_id)
-    global_ids = global_logged_ids(checkpoint) if use_inc else set()
-    seen.update(global_ids)
+    ordered_global = ordered_logged_ids(checkpoint) if use_inc else []
+    seen.update(ordered_global)
 
     for path in paths:
         if not path:
@@ -541,12 +569,12 @@ def scan_subagent_files(
             continue
         with fh:
             start = 0
-            logged_ids: set[str] = set(global_ids)
+            logged_ids = OrderedIds(ordered_global)
             ck = files_ckpt.get(path) if use_inc else None
             if use_inc:
                 sub_stats = {"mode": "incremental"}
                 start, file_ids, _ = _resolve_start(path, ck, sub_stats)
-                logged_ids |= file_ids
+                logged_ids.update(file_ids)
                 stats["mode"] = sub_stats.get("mode", stats.get("mode"))
             fh.seek(0, os.SEEK_END)
             size = fh.tell()
@@ -595,6 +623,7 @@ def scan_subagent_files(
                     sub_tot[key] += v
                     mt[key] += v
                 n_sub += 1
+                _count_call(stats, model)
                 ts = e.get("timestamp")
                 if ts:
                     last = max(last or "", ts)
@@ -606,7 +635,7 @@ def scan_subagent_files(
                     "offset": new_off,
                     "boundary_fp": _boundary_fingerprint(path, new_off),
                     "content_fp": _content_fingerprint(path, new_off),
-                    "logged_ids": sorted(logged_ids)[-5000:],
+                    "logged_ids": logged_ids.newest(_FILE_ID_CAP),
                 }
                 merge_global_logged_ids(checkpoint, logged_ids)
     return sub_tot, sub_models, last, n_sub, stats

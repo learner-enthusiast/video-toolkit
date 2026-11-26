@@ -3,7 +3,7 @@
 **Goal:** know every source exactly, then make clean, frame-accurate working copies in `work/`.
 
 **Probe**
-- Run `ffprobe` on every file in `raw/` and `assets/`. Report resolution, rotation (side data or `rotate` tag), fps (avg vs. r_frame_rate), duration, and audio streams.
+- Probe every file in `raw/` and `assets/` with `vt-python tools/asset_cache.py ffprobe projects/<name> <file>` (toolkit-root paths): it prints the path of the probe JSON, cached by file hash. `--force` re-probes. Report resolution, rotation (side data or `rotate` tag), fps (avg vs. r_frame_rate), duration, and audio streams.
 - Phone footage is often stored landscape with a 90° rotation flag. Make sure the working copy is upright, and look at a frame to confirm.
 - If avg fps ≠ r_frame_rate, the source is VFR. Convert it to constant 30 fps first, which keeps A/V sync stable.
 
