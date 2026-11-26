@@ -14,6 +14,7 @@ from tools.script_beats import BEAT_ID  # noqa: E402
 ap = argparse.ArgumentParser(); ap.add_argument('words'); ap.add_argument('k', type=float)
 ap.add_argument('--config', default='config/build_timeline.json'); ap.add_argument('--edl', default='edl.json')
 ap.add_argument('--captions', default='transcript/caption_text.md'); ap.add_argument('--out', default='remotion/public/data/timeline.json')
+ap.add_argument('--display', help='{"<caption token index>": shown text or ""} written by a caption tool (spoken numbers shown as digits)')
 args = ap.parse_args()
 C = load_config(args.config, dict(tail_frames=60, num={}, fix=[], pins=[], time_fix=[], highlights=[], warn=[], display=[], word_fix={}))
 words = json.load(open(args.words)); K = args.k; FPS = 30
@@ -123,6 +124,10 @@ for ph, rep in DISP:
             for k in range(len(pt)): disp[j + k] = rep[k]
             found += 1
     print(f'DISP {ph!r}: {found}')
+if args.display:  # per-token display rules: only the shown text changes, never a time or the raw token
+    for index, shown in json.load(open(args.display)).items():
+        if int(index) >= len(toks): sys.exit(f'{args.display}: token {index} is past the last caption token')
+        disp[int(index)] = shown
 warn = [False] * len(toks)
 for ph in WARN:
     pt = [norm(x) for x in ph.split()]

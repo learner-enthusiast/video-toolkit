@@ -1,0 +1,7 @@
+{
+ "_comment": "Tech-term spelling and casing, merged with the project script.md Glossary (project wins).",
+ "postgresql": "PostgreSQL",
+ "redis": "Redis",
+ "api": "API",
+ "server": "server"
+}

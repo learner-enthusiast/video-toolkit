@@ -17,6 +17,8 @@
 - Cut voice → caption times: `gpu-run vt-python tools/captions/align_ctc.py audio/voice.wav transcript/cut_words.json transcript/words_ctc.json`, then `tools/captions/clamp_ctc.py`, `tools/captions/build_timeline.py`, `tools/captions/retime_onsets.py` and `tools/captions/fix_starts.py` (both take `audio/voice.wav remotion/public/data/timeline.json`).
 - Settle doubts: `tools/captions/ctc_window.py` or `ctc_windows.py` (literal CTC decodes, `gpu-run`); `tools/captions/ctc_scan.py` finds hidden repeats against the script.
 
+- Hindi twin: `transcribe.py --language hi`, then captions only through `tools/captions/hindi_captions.py` (it uses `align_mms.py`, never the English `align_ctc.py`).
+
 **Checks**
 - Every script paragraph is found in the transcript, or reported as missing.
 - Word times are monotonic, with no zero-length words. Spot-check 3 words against the waveform.
