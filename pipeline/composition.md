@@ -9,8 +9,10 @@
 - Copy media into `public/` (clips, screenshots, clean voice WAV). Never reference `raw/` or `assets/` directly.
 
 **Data in, not hard-coded**
-- A build script turns the EDL into `public/data/timeline.json`: segments (source in/out → output frames), beats, and every kept word with its output time. Add `face.json` from `components/specs/FaceTrackedCrop.md`.
-- Every visual triggers on a word's output frame, found by phrase lookup (e.g. `at('indexes')`), never on a typed number.
+- A build script turns the EDL into `public/data/timeline.json`: segments (source in/out → output frames), beats (by script beat ID: `### B07` headings in `caption_text.md`, in output order), and every kept word with its output time. Add `face.json` from `components/specs/FaceTrackedCrop.md`.
+- Every visual triggers on a word's output frame, never on a typed number. Scenes call `cue('B07.tableScan')` (`src/lib/cues.ts`); `beatAt('B07', 0.4)` covers a moment no word marks. No spoken words in TSX, and saved components take frames as props.
+- Cue phrases live in `public/data/cues.json`: `{"B07.tableScan": {"beat": "B07", "phrase": "full table"}}`, with optional `from` (a frame or `"B07.other+5"`) and `"edge": "end"`.
+- After every timeline step, from `work/remotion/`: `vt-python tools/captions/resolve_cues.py --src src`. It writes `cue_frames.json` and fails on a missing or ambiguous phrase. Projects made before named cues keep `at()` and `tools/captions/check_phrases.py`.
 - The voice plays as one continuous WAV laid out on the output timeline. Picture segments are cut separately, which makes J/L cuts easy.
 
 **Build**
@@ -42,18 +44,18 @@ What may and may not change: `CLAUDE.md` → Creative direction.
 - Pick still frames inside the scene's own window, not just N frames after a trigger.
 - Draw each scene once in a logical 972x900 card and scale it into every aspect.
 - A typing question card starts after the kicker's words, and the kicker lands on the first spoken word (`kickerAt`).
-- `tsc` doesn't check `at()` phrases: right after writing scenes, render one half-scale still per scene from a single bundle.
+- `tsc` doesn't check cue phrases: after writing scenes, run `resolve_cues.py --src src`, then render one half-scale still per scene from a single bundle.
 - Dark HEAD punch: keep me full frame, dimmed (`brightness(0.38) saturate(0.6)`), graphic above my head (y ≈ 96–500).
 - Whisper can put short words up to 1 s early in a pause: pin from the envelope (`pins`) and recheck trailer segments starting there.
 - Small UI slots take the official mark, not the wordmark; wide wordmarks get a wide box (`logoW`), never a square.
 - SVG `width`/`height` that don't match its `viewBox` aspect: size the tile to the declared aspect; don't edit the attributes.
 - Oversized intro lane headers overlap once three share a card: move them, keep their size.
-- Hyphenated and possessive words are one token: write `at()` as spoken and run `tools/captions/check_phrases.py` from `work/remotion/` before any still.
+- Hyphenated and possessive words are one token: write cue phrases as spoken, and run `resolve_cues.py` before any still.
 - Fade a clipped scrolling list's top edge with a CSS mask, or half-chips show under the header.
 - Never spread `opacity: undefined` into a spring-animated component: wrap it in a div for extra opacity or filter.
-- Scope repeated phrases to their beat (`at(phrase, from)`); the phrase check lists unscoped repeats.
+- A cue is scoped to its beat; a phrase repeated inside the beat needs a longer phrase or `from`.
 - Remotion composition ids allow only a-z, A-Z, 0-9 and `-`; an underscore fails the whole batch.
-- Number words are digits in word data: apply the map in `at()`, the phrase check and highlights; anchor list numbers with the next word or `from`.
+- Number words are digits in word data: `resolve_cues.py` maps them, and the highlight matcher needs the same map; anchor list numbers with the next word.
 - `PipelineCanvas` stations are transparent: draw connectors edge-to-edge in the gaps.
 - Put a positioning `transform` on an outer div and `enter()`/`popIn()` on an inner one, or the entrance overwrites it.
 - Bring each scene's base layout in on its first word; trigger only details on later words.

@@ -40,7 +40,7 @@ There is no fixed default layout. Every moment of a video is in exactly one of t
 - **FULL:** the graphic fills the whole frame and my face is hidden, while my voice keeps going. Whenever a concept needs the whole screen: flows, code, timelines, comparisons, data.
 - **SPLIT:** my face and a graphic together (graphic on top, face docked below: `components/specs/ReelSplit.md`). When my reaction or delivery matters while a simple graphic is on screen: a single card, a short list, a number, a punchline that points at a visual. Never for dense code or detailed diagrams; those go FULL.
 - **Switching:** a hard cut or a fluid brand-style wipe (spring or ease-in-out, never linear), only on the beat where a concept starts or ends. Never mid-sentence unless the cut lands on an emphasised word.
-- **Script cues** are written `[mm:ss–mm:ss | HEAD]`, `[… | FULL]`, `[… | SPLIT]`. They are the layout plan; I may move a beat to another state if it explains better (`CLAUDE.md`, Creative direction).
+- **Script cues** are written `[B07 | mm:ss–mm:ss | HEAD]`, `[… | FULL]`, `[… | SPLIT]`. They are the layout plan; I may move a beat to another state if it explains better (`CLAUDE.md`, Creative direction).
 - **9:16 (1080x1920) framing:** HEAD uses a portrait source natively, or a landscape source face-tracked and centre-cropped to portrait. In SPLIT the docked head is a 16:9 window (landscape source) or a head-and-shoulders square on a blurred, darkened copy (portrait source). Keep the face out of the top ~12% and the bottom ~20% platform UI zones, and the docked head lifted clear of the platform caption overlay.
 - **Captions** stay on in every state and never sit over a graphic's key element (placement per state in the Captions section).
 

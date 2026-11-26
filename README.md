@@ -372,7 +372,7 @@ Every beat uses a layout state from `brand.md`:
 - **FULL** — graphic full frame  
 - **SPLIT** — graphic on top, face below  
 
-Script cues `[mm:ss–mm:ss | STATE]` set intent. Agents may improve **how** a cue is shown (motion, reveal order, metaphor) but **must not** change spoken lines, on-screen facts/code, `brand.md`, the 2:59 reel cap, or the pedagogical intent of a cue.
+Script cues `[B07 | mm:ss–mm:ss | STATE]` set intent. Agents may improve **how** a cue is shown (motion, reveal order, metaphor) but **must not** change spoken lines, on-screen facts/code, `brand.md`, the 2:59 reel cap, or the pedagogical intent of a cue.
 
 Priority: `brand.md` → hard rules → script cue intent → agent creative take → skill defaults (`pipeline/instruction-hierarchy.md`).
 

@@ -92,6 +92,7 @@ def scaffold(project: str, aspect: str, force: bool = False) -> str:
                 "preserveSymlinks": true,
                 "esModuleInterop": true,
                 "skipLibCheck": true,
+                "resolveJsonModule": true,
                 "lib": ["ES2022", "DOM"]
               },
               "include": ["src"]
@@ -150,6 +151,11 @@ def scaffold(project: str, aspect: str, force: bool = False) -> str:
         os.path.join(src, "index.ts"),
         "import { registerRoot } from 'remotion';\nimport { RemotionRoot } from './Root';\n\nregisterRoot(RemotionRoot);\n",
     )
+    # Named cues: the library, an empty cue list and its (empty) resolved frames.
+    with open(os.path.join(TOOLKIT, "templates", "remotion", "cues.ts"), encoding="utf-8") as f:
+        write(os.path.join(src, "lib", "cues.ts"), f.read())
+    for name in ("cues.json", "cue_frames.json"):
+        write(os.path.join(pub, "data", name), "{}\n")
     write(os.path.join(pub, "data", ".gitkeep"), "")
     return remotion
 

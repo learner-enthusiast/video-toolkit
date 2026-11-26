@@ -5,6 +5,8 @@ import subprocess
 import unittest
 from pathlib import Path
 
+from tools.script_beats import id_problems, parse_beats
+
 ROOT = Path(__file__).resolve().parents[1]
 
 # A line that lost its head: starts with ", " or with one space then a capital or a backtick.
@@ -207,6 +209,30 @@ class ComponentIndexTest(unittest.TestCase):
         self.assertGreater(len(names), 150)
         missing = sorted({n for n in names if not (ROOT / "components" / "specs" / f"{n}.md").is_file()})
         self.assertEqual(missing, [])
+
+
+SCRIPT_TEMPLATES = ("templates/script-reel.md", "templates/script-tutorial.md", "templates/script-project-demo.md")
+
+
+class ScriptTemplateBeatsTest(unittest.TestCase):
+    def test_beat_ids_are_present_unique_and_in_order(self):
+        for rel in SCRIPT_TEMPLATES:
+            with self.subTest(template=rel):
+                beats = parse_beats(read(rel))
+                ids = [b["id"] for b in beats]
+                self.assertGreaterEqual(len(ids), 5)
+                self.assertEqual(id_problems(ids), [])
+                # templates have no gaps, so a copied script starts clean
+                self.assertEqual(ids, [f"B{n:02d}" for n in range(1, len(ids) + 1)])
+
+    def test_the_hook_beat_comes_before_the_greeting_beat(self):
+        for rel in SCRIPT_TEMPLATES:
+            with self.subTest(template=rel):
+                lines = read(rel).splitlines()
+                first, second = (lines[b["line"] - 1] for b in parse_beats(read(rel))[:2])
+                self.assertIn("hook", first.lower())
+                self.assertNotIn("Namoshkar", first)
+                self.assertIn("Namoshkar!", second)
 
 
 class DocLintRuleTest(unittest.TestCase):

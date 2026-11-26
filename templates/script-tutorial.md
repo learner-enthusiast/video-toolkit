@@ -9,24 +9,25 @@
 
 ## Hook, then opener
 **On-screen text (2–5 words, from frame 0):** <bold claim or result>
-**O1** · "<hook line>", then "Namoshkar!" (timing and delivery: `CLAUDE.md` → House numbers) → HEAD
+`[B01 | 00:00–00:03 | HEAD]` · "<hook line: boldest claim or result>" → <cue>
+`[B02 | 00:03–00:05 | HEAD]` · "Namoshkar!" (timing and delivery: `CLAUDE.md` → House numbers)
 
 ## Intro
-**I1** · "<what we'll build and why it matters>" → TALK, LowerThird on my name
+`[B03 | mm:ss–mm:ss | HEAD]` · "<what we'll build and why it matters>" → LowerThird on my name
 
 ## Steps
-Format: **ID** · `[mm:ss–mm:ss | HEAD, FULL or SPLIT]` · spoken text → visual cue (trigger word in quotes). The state tag is the layout plan (`brand.md` Layout); Claude may improve it (`CLAUDE.md`, Creative direction).
+Beats: `[Bnn | mm:ss–mm:ss | HEAD, FULL or SPLIT]` · spoken text → visual cue (trigger word in quotes). IDs are `B01…`, unique and in order across the whole script; a Hindi twin and the scene cues use them. The state tag is the layout plan (`brand.md` Layout); Claude may improve it (`CLAUDE.md`, Creative direction).
 
-**S1** · "<explain step 1>" → SCREEN + BUBBLE `assets/<file>`, zoom to <region> on "<word>", Highlight <region>
-**S2** · "<explain step 2>" → GFX + BUBBLE: FlowDiagram `A → B → C`, nodes on their words
-**S3** · "<common mistake>" → TALK + BarCompare / Tag (bad → good)
+`[B04 | mm:ss–mm:ss | SPLIT]` · "<explain step 1>" → screen `assets/<file>`, zoom to <region> on "<word>", Highlight <region>
+`[B05 | mm:ss–mm:ss | FULL]` · "<explain step 2>" → FlowDiagram `A → B → C`, nodes on their words
+`[B06 | mm:ss–mm:ss | HEAD]` · "<common mistake>" → BarCompare / Tag (bad → good)
 
 ## Recap
-**R1** · "<three takeaways>" → three Tags, one per phrase
+`[B07 | mm:ss–mm:ss | SPLIT]` · "<three takeaways>" → three Tags, one per phrase
 
 ## Close (`CLAUDE.md` → House numbers)
-**C1** · "<one-line recap: the payoff of the hook>" → TALK, warm, captions only
-**C2** · "Bye bye, sayonara!" with a wave → HEAD
+`[B08 | mm:ss–mm:ss | HEAD]` · "<one-line recap: the payoff of the hook>" → warm, captions only
+`[B09 | mm:ss–mm:ss | HEAD]` · "Bye bye, sayonara!" with a wave
 **End card** (5 s) → EndCard with links from `brand.md`
 
 ## Web captures (Claude takes these with Playwright)

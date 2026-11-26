@@ -68,7 +68,7 @@ Upstream license files are kept inside each vendored skill folder.
   - Pace and word cap: `CLAUDE.md` → House numbers; cut points when over.
   - Short-form path for every video (≤ 3 min), but research and the facts file (`work/facts.md`) are never skipped.
   - Story with depth; AI System Design episodes map the series format onto ABT (normal flow / where it breaks with LLMs / the fix).
-  - Toolkit template format with `[mm:ss–mm:ss | HEAD|FULL|SPLIT]` cues instead of the A/V two-column format; `**Message:**` line at the top of `script.md`.
+  - Toolkit template format with `[B07 | mm:ss–mm:ss | HEAD|FULL|SPLIT]` beat tags and cues instead of the A/V two-column format; `**Message:**` line at the top of `script.md`.
   - Ignores the TTS spoken layer, voice casting, localisation and the Spanish sections.
   - Token diet (2026-11-20): upstream's superseded Step 0 ("read every file") moved to `references/upstream-step0.md`; the topic table stays.
   - Keeps the three-track hook, recognition ladder, re-hooks every 5–8 s, AI-tells bans (no em dashes), swap test and fact audit as-is.

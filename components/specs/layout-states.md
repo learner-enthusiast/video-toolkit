@@ -4,7 +4,7 @@
 
 **Aspect scope:** a reel (final length ≤ 2:59) is designed and laid out for 9:16 (1080x1920) only: no dual-layout composition, no 16:9 safe-area checks, no landscape variant. Every "16:9" rule below is **long-form only** (> 3:00) and is kept for those videos.
 
-**Props:** `face` track, `segments` (picture cuts), `states` (HEAD | FULL | SPLIT, each with `from`/`to` frames, from the script's `[mm:ss–mm:ss | STATE]` cues), `transition` per switch (`cut` | `wipe`), `dark` flag for punch moments.
+**Props:** `face` track, `segments` (picture cuts), `states` (HEAD | FULL | SPLIT, each with `from`/`to` frames, from the script's `[B07 | mm:ss–mm:ss | STATE]` cues), `transition` per switch (`cut` | `wipe`), `dark` flag for punch moments.
 
 **The states**
 - **HEAD:** my face fills the frame; captions and lower-thirds on top. For story beats, emotion, reactions, transitions, punchlines.
