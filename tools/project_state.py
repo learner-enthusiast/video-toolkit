@@ -41,6 +41,8 @@ def default_state(project: str) -> dict:
         "stage": "prep",
         "status": "not_started",
         "master_language": "en",
+        "language": "en",
+        "twin_of": None,
         "approvals": {k: False for k in APPROVALS},
         "approval_evidence": {k: "none" for k in APPROVALS},
         "artifacts": {
@@ -269,7 +271,7 @@ def _sync_handoff_body(project: str) -> dict:
             quarantine_state_file(project)
         state = _rebuild_state_from_log(project)
     elif state.get("schema_version") != SCHEMA_VERSION:
-        preserved = {k: state[k] for k in ("project", "project_path", "master_language") if k in state}
+        preserved = {k: state[k] for k in ("project", "project_path", "master_language", "language", "twin_of") if k in state}
         state = _rebuild_state_from_log(project, base=default_state(project))
         state.update(preserved)
     else:
@@ -368,6 +370,15 @@ def append_log_line(project: str, line: str) -> None:
         f.write(f"{lead}{line}\n")
 
 
+def cmd_record_final_qa(args):
+    """The fresh final QA result, in log.md (tools/twin/gate.py reads it)."""
+    if not os.path.isfile(log_path(args.project)):
+        sys.exit("log.md missing; create the project first")
+    with project_log_lock(args.project):
+        append_log_line(args.project, f"**Final QA:** {args.result}")
+    print(log_path(args.project))
+
+
 def cmd_record_approval(args):
     status = args.status.lower()
     if status not in APPROVAL_STATUSES:
@@ -430,6 +441,11 @@ def main():
     s.add_argument("name", choices=APPROVALS)
     s.add_argument("value")
     s.set_defaults(func=cmd_set_approval)
+
+    s = sub.add_parser("record-final-qa", help="after the fresh --thorough vision QA")
+    s.add_argument("project")
+    s.add_argument("result", choices=("pass", "fail"))
+    s.set_defaults(func=cmd_record_final_qa)
 
     s = sub.add_parser("record-approval")
     s.add_argument("project")

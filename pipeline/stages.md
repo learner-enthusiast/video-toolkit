@@ -34,6 +34,7 @@ In Compose, be a creative co-director: script cues are the baseline, not a limit
 
 - Write a handoff entry to `log.md` (format in `pipeline/project-log.md`): decisions and the reasons for them, rejected options, open issues, files produced, and next steps. Update `project-state.json` (`vt-python tools/project_state.py sync-handoff projects/<name>`) and optional `work/context/<stage>-context.md` (`pipeline/context-handoffs.md`).
 - Write it so a fresh session with no memory of this one can continue without re-deriving anything: name exact files, timestamps, and parameter values.
+- After the Deliver stage's fresh final QA: `vt-python tools/project_state.py record-final-qa projects/<name> pass|fail`.
 - Record the stage: `vt-python tools/vt_log.py record projects/<name> --stage <stage>` writes `work/metrics/<stage>-<run_id>.json`. Add `--validators pass|fail` and `--final-qa pass|fail` only for checks you ran. The Stop hook doesn't do this, and the current turn isn't in the record yet (`docs/optimization/benchmark-protocol.md`).
 - Then tell me the stage is done and to start the next one in a new session (`/clear`, then the next stage's prompt).
 

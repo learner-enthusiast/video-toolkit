@@ -107,6 +107,13 @@ def _user_approval(project: str, stage: str) -> bool | None:
     return all(a["approved"] for a in recorded)
 
 
+def _language(project: str) -> dict:
+    """language and twin_of from project-state.json; null when there is no readable state."""
+    state, err = project_state.try_load_state(project)
+    state = {} if err else state
+    return {"language": state.get("language"), "twin_of": state.get("twin_of")}
+
+
 def _commit() -> str | None:
     try:
         return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=os.path.dirname(__file__),
@@ -130,6 +137,7 @@ def build_record(project: str, stage: str, *, since: str | None = None,
         "schema_version": SCHEMA_VERSION,
         "run_id": f"{now:%Y%m%dT%H%M%SZ}-{secrets.token_hex(3)}",
         "project": os.path.basename(os.path.normpath(project)),
+        **_language(project),
         "stage": stage,
         "recorded_at": now.isoformat(),
         "toolkit_commit": _commit(),

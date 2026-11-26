@@ -18,3 +18,11 @@ Everything else (quality bar, layout states, length rule, never cutting lines, c
 ## 60-second cut
 
 <the spoken lines of the short cut, in order; this IS the trailer. Leave the section out to get the default trailer from `pipeline/trailer.md`>
+
+# Hindi script
+
+<optional: the romanized Hindi script, one beat per line with the same IDs: `[B07 | SPLIT | tableScan="poori table"] <line>`. English Prep only saves it for the twin. Leave the section out if there is no twin.>
+
+## Hindi 60-second cut
+
+<optional: beat IDs, e.g. B01, B02, B05–B07, B18>

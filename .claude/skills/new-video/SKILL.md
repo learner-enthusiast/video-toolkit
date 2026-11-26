@@ -24,4 +24,6 @@ argument-hint: <name>
 5. Copy `.env` into the project only if I ask. It is gitignored either way.
 6. Tell me where to drop the files and which skill to run next (`/coding-video` or `/reel`).
 
+**Hindi twin** (`/new-video <name>-hi --twin-of <name>`): run `vt-python tools/twin/new_twin.py projects/<name>` instead of steps 1–5 (it sets `twin_of` and `language: hi`), then point me to `/hindi-twin <name>`.
+
 Do not create the Remotion project here. `pipeline/composition.md` does that after the rough cut is approved.

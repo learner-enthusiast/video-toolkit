@@ -82,6 +82,37 @@ def check_state_schema(project: str) -> list:
     return errs
 
 
+ALLOWED_TWIN_EXTRAS = {"roughcut_preview.mp4"}   # the H1 rough cut, not a deliverable
+
+
+def check_twin(project: str) -> list:
+    """A Hindi twin ships exactly its video and trailer, each with an SRT, built on unchanged English code."""
+    from tools.twin import common, setup_remotion
+
+    state = common.read_state(project)
+    if not state.get("twin_of"):
+        return [_err("NOT_A_TWIN", "project-state.json has no twin_of")]
+    english = common.english_of(project)
+    wanted = common.twin_deliverables(english)
+    if not wanted:
+        return [_err("NO_ENGLISH_MAIN", f"no single delivered main video in {english}/out", file=english)]
+    out = os.path.join(project, "out")
+    found = {os.path.relpath(os.path.join(folder, name), out)
+             for folder, _, files in os.walk(out) for name in files}
+    errs = [_err("MISSING_DELIVERABLE", "twin deliverable missing", file=f"out/{name}")
+            for name in wanted if name not in found]
+    errs += [_err("UNEXPECTED_DELIVERABLE", "a twin ships only its video, trailer and their SRTs", file=f"out/{name}")
+             for name in sorted(found - set(wanted) - ALLOWED_TWIN_EXTRAS)]
+    for name in wanted:
+        if name.endswith(".srt") and name in found:
+            errs += check_subtitles(os.path.join(out, name))
+    if os.path.isfile(os.path.join(project, "work", "twin", "english-src.json")):
+        errs += [_err("ENGLISH_SRC_CHANGED", problem) for problem in setup_remotion.verify(project)]
+    else:
+        errs.append(_err("TWIN_NOT_SET_UP", "run tools/twin/setup_remotion.py"))
+    return errs
+
+
 def check_stage(project: str) -> list:
     errs = []
     schema_errs = check_state_schema(project)
@@ -525,6 +556,7 @@ CHECKS = {
     "project": check_project,
     "stage": check_stage,
     "state_schema": check_state_schema,
+    "twin": check_twin,
 }
 
 

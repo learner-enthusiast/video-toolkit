@@ -2,6 +2,10 @@
 // another language only swaps public/data/. cue_frames.json comes from tools/captions/resolve_cues.py.
 import timeline from '../../public/data/timeline.json';
 import cueFrames from '../../public/data/cue_frames.json';
+import trailerData from '../../public/data/trailer_ranges.json';
+
+/** The trailer's [from, to] ranges on the main timeline (data, so a Hindi twin brings its own). */
+export const trailerRanges = (trailerData as unknown as {ranges: [number, number][]}).ranges;
 
 const CUES = cueFrames as unknown as Record<string, number>;
 const WORDS = (timeline as unknown as {words: {s: number; e: number; b?: string}[]}).words;
