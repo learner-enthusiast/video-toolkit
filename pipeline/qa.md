@@ -22,7 +22,7 @@ Any Whisper pass here is post-production verification only and must consume a de
 **Audio**
 - Integrated loudness and true peak meet `CLAUDE.md` → House numbers.
 - Listen at every cut point in the rough sheet for clicks or clipped words.
-- Run the sound checks in `pipeline/sound.md` (SFX onsets 1–3 frames early, music ≥ 15 dB under the voice in speech, mix spectrogram in `work/qa/`).
+- Run the sound checks in `pipeline/sound.md` (SFX onsets 1–3 frames early, mix spectrogram in `work/qa/`) and the voice-over-music checks (`pipeline/music.md`).
 
 **Restate test (fresh eyes)**
 - Run once per video, on the main video, after its 5 s beat sheet exists.

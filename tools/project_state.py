@@ -261,6 +261,11 @@ def _rebuild_state_from_log(project: str, *, base: dict | None = None) -> dict:
         if handoff.get("next"):
             state["next_actions"] = [handoff["next"]]
         state["status"] = "in_progress"
+    if not state.get("music") and os.path.isfile(log_path(project)):
+        with open(log_path(project)) as f:
+            restored = music_from_log(f.read())
+        if restored:
+            state["music"] = restored
     return state
 
 
@@ -271,13 +276,23 @@ def _sync_handoff_body(project: str) -> dict:
             quarantine_state_file(project)
         state = _rebuild_state_from_log(project)
     elif state.get("schema_version") != SCHEMA_VERSION:
-        preserved = {k: state[k] for k in ("project", "project_path", "master_language", "language", "twin_of") if k in state}
+        preserved = {k: state[k] for k in ("project", "project_path", "master_language", "language", "twin_of", "music")
+                     if k in state}
         state = _rebuild_state_from_log(project, base=default_state(project))
         state.update(preserved)
     else:
         state = _rebuild_state_from_log(project, base=state)
     save_state(project, state)
     return state
+
+
+def music_from_log(text: str) -> dict | None:
+    """The latest `**Music bed:** <id|none> (<mode>)` line, for a state file rebuilt from the log."""
+    found = re.findall(r"^\*\*Music bed:\*\* (\S+) \(([\w-]+)\)\s*$", text, re.M)
+    if not found:
+        return None
+    track, mode = found[-1]
+    return {"id": None if track == "none" else track, "mode": mode}
 
 
 def sync_handoff(project: str) -> dict:
@@ -379,6 +394,24 @@ def cmd_record_final_qa(args):
     print(log_path(args.project))
 
 
+def cmd_set_music(args):
+    """My reply after an audition ("music 2"), or a track id, or none."""
+    from tools.music import library, pick
+    choice = args.choice.strip()
+    if choice.isdigit():
+        report = os.path.join(args.project, "out", "music-audition", "audition.json")
+        if not os.path.isfile(report):
+            sys.exit("no audition report: run tools/music/audition.py, or name a track id")
+        with open(report) as f:
+            entry = next((t for t in json.load(f)["tracks"] if t["n"] == int(choice)), None)
+        if entry is None or entry["status"] != "ok":
+            sys.exit(f"audition {choice}: " + ("no such number" if entry is None else f"rejected ({entry['reason']})"))
+        choice = entry["id"]
+    track = None if choice.lower() == "none" else library.find(choice)["id"]
+    pick.record(args.project, {"id": track, "mode": "chosen"})
+    print(f"music: {track or 'no bed'}")
+
+
 def cmd_record_approval(args):
     status = args.status.lower()
     if status not in APPROVAL_STATUSES:
@@ -446,6 +479,11 @@ def main():
     s.add_argument("project")
     s.add_argument("result", choices=("pass", "fail"))
     s.set_defaults(func=cmd_record_final_qa)
+
+    s = sub.add_parser("set-music", help="my audition choice: a number, a track id or none")
+    s.add_argument("project")
+    s.add_argument("choice")
+    s.set_defaults(func=cmd_set_music)
 
     s = sub.add_parser("record-approval")
     s.add_argument("project")

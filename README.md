@@ -202,7 +202,9 @@ Launcher: **`vt-python`** → `~/video-toolkit/venv` (see `setup.md`). From repo
 
 | Tool | Purpose |
 |------|---------|
-| `tools/project_state.py` | `init`, `show`, `set-stage`, `record-approval`, `sync-handoff` |
+| `tools/project_state.py` | `init`, `show`, `set-stage`, `record-approval`, `set-music`, `sync-handoff` |
+| `tools/music/` | Add, restore, pick, audition and bookkeeping for background tracks (`pipeline/music.md`) |
+| `tools/sound/music_bed.py` · `tools/qa/voice_over_music.py` | Build the music bed under the voice; check gap, clarity and loudness |
 | `tools/validate/vt_validate.py` | Layout, stage gates, SRT, render specs, loudness expectations |
 | `tools/project_log_lock.py` | Exclusive lock for `log.md` (shared with hooks and approvals) |
 | `tools/hooks/projlog.py` | Prompt + token hooks |
@@ -268,6 +270,7 @@ Manifest corruption quarantines to `*.corrupt` when recovery succeeds; failed qu
 | Take selection & cut | `pipeline/take-selection.md`, skill `/cut-video` |
 | Composition | `pipeline/composition.md` |
 | Sound & SFX | `pipeline/sound.md` |
+| Background music (library, audition, mix, voice checks) | `pipeline/music.md`, `music/index.md` |
 | Subtitles | `pipeline/subtitles.md` |
 | Render & loudness | `pipeline/render.md` |
 | Trailer | `pipeline/trailer.md` |

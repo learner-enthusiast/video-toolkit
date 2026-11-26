@@ -3,6 +3,7 @@
 > **Final ≤ 2:59. Speed-up cap <1.4x>.** Twin of `projects/<name>/` (English must be delivered).
 
 **Project:** `projects/<name>-hi/` · **Raw:** <where the Hindi talking head is; never modify `raw/`>
+**Music:** inherited from the English video (nothing to set).
 **Notes:** <only what differs from the English video: extra emphasis words, spellings to force, anything unusual>
 
 Follow `/hindi-twin`; read only what the current stage needs.

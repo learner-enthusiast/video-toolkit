@@ -1,8 +1,12 @@
-"""Offline mix (pipeline/sound.md §7): sfx.wav from sfx_cues*.json, voice laid on the output timeline, mix = voice + sfx (no music).
-usage (from work/): vt-python tools/compose/mix.py main|trailer"""
+"""Offline mix (pipeline/sound.md §7): sfx.wav from sfx_cues*.json, voice laid on the output timeline,
+mix = voice + sfx, plus the music bed stem with --music (tools/sound/music_bed.py builds it from the voice).
+usage (from work/): vt-python tools/compose/mix.py main|trailer [--music audio/stems/<which>-music.wav]"""
 import json, os, subprocess, sys
 os.makedirs('scripts', exist_ok=True)
 W = '.'; which = sys.argv[1]
+if sys.argv[2:] and (len(sys.argv) != 4 or sys.argv[2] != '--music'):
+    sys.exit(__doc__)
+music = sys.argv[3] if sys.argv[2:] else None
 K = 'sfx_cues.json' if which == 'main' else 'sfx_cues_trailer.json'
 d = json.load(open(f'audio/{K}')); dur = d['duration']; cues = d['cues']
 sfx_out = 'audio/sfx.wav' if which == 'main' else 'audio/sfx_trailer.wav'
@@ -26,5 +30,6 @@ else:
     g = ';'.join(parts) + ';' + ''.join(f'[v{i}]' for i in range(len(R))) + f'concat=n={len(R)}:v=0:a=1,apad=whole_dur={dur:.3f},atrim=0:{dur:.3f}[o]'
     run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-i', 'audio/voice.wav', '-filter_complex', g, '-map', '[o]', '-ar', '48000', '-ac', '1', '-c:a', 'pcm_s24le', voice_out])
 # 3 · mix (fade the last 0.5 s with the picture fade)
-run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-i', voice_out, '-i', sfx_out, '-filter_complex', f'[0][1]amix=inputs=2:normalize=0,afade=t=out:st={dur - 0.5:.3f}:d=0.5[o]', '-map', '[o]', '-ar', '48000', '-c:a', 'pcm_s24le', mix_out])
+stems = [voice_out, sfx_out, *([music] if music else [])]   # the voice goes in unchanged; the bed is already leveled
+run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', *[a for s in stems for a in ('-i', s)], '-filter_complex', ''.join(f'[{i}]' for i in range(len(stems))) + f'amix=inputs={len(stems)}:normalize=0,afade=t=out:st={dur - 0.5:.3f}:d=0.5[o]', '-map', '[o]', '-ar', '48000', '-c:a', 'pcm_s24le', mix_out])
 print(which, 'cues', len(cues), 'dur', round(dur, 3), '->', mix_out)

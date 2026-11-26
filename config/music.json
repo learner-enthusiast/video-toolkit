@@ -1,0 +1,16 @@
+{
+  "_note": "Engineering parameters of the music bed (pipeline/music.md). The gap, fail level, fade-in and pause hold are House numbers in CLAUDE.md, not here.",
+  "duck_depth_db": 6.0,
+  "hold_s": 0.45,
+  "attack_s": 0.12,
+  "release_s": 0.9,
+  "voice_gate_db": -45.0,
+  "eq": { "freq_hz": 2000.0, "q": 0.7, "gain_db": -4.0 },
+  "fade_out_s": 2.0,
+  "loop_crossfade_s": 0.25,
+  "window_s": 0.4,
+  "window_hop_s": 0.1,
+  "window_speech_cover": 0.6,
+  "auto_level_rounds": 3,
+  "audition": { "busy_s": 20.0, "quiet_s": 10.0, "min_pause_s": 0.8, "phone_highpass_hz": 180, "phone_lowpass_hz": 7000 }
+}

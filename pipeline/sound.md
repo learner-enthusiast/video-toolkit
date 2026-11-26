@@ -1,6 +1,6 @@
 # Sound
 
-**Goal:** every visible hit that should sound gets one consistent sound, music (if any) sits under my voice, and the final mix meets `qa.md`.
+**Goal:** every visible hit that should sound gets one consistent sound, music (`pipeline/music.md`) sits under my voice, and the final mix meets `qa.md`.
 
 **Do**
 
@@ -59,21 +59,19 @@ Any other component: map it from `components/index.md` by what the viewer sees (
 **5 · Levels**
 
 - `gain_db` = (voice peak in dBFS) − (dB under voice peak, from the map) + 3. Measure the voice peak on `work/audio/clean.wav` once (`astats` Peak level). That puts every SFX peak 10–16 dB under my voice's peaks; boom and riser are the quietest.
-- Music bed: about −24 LUFS on its own, and it ducks a further 8–10 dB while I speak.
+- Music bed: set against my voice, never at a fixed level (`pipeline/music.md`).
 
-**6 · Music (optional, default none)**
+**6 · Music**
 
-- Look in this order: Pixabay Music, Freesound (CC0 filter), Mixkit, then Uppbeat. Pick by mood, tempo and a clean ending.
-- Prefer licences that need no attribution (Pixabay Content License, CC0, Mixkit free licence). CC-BY only with the credit in `<name>_social.json` (every post that uses the video). Never NC or ND licences, never Instagram/TikTok in-app music, never commercial songs.
-- Put the file in `projects/<name>/assets/music/` with a line in `assets/music/SOURCES.md`: URL, author, licence. If you can't download it, tell me which track (link, author, licence) and I'll drop it in.
+The track, the license rules, the bed's level and its checks: `pipeline/music.md`. I choose the music.
 
 **7 · Mix offline.** Remotion does no ducking, so the delivered audio is built with ffmpeg, not taken from the render.
 
 The voice is always the Prep-verified cleaned voice (`pipeline/voice-cleaning.md`): `work/audio/clean.wav` is a copy of a verified `work/audio/cleaned/<recording-id>.wav`, and the cut voice is trimmed from it, from each recording's own cleaned WAV when there are several. Never re-extract voice from `raw/`, a proxy or the Remotion render. Don't add more denoise or dereverb here; the main mix and both trailer mixes use the same voice source.
 
 1. **SFX track:** `work/audio/sfx.wav`, from `sfx_cues.json`: each cue's file through `adelay=<t in ms>:all=1` and `volume=<gain_db>dB`, all through `amix=inputs=N:normalize=0`, padded to the composition length (`apad=whole_dur=<s>`). A small per-project script in `work/scripts/` writes the filtergraph.
-2. **Music (if any):** loop or trim to length (`aloop` / `atrim`, fade the last 1.5 s), set to about −24 LUFS with `volume`, then duck it with `sidechaincompress` keyed on the clean voice. Start at `threshold=0.02:ratio=2.5:attack=15:release=350` and adjust `ratio` until the measured duck in speech windows is 8–10 dB.
-3. **Mix:** `amix=inputs=3:normalize=0` of `clean.wav` (laid out on the output timeline), `sfx.wav` and the ducked music → `work/audio/mix.wav`, 48 kHz.
+2. **Music (if any):** `tools/sound/music_bed.py` builds the stem `work/audio/stems/<which>-music.wav` (`pipeline/music.md`).
+3. **Mix:** `amix=normalize=0` of the voice on the output timeline, `sfx.wav` and the music stem → `work/audio/mix.wav`, 48 kHz.
 
 `pipeline/render.md` muxes `mix.wav` (one per composition: `mix.wav`, `mix_trailer_9x16.wav`, and `mix_trailer_16x9.wav` for long-form only); the Remotion master's own audio isn't used. SFX `<Audio>` in the Remotion composition is for preview only.
 
@@ -86,7 +84,7 @@ The voice is always the Prep-verified cleaned voice (`pipeline/voice-cleaning.md
 **Checks**
 
 - Every SFX onset is 1–3 frames before its visual trigger: `visual_t − t` in `sfx_cues.json`, and the first sample above −40 dBFS in `sfx.wav` after each `t`. List any that aren't.
-- Music sits ≥ 15 dB under my voice during speech: measure the RMS of each stem (voice, ducked music) inside the speech windows from `timeline.json` (`atrim` + `astats`) and report the smallest gap.
+- With music: `tools/qa/voice_over_music.py` passes on every deliverable (`pipeline/music.md`).
 - Save a spectrogram of the mix to `work/qa/mix_spectrum.png` and look at it (SFX spikes, music bed under the voice, no wideband clicks).
 - Final loudness per `CLAUDE.md` → House numbers, checked in `qa.md`.
 

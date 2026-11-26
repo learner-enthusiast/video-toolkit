@@ -1,6 +1,6 @@
 # Standing rules
 
-Per-video code lives in `projects/<name>/work/`, never in the toolkit. Every video first checks the git-tracked `icons/` (logos, icons) and `components/` (specs and approved Remotion code).
+Per-video code lives in `projects/<name>/work/`, never in the toolkit. Every video first checks the git-tracked `icons/` and `components/` (specs, approved Remotion code).
 
 ## House numbers
 The only copy of these values; other files point here.
@@ -9,6 +9,7 @@ The only copy of these values; other files point here.
 - **Close:** one-line recap, then "Bye bye, sayonara!" with a wave.
 - **Pace:** ~160 wpm. Max spoken words = 160 × minutes, minus room for clips (3 min ≈ 430–450). If over, cut points; never plan to speed up the script.
 - **Loudness:** every deliverable is −16 ± 0.5 LUFS integrated, true peak ≤ −1.5 dBTP.
+- **Music:** instrumental only; 20 dB under my voice (fail < 15 dB), 1.5 s fade-in, ducking holds 0.3 s pauses (`pipeline/music.md`).
 
 ## Icons
 - Before downloading any icon or logo, `grep -i '<brand>' icons/icons.md`; reuse `icons/<File>` if listed. Else download the **official** version into `icons/logos/` (generic UI: `icons/ui/`) and add a row (source URL, license, date). Never Read the table whole (a hook blocks it; to edit it or `components/index-full.md`, Read ≤ 40 lines).
@@ -22,7 +23,7 @@ The only copy of these values; other files point here.
 
 ## GPU
 - Prefix GPU work with `gpu-run` (create it if missing, `pipeline/gpu.md`). Verify first: `gpu-run nvidia-smi` shows the card and torch reports `cuda.is_available() == True`.
-- Never fall back to the CPU silently. Fix the cause, or stop and tell me. See `pipeline/gpu.md`.
+- Never fall back to the CPU silently. Fix the cause, or stop and tell me.
 - Exception: when the GPU is busy with another heavy job (a render, Whisper), run small side jobs (stills, thumbnails, rembg, contact sheets) on the CPU instead of waiting (Remotion: no `gpu-run`, `--gl=swangle`). Say so in the log and report. Never move the main render, transcription or final encodes to the CPU.
 
 ## Model routing
@@ -41,7 +42,7 @@ The only copy of these values; other files point here.
 
 ## Creative direction
 - My script's visual cues say **what the viewer must understand**. They are the baseline, not a limit: bring your own take where it explains better or holds attention (process: `pipeline/composition.md`).
-- **You may change:** how a cue is visualised, animation style, reveal order within a beat, the layout state of a beat (HEAD / FULL / SPLIT, `brand.md`) and its switch points (within a beat or two), extra graphics, emphasis, SFX and music beds, zooms.
+- **You may change:** how a cue is visualised, animation style, reveal order within a beat, the layout state of a beat (HEAD / FULL / SPLIT, `brand.md`) and its switch points (within a beat or two), extra graphics, emphasis, SFX, zooms.
 - **You may NOT change:** spoken lines (never cut or reword any line), the facts or code shown, `brand.md`, the length limit, or the intent of a cue (what the viewer must understand).
 - **Priority order:** `brand.md` → hard rules (length, never cut lines, never modify raw footage) → intent of my script cues → your creative take → skill defaults.
 
@@ -81,11 +82,11 @@ The only copy of these values; other files point here.
 - Visuals trigger on the word timestamps of what I say, never on fixed times.
 - No screenshot stays static for more than 3 s. No dead air. Use J/L cuts where they smooth the flow.
 - Never cover my face. Never stretch me. No text cut off. Captions are always readable.
-- Every visible hit that should sound gets one SFX from the kit (`pipeline/sound.md`); music, if any, ducks under my voice.
+- Every visible hit that should sound gets one SFX from the kit (`pipeline/sound.md`).
 - Deliver at House numbers loudness with A/V sync verified at the start, middle and end.
 
 ## Deliverables
-- **Reels (see House numbers) are 9:16 only, start to finish:** the main video in 9:16 (1080x1920), exactly one trailer in 9:16 (a short cut defined in the prompt IS the trailer; otherwise the default from `pipeline/trailer.md`; never both), an SRT for each, a 9:16 cover/thumbnail (1080x1920) in `out/thumbnail/` plus the ChatGPT kit (`pipeline/thumbnail.md`), `<name>_social.json` (`pipeline/social-copy.md`), the carousel twin and the text posts (`pipeline/text-posts.md`). No 16:9 renders, stills, QA or layouts for a reel. Don't wait to be asked.
+- **Reels (see House numbers) are 9:16 only:** the main video (1080x1920), exactly one trailer (a short cut defined in the prompt IS the trailer; otherwise the default from `pipeline/trailer.md`; never both), an SRT for each, a cover/thumbnail (1080x1920) in `out/thumbnail/` plus the ChatGPT kit (`pipeline/thumbnail.md`), `<name>_social.json` (`pipeline/social-copy.md`), the carousel twin and the text posts (`pipeline/text-posts.md`). No 16:9 renders, stills or QA for a reel. Don't wait to be asked. Don't wait to be asked.
 - Long-form (> 3:00): the 16:9 + 9:16 set in `/coding-video`.
 - Hindi twins (`/hindi-twin`) ship only video, trailer and SRTs. Other reels also get a carousel twin (`pipeline/carousel.md`); other videos get text posts, extras (`pipeline/text-posts.md`).
 - X Premium: **yes**.
