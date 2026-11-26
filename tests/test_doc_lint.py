@@ -32,6 +32,8 @@ GREETING_FIRST = (
 PATH_PREFIXES = ("pipeline/", "components/", "tools/", "templates/", "config/", ".claude/")
 # Documented as per-project, so they don't exist in the toolkit.
 PER_PROJECT_PREFIXES = ("work/", "projects/")
+# Gitignored and installed per clone by /setup, so absent in CI.
+PER_CLONE_PREFIXES = (".claude/skills/remotion-",)
 PLACEHOLDER = re.compile(r"[<>*{}$…|]")
 
 
@@ -69,7 +71,7 @@ def repo_paths(text):
         for token in span.split():
             token = token.strip("\"'(),;").rstrip(".:")
             token = re.split(r"#|:\d", token)[0]
-            if token.startswith(PER_PROJECT_PREFIXES) or PLACEHOLDER.search(token):
+            if token.startswith(PER_PROJECT_PREFIXES + PER_CLONE_PREFIXES) or PLACEHOLDER.search(token):
                 continue
             if token.startswith(PATH_PREFIXES):
                 yield token
