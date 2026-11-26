@@ -1,6 +1,6 @@
 # Render
 
-**Goal:** a ProRes master per composition, then a delivery MP4 at -16 LUFS.
+**Goal:** a ProRes master per composition, then a delivery MP4 at House numbers loudness (`CLAUDE.md`).
 
 **Master**
 - Render through `gpu-run` to `work/render/<comp>.mov` with ProRes standard, `--gl=angle`, and concurrency of about cores/2.
@@ -16,7 +16,7 @@
 
 **Checks**
 - `ffprobe` the output: codec, size, fps, duration matching the composition, audio present.
-- Loudness of the final file is about -16 LUFS (`ebur128`).
+- Loudness of the final file meets `CLAUDE.md` → House numbers (`ebur128`).
 
 **Gotchas**
 - Stop a render by PID (`pgrep -f 'remotion render'`, then `kill <pid>`), never `pkill -f <script name>` from the same shell: the pattern also matches your own command line and kills it (`sdai-12`).

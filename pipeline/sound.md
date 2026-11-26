@@ -143,7 +143,7 @@ The voice is always the Prep-verified cleaned voice (`pipeline/voice-cleaning.md
 - Every SFX onset is 1–3 frames before its visual trigger: `visual_t − t` in `sfx_cues.json`, and the first sample above −40 dBFS in `sfx.wav` after each `t`. List any that aren't.
 - Music sits ≥ 15 dB under my voice during speech: measure the RMS of each stem (voice, ducked music) inside the speech windows from `timeline.json` (`atrim` + `astats`) and report the smallest gap.
 - Save a spectrogram of the mix to `work/qa/mix_spectrum.png` and look at it (SFX spikes, music bed under the voice, no wideband clicks).
-- Final loudness per `qa.md`: −16 LUFS (a reel brief may say −14).
+- Final loudness per `CLAUDE.md` → House numbers, checked in `qa.md`.
 
 **Gotchas**
 
@@ -151,4 +151,4 @@ The voice is always the Prep-verified cleaned voice (`pipeline/voice-cleaning.md
 - An SFX that lands late reads as a sync bug, even when the picture is perfect. Lead the visual by 2–3 frames.
 - A sine or decay that stops mid-cycle clicks: the first stamp-thud draft ended on a click at its last sample (a vertical line on the kit's spectrogram sheet). End every recipe with a fade.
 - `amix` scales every input by 1/N unless `normalize=0`, so a 40-cue SFX track plays each sound 32 dB too quiet and the cue gains mean nothing. Always pass `normalize=0`.
-- SFX sum on top of voice peaks: a −16 LUFS mix peaked at −0.4 dBFS on `system-design-of-ai/06-cancellation`, so a linear two-pass loudnorm to a reel's −14 LUFS / TP −1 couldn't stay linear. Put `alimiter=limit=0.69:level=false` (≈ −3.2 dBFS) before loudnorm in both the measure and apply passes (that project's `render_chain.sh`): −14.0 LUFS, peak −4 dBFS.
+- SFX sum on top of voice peaks: a −16 LUFS mix peaked at −0.4 dBFS on `system-design-of-ai/06-cancellation`, so a linear two-pass loudnorm couldn't stay linear. Put `alimiter=limit=0.69:level=false` (≈ −3.2 dBFS) before loudnorm in both the measure and apply passes (that project's `render_chain.sh`).

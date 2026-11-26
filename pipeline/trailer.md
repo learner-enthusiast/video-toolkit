@@ -7,9 +7,9 @@
 **Cut**
 - **Which cut:** if the prompt defines a short cut (e.g. a "60-second cut" with a beat list), that cut IS the trailer: use the prompt's length and beats. Otherwise use the default trailer below. Never ship both a prompt-defined cut and a default trailer.
 - Default trailer: length 30–60 s (15–20 s when the main video is itself a reel). One idea: the problem, the payoff, and a reason to watch the full video.
-- Open with "Namoshkar!" (~1.5 s with the pause), then the boldest line or result as the hook. A 2–5 word text hook is on screen from frame 0. Reuse the main edit's "Namoshkar!" take.
+- Opener per `CLAUDE.md` → House numbers (hook first), with the boldest line or result as the hook and a 2–5 word text hook. Reuse the main edit's "Namoshkar!" take.
 - Reuse beats, graphics and word timestamps from the main edit. Don't re-pick takes.
-- End on a one-line recap, then "Bye bye, sayonara!" with a wave (reused from the main edit), then a short `EndCard` (≤ 2 s) that points to the full video.
+- Close per `CLAUDE.md` → House numbers (reused from the main edit), then a short `EndCard` (≤ 2 s) that points to the full video.
 
 **Formats**
 - **Portrait** (1080x1920, 30 fps; every video): follow the `/reel` rules for framing, big captions and safe zones. If the source is landscape, use `components/specs/FaceTrackedCrop.md` for talking-head beats and stack me on top of the screen for screen beats. Never stretch.

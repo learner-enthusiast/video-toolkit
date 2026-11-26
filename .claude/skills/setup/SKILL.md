@@ -1,6 +1,7 @@
 ---
 name: setup
 description: Check which video tools are installed, ask before installing the missing ones, then re-check. Run once per machine.
+disable-model-invocation: true
 ---
 
 # Setup

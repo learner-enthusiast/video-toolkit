@@ -1,10 +1,12 @@
 ---
 name: reel
-description: 9:16 reel pipeline (1080x1920, 30–60 s) with a "Namoshkar!" opener, a hook landing within 3 s, big captions and fast pace.
+description: 9:16 reel pipeline (1080x1920) for any video whose final length is ≤ 2:59. Hook first, then the greeting, with big captions and fast pace.
 argument-hint: <name>
 ---
 
-# Reel (9:16, 1080x1920, 30 fps, 30–60 s)
+# Reel (9:16, 1080x1920, 30 fps)
+
+**Length, pace, opener, close and loudness: `CLAUDE.md` → House numbers.**
 
 **Read only what the current stage needs (`pipeline/stages.md`). `CLAUDE.md` is already loaded — never Read it again.**
 
@@ -28,10 +30,10 @@ Prompts follow `templates/editing-prompt.md` (topic, path, speed-up cap, notes/s
 - **Script into the project.** Save the prompt's `# Script` as `projects/<name>/script.md` in the style of `templates/script-reel.md`, with a Glossary.
 - **Caption prep (Prep).** Record in the `script.md` Glossary: caption spellings (names, APIs and code terms exactly as written), number formatting (spoken numbers → digits, ₹, %, separators) and the orange-highlight words. Take them from the prompt's notes; where it gives none, derive them from the script and list them in the handoff. Captions follow the actual words (`CLAUDE.md`, Workflow).
 - **Web captures (Prep).** Take every capture in the script's `## Web captures` list yourself with Playwright (`pipeline/web-capture.md`): framed for its beat (mobile viewport for FULL beats), cleaned, focus boxes saved. Never ask me for public pages.
-, including one-word lines, the greeting, the recap and the sign-off. Only retakes, fillers and dead pauses go.
+- **Never cut any script line**, including one-word lines, the greeting, the recap and the sign-off. Only retakes, fillers and dead pauses go.
 - **HARD RULE: length (final ≤ 2:59, or the prompt's limit).** In this order, and stop at the first step that fits:
   1. Cut retakes: keep the last complete, clean take of each paragraph (`/cut-video`, `pipeline/take-selection.md`).
-  2. Tighten pauses to 0.2–0.3 s and remove fillers and restarts. Keep the deliberate pauses the script or prompt marks (e.g. after "Namoshkar!", before "Bye bye, sayonara!"). A 30–60 s reel uses the tighter pauses under Length below.
+  2. Tighten pauses (`CLAUDE.md` → House numbers) and remove fillers and restarts. Keep the deliberate pauses the script or prompt marks (e.g. after "Namoshkar!", before "Bye bye, sayonara!").
   3. Still over: pitch-preserved speed-up from 1.05x, rising in 0.05 steps, up to the prompt's cap. Use the sync-safe chain (`setpts=PTS/k,fps=30` + `atempo=k`, `pipeline/qa.md`).
   4. Still over at the cap: **stop and ask me.** Never cut a line.
 - **Checkpoints.**
@@ -42,22 +44,21 @@ Prompts follow `templates/editing-prompt.md` (topic, path, speed-up cap, notes/s
   5. Save components (`CLAUDE.md`, Components → Deliver) and apply any series-file update the prompt asks for.
   6. Project log every turn (`pipeline/project-log.md`).
 
-- **Skills.** Cut with `/cut-video` (`aggressive` tone, but this file's pause lengths win), and punch in with `/add-zooms` (punches and ratchets only). If the source is a long video, use `/clipify` (dialogue mode) to pick 3–5 candidate moments. Show them to me, then build each chosen one as a reel with the rules below.
+- **Skills.** Cut with `/cut-video` (`aggressive` tone, but the House numbers pause lengths win), and punch in with `/add-zooms` (punches and ratchets only). If the source is a long video, ask me to run `/clipify` (I start it myself; dialogue mode) to pick 3–5 candidate moments. Show them to me, then build each chosen one as a reel with the rules below.
 
-- **Opener and hook.** Open with "Namoshkar!" (~1.5 s with the pause), then the hook line: the boldest claim or result, starting by ~1.5 s and landing within 3 s. A big text hook (2–5 words) is on screen from frame 0, so muted viewers get the hook while I greet. If the strongest line is mid-recording, move it right after "Namoshkar!".
-- **Length 30–60 s.** Cut to one idea. Tighten pauses harder: about 0.10 s between phrases and 0.15 s between sentences.
+- **Opener and hook.** `CLAUDE.md` → House numbers. The hook line is the boldest claim or result, and the on-screen text hook is 2–5 words, so muted viewers get it at once. If the strongest line is mid-recording, move it to the very start.
 - **Fast pace.** The visual changes every 1.5–3 s (punch-in, a screen, a graphic, a card). No beat holds still.
 - **Layout.** There is no default layout. Every beat is HEAD (my face fills the frame), FULL (graphic fills the frame, my face hidden, voice continues) or SPLIT (graphic on top, me docked below), per `brand.md` Layout and `components/specs/layout-states.md`. Read the script's `[mm:ss–mm:ss | HEAD|FULL|SPLIT]` tags as the plan, mix all three, and switch by hard cut or brand wipe only where a concept starts or ends. HEAD uses the portrait recording natively. Keep the face out of the top ~12% and bottom ~20% UI zones.
 - **Creative direction.** Script cues are the baseline, not a limit: bring a better visual take where it explains better, within the rules in `CLAUDE.md` (never change spoken lines, facts or code, `brand.md`, the length limit, or a cue's intent). List a "Creative take" in the storyboard; small changes just do and log, bigger ones go to 3 approval stills for my OK.
 - **Playlists.** If the project sits in a playlist (`projects/<playlist>/<NN>-<topic>/`), also follow `series/<playlist>.md`.
 - **Big captions.** See `components/specs/Captions.md` (reel mode): 1–3 words at a time, ~80 px, placed per state (HEAD lower third clear of the face, SPLIT in the strip, FULL in a band clear of the graphic's key element).
 - **Safe zones.** Keep text clear of the right ~15% (platform buttons) and the bottom ~20% (description overlay).
-- **Ending.** A one-line recap (the payoff of the hook), then "Bye bye, sayonara!" with a wave. A short `EndCard` (≤ 2 s) may follow.
-- **Deliver.** `out/<name>_9x16.mp4` plus an SRT, at -14 to -16 LUFS. Always make a cover/thumbnail with `pipeline/thumbnail.md`: 1080x1920 only, no 1280x720. Then save new or extended components to `components/code/` and update `icons/icons.md` "Used in" (`CLAUDE.md`, Icons and Components).
+- **Ending.** The close in `CLAUDE.md` → House numbers (the recap is the payoff of the hook). A short `EndCard` (≤ 2 s) may follow.
+- **Deliver.** `out/<name>_9x16.mp4` plus an SRT, at House numbers loudness. Always make a cover/thumbnail with `pipeline/thumbnail.md`: 1080x1920 only, no 1280x720. Then save new or extended components to `components/code/` and update `icons/icons.md` "Used in" (`CLAUDE.md`, Icons and Components).
 - **9:16 only.** A reel never builds, previews, stills, QAs or renders anything in 16:9: no landscape layout, composition, trailer or thumbnail (`CLAUDE.md`, Deliverables).
 - **Trailer.** Always make exactly one short cut, rendered in 9:16 only: `out/<name>_trailer_9x16.mp4` (`pipeline/trailer.md`). If the prompt defines a short cut, that is the trailer; otherwise the default 15–20 s trailer. Never both.
 - **Carousel twin.** After the final render's QA, run `/carousel <name>` (`pipeline/carousel.md`): 6–8 slides in `out/carousel/`, with its outline and slide-1 approval stops.
 - **Text posts (extra).** Last, after the video deliverables are done and reported, run `/text-posts <name>` (`pipeline/text-posts.md`): the LinkedIn hook photo, the full LinkedIn post, the X post and the X Article in `out/text-posts/`, with its draft and photo approval stops. The video's LinkedIn/X captions in the social JSON stay as they are.
- Always write `out/<name>_social.json` per `pipeline/social-copy.md`. YouTube chapters don't apply to a reel; use the `shorts_title` and a short description instead.
+- **Social copy.** Always write `out/<name>_social.json` per `pipeline/social-copy.md`. YouTube chapters don't apply to a reel; use the `shorts_title` and a short description instead.
 
 Stop at the rough cut for my OK, as always.

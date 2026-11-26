@@ -8,7 +8,7 @@
 - Stolen token: a token chip with a hooked hand line icon, dim grey + orange WarnMark, and a mono countdown "valid until exp 14:59".
 - Two token cards: Access (orange fill, "15 min") and Refresh (white, "7 days").
 - Swap: the refresh card emits a fresh access token (old one fades).
-- Redis: the official Redis logo (assets/logos) on the card; a "blocked" list card with mono rows `jti a7f3… · TTL 14:12`, the TTL ticking down.
+- Redis: the official Redis logo (from `icons/logos/`) on the card; a "blocked" list card with mono rows `jti a7f3… · TTL 14:12`, the TTL ticking down.
 
 **Motion**
 - Countdown ticks every frame-second (digits slide); cards pop on words; the jti chip drops into the list with a bounce on `blockAt`.

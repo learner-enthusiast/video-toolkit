@@ -10,7 +10,7 @@
 ## Rules that keep it small
 - `CLAUDE.md` is auto-loaded: never Read it again. Skills say "read only what the current stage needs".
 - Stage start: latest `### Handoff` in `log.md`, not the whole log (`pipeline/stages.md`).
-- `components/index.md` for intent + ✓; rows by `grep -i '^| \[<Name>\]' components/index-full.md`. Icons by `grep -i '<brand>' icons/icons.md`. Never read `index-full.md` or `icons.md` whole.
+- `components/index.md` for intent + ✓; rows by `grep -i '^| \[<Name>\]' components/index-full.md`. Icons by `grep -i '<brand>' icons/icons.md`. Never read `components/index-full.md` or `icons/icons.md` whole.
 - Images only in the Opus vision subagent (`pipeline/video-inspect.md`); the main session reads text.
 - Prompt, time and tokens are logged by hooks (`pipeline/project-log.md`). Each turn records **`Stage:`** from `project-state.json` at prompt time. Token footers separate **main** vs **subagent** models (`; models main: … | sub: …`). Aggregate with `vt-python tools/vt_log.py summary projects/<name>/log.md` (`by_stage`, `by_model`, `by_stage_model`).
 - Optional skill material lives in `references/`; load it only when that path is used.

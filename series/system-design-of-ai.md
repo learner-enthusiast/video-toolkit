@@ -16,9 +16,9 @@ Tracked rules for every episode in `projects/system-design-of-ai/<NN>-<topic>/` 
 - #01–#04 (legacy): told with Taarak Mehta Ka Ooltah Chashmah characters as role-players, only as simple, generic illustrated avatars with name labels in the brand style; no show stills, clips, logos or actor likeness, ever.
 
 **Length and hook**
-- Open with the hook line (boldest claim, result or problem) from frame 0, then "Namoshkar!" (~1 s hold + ~0.5 s pause). A 2–5 word text hook is on screen from frame 0. If "Namoshkar!" was recorded first, move that take to right after the hook (rule since 2026-11-24, #9).
-- Close with a one-line recap (the payoff of the hook), then "Bye bye, sayonara!" with a wave, before the end card.
-- 9:16 short; final length ≤ 2:59.
+- Opener per `CLAUDE.md` → House numbers (hook first: the boldest claim, result or problem; 2–5 word text hook). If "Namoshkar!" was recorded first, move that take to right after the hook (rule since 2026-11-24, #9).
+- Close per `CLAUDE.md` → House numbers (the recap is the payoff of the hook), before the end card.
+- 9:16 short; length per `CLAUDE.md` → House numbers.
 
 **Visuals**
 - Layout states per `brand.md` (HEAD / FULL / SPLIT); creative direction per `CLAUDE.md`.

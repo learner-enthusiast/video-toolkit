@@ -2,6 +2,14 @@
 
 Per-video code is built inside `projects/<name>/work/`, never in the toolkit. The toolkit holds two shared, git-tracked libraries that every video checks first: `icons/` (logos and icons) and `components/` (specs plus approved Remotion code).
 
+## House numbers
+The only copy of these values; other files point here.
+- **Reel length:** a reel is any video with final length ≤ 2:59 (or the prompt's limit). No shorter target, no "cut to one idea". Pauses tighten to 0.2–0.3 s.
+- **Opener:** hook first (text hook on screen from frame 0, spoken hook lands within 3 s), then "Namoshkar!" (hands folded, smile, ~1 s hold, half-second pause).
+- **Close:** one-line recap, then "Bye bye, sayonara!" with a wave.
+- **Pace:** ~160 wpm. Max spoken words = 160 × minutes, minus room for clips (3 min ≈ 430–450). If over, cut points; never plan to speed up the script.
+- **Loudness:** every deliverable is −16 ± 0.5 LUFS integrated, true peak ≤ −1.5 dBTP.
+
 ## Icons
 - Before downloading any icon or logo, `grep -i '<brand>' icons/icons.md` (never Read it whole). If it is listed, reuse `icons/<File>`. If not, download the **official** version into `icons/logos/` (generic UI icons: `icons/ui/`), add a row (source URL, license, today's date), then use it.
 - Never save icons inside project folders (no `assets/logos/`, no `SOURCES.md`). Add the project to "Used in" every time a video uses an icon.
@@ -47,7 +55,7 @@ Flags and VLM captions are leads, not verdicts. Judge them against this file and
 ## Creative direction
 - The visual cues in my script describe **what the viewer must understand** at each moment. They are the baseline, not a limit. Bring your own take wherever it explains better or keeps viewers watching: a sharper metaphor animation, a better reveal order, a cleaner diagram, a stronger transition, sound design, pacing, a visual callback, a punchier end card.
 - **You may change:** how a cue is visualised, animation style, reveal order within a beat, the layout state of a beat (HEAD / FULL / SPLIT, `brand.md`) and its switch points (within a beat or two), extra graphics, emphasis, SFX and music beds, zooms.
-- **You may NOT change:** spoken lines (never cut or reword any line), the facts or code shown, `brand.md`, the ≤ 2:59 limit, or the intent of a cue (what the viewer must understand).
+- **You may NOT change:** spoken lines (never cut or reword any line), the facts or code shown, `brand.md`, the length limit, or the intent of a cue (what the viewer must understand).
 - **Priority order:** `brand.md` → hard rules (length, never cut lines, never modify raw footage) → intent of my script cues → your creative take → skill defaults.
 - **Process:**
   1. In the storyboard step, add a **"Creative take"** list: each idea, the beat it touches, and one line on why it helps the explanation or retention.
@@ -101,10 +109,10 @@ Flags and VLM captions are leads, not verdicts. Judge them against this file and
 - No screenshot stays static for more than 3 s. No dead air. Use J/L cuts where they smooth the flow.
 - Never cover my face. Never stretch me. No text cut off. Captions are always readable.
 - Every visible hit that should sound gets one SFX from the kit (`pipeline/sound.md`); music, if any, ducks under my voice.
-- Deliver at -16 LUFS with A/V sync verified at the start, middle and end.
+- Deliver at House numbers loudness with A/V sync verified at the start, middle and end.
 
 ## Deliverables
-- **Reels (final length ≤ 2:59) are 9:16 only, start to finish:** the main video in 9:16 (1080x1920), exactly one trailer in 9:16 (a short cut defined in the prompt IS the trailer; otherwise the default from `pipeline/trailer.md`; never both), an SRT for each, a 9:16 cover/thumbnail (1080x1920) in `out/thumbnail/` plus the ChatGPT kit (`pipeline/thumbnail.md`), `<name>_social.json` (`pipeline/social-copy.md`), the carousel twin and the text posts (`pipeline/text-posts.md`). No 16:9 renders, stills, QA or layouts for a reel. Don't wait to be asked.
+- **Reels (see House numbers) are 9:16 only, start to finish:** the main video in 9:16 (1080x1920), exactly one trailer in 9:16 (a short cut defined in the prompt IS the trailer; otherwise the default from `pipeline/trailer.md`; never both), an SRT for each, a 9:16 cover/thumbnail (1080x1920) in `out/thumbnail/` plus the ChatGPT kit (`pipeline/thumbnail.md`), `<name>_social.json` (`pipeline/social-copy.md`), the carousel twin and the text posts (`pipeline/text-posts.md`). No 16:9 renders, stills, QA or layouts for a reel. Don't wait to be asked.
 - Long-form (> 3:00) keeps 16:9 + 9:16 as before: every long-form video ships with the main video, exactly one trailer cut rendered in landscape 16:9 and portrait 9:16 (a short cut defined in the prompt IS the trailer; otherwise the default from `pipeline/trailer.md`; never both), an SRT for each, thumbnails in `out/thumbnail/` along with a ChatGPT kit (up to 3 static assets plus a ready prompt and a template for my own) (`pipeline/thumbnail.md`), and `<name>_social.json` with ready-to-paste titles, posts and hashtags for LinkedIn, X, Instagram, Facebook, Threads and YouTube (`pipeline/social-copy.md`), and the text posts (`pipeline/text-posts.md`). Don't wait to be asked.
 - Every 9:16 reel delivery also produces a carousel twin in `projects/<name>/out/carousel/`, built from that project's `script.md` (`pipeline/carousel.md`). `/carousel <project>` can also be run on its own for older projects.
 - Every video (reel and long-form) also gets its text posts in `projects/<name>/out/text-posts/`: the LinkedIn hook photo (content, never my face) with the full LinkedIn post, and the X post, all ready to paste as they are (`/text-posts`, `pipeline/text-posts.md`). These are **extras**: I still post the video on LinkedIn and X with its captions from `<name>_social.json`. Nothing in the video pipeline changes or waits for them.

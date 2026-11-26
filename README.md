@@ -108,11 +108,11 @@ Full policy: `pipeline/stages.md` and `CLAUDE.md`.
 | **1 · Prep** | ffprobe, proxy paths, **voice-cleaning gate**, Whisper, web captures, scaffolding | Implicit via handoff; voice gate is mandatory before ASR on talking-head audio |
 | **2 · Cut** | Take selection, `/cut-video`, punch-ins (`/add-zooms`), rough-cut preview | **Rough cut** — no Compose until you OK |
 | **3 · Compose** | Storyboard, Remotion scenes, sound map, preview renders | **3 approval stills** when creative direction changes a whole beat or motif |
-| **4 · Deliver** | Final render, loudness (-16 LUFS), subs, trailer, thumbnail, social, carousel, library save | **Final visual QA** (creative-tier vision subagent on contact sheets) |
+| **4 · Deliver** | Final render, loudness (`CLAUDE.md` → House numbers), subs, trailer, thumbnail, social, carousel, library save | **Final visual QA** (creative-tier vision subagent on contact sheets) |
 
 Each stage should end in `log.md` with a **`### Handoff`**: decisions, rejected options, open issues, files produced, next steps.
 
-**Quality bar (summary):** hide jump cuts; one light grade; spring/ease motion only; 5% safe margins; captions on word timestamps; no static screenshot > 3s; never cover the presenter’s face; deliver at -16 LUFS with A/V sync spot-checks. Details in `CLAUDE.md` and `brand.md`.
+**Quality bar (summary):** hide jump cuts; one light grade; spring/ease motion only; 5% safe margins; captions on word timestamps; no static screenshot > 3s; never cover the presenter’s face; deliver at house loudness with A/V sync spot-checks. Details in `CLAUDE.md` and `brand.md`.
 
 ---
 
