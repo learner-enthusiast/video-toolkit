@@ -80,12 +80,30 @@ def resolve_mentions(root, prompt):
     return None, None
 
 
-def current_project(root):
+def read_current_project(root):
+    """(project, session_id) from .current-project: path on line 1, session on line 2."""
     try:
-        rel = open(os.path.join(root, ".current-project")).read().strip()
-        return rel if rel and is_project(root, rel) else None
+        with open(os.path.join(root, ".current-project")) as f:
+            lines = f.read().split("\n")
     except OSError:
+        return None, None
+    rel = lines[0].strip() or None
+    sid = lines[1].strip() if len(lines) > 1 else ""
+    return rel, sid or None
+
+
+def current_project(root, session_id):
+    """The current project, only if this Claude session set it. A leftover from an
+    earlier session must not receive this session's prompts."""
+    rel, owner = read_current_project(root)
+    if not session_id or owner != session_id:
         return None
+    return rel if rel and is_project(root, rel) else None
+
+
+def set_current_project(root, project, session_id):
+    with open(os.path.join(root, ".current-project"), "w") as f:
+        f.write(f"{project}\n{session_id or ''}\n")
 
 
 @contextlib.contextmanager
@@ -149,10 +167,9 @@ def cmd_prompt(data, root):
     sid = data.get("session_id") or "nosession"
     project, mentioned = resolve_mentions(root, prompt)
     if project:
-        with open(os.path.join(root, ".current-project"), "w") as f:
-            f.write(project + "\n")
+        set_current_project(root, project, data.get("session_id"))
     elif not mentioned:
-        project = current_project(root)
+        project = current_project(root, data.get("session_id"))
     now = dt.datetime.now(IST)
     st = {
         "prompt": prompt,
@@ -303,8 +320,7 @@ def cmd_tokens(data, root):
                 log_err(root, None, f"prompt names {st['mentioned']}, which is not a project; prompt not logged")
             drop_state(sp, st["started_utc"])
             return
-        with open(os.path.join(root, ".current-project"), "w") as f:
-            f.write(project + "\n")
+        set_current_project(root, project, data.get("session_id"))
         write_header(root, project, st)
     project = st["project"]
     started_key = st["started_utc"]
@@ -428,7 +444,7 @@ def cmd_tokens(data, root):
 
 def main():
     mode = sys.argv[1] if len(sys.argv) > 1 else ""
-    root, project = None, None
+    root, project, data = None, None, {}
     try:
         data = json.loads(sys.stdin.read() or "{}")
         root = repo_root(data)
@@ -439,7 +455,7 @@ def main():
     except Exception:
         try:
             root = root or os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
-            project = current_project(root)
+            project = current_project(root, data.get("session_id"))
             log_err(root, project, f"{mode}: " + traceback.format_exc().replace("\n", " | "))
         except Exception:
             pass

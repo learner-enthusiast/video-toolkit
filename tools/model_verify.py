@@ -11,9 +11,10 @@ import sys
 from datetime import datetime, timezone
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from tools.routing_config import load_config, validate_config, tier_id  # noqa: E402
+from tools.routing_config import load_config, validate_claude_files, validate_config, tier_id  # noqa: E402
 
-CONFIG = os.path.join(os.path.dirname(__file__), "..", "config", "model-routing.json")
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+CONFIG = os.path.join(ROOT, "config", "model-routing.json")
 
 
 def cli_capabilities() -> dict:
@@ -104,7 +105,7 @@ def build_report(config_path: str | None, probe: str | None, probe_timeout: int)
         "configured_models": [],
         "vision_qa_policy": (config.get("subagents") or {}).get("vision_qa") if (config := load_config(config_path)) else None,
     }
-    report["config_errors"] = validate_config(config)
+    report["config_errors"] = validate_config(config) + validate_claude_files(config, ROOT)
     report["config_valid"] = not report["config_errors"]
     report["configured_models"] = verify_model_ids(config, report["local_hints"])
     report["creative_tier_id"] = tier_id(config, "creative")

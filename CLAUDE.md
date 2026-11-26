@@ -11,7 +11,7 @@ The only copy of these values; other files point here.
 - **Loudness:** every deliverable is −16 ± 0.5 LUFS integrated, true peak ≤ −1.5 dBTP.
 
 ## Icons
-- Before downloading any icon or logo, `grep -i '<brand>' icons/icons.md` (never Read it whole). If it is listed, reuse `icons/<File>`. If not, download the **official** version into `icons/logos/` (generic UI icons: `icons/ui/`), add a row (source URL, license, today's date), then use it.
+- Before downloading any icon or logo, `grep -i '<brand>' icons/icons.md` (never Read it whole: a hook blocks it; to edit a row in it or in `components/index-full.md`, Read ≤ 40 lines with offset/limit). If it is listed, reuse `icons/<File>`. If not, download the **official** version into `icons/logos/` (generic UI icons: `icons/ui/`), add a row (source URL, license, today's date), then use it.
 - Never save icons inside project folders (no `assets/logos/`, no `SOURCES.md`). Add the project to "Used in" every time a video uses an icon.
 - Remotion reads them through `public/icons` (a symlink to `icons/`): `staticFile('icons/logos/<file>')`.
 
@@ -31,22 +31,22 @@ The only copy of these values; other files point here.
 - Exception: when the GPU is busy with another heavy job (a render, Whisper), run small side jobs (stills, thumbnails, rembg, contact sheets) on the CPU instead of waiting (Remotion: no `gpu-run`, `--gl=swangle`). Say so in the log and report. Never move the main render, transcription or final encodes to the CPU.
 
 ## Model routing
-- Default production: **Sonnet** (`pipeline/model-routing.md`, `config/model-routing.json`). **Opus** at creative checkpoints and final visual QA; **Haiku** for bounded worker tasks and the heavy-job runner only.
+- Default production: **Sonnet**, set in `.claude/settings.json` (`pipeline/model-routing.md`, `config/model-routing.json`). **Opus** only at creative checkpoints and visual QA, through the `creative-director` and `vision-qa` subagents (`.claude/agents/`); **Haiku** for bounded worker tasks and the heavy-job runner only.
 - Deterministic checks first: `vt-python tools/validate/vt_validate.py`, ffprobe, reports on disk (`pipeline/job-results.md`). Never spend Opus on work a script can verify.
-- Start each stage from `project-state.json` + latest `### Handoff` (`pipeline/context-handoffs.md`). `log.md` wins on conflict.
+- Start each stage from the session brief (`pipeline/stages.md`, Starting a stage). `log.md` wins on conflict.
 
 ## Delegation
 - You orchestrate. Two kinds of delegated work (`pipeline/delegation.md`): **low-stakes tasks** (scaffolding, renames, ffprobe reads, proxies, logo downloads into `icons/` + `icons/icons.md` rows, SRT wrapping, social JSON scaffold, `log.md`, boilerplate from a final spec) and **heavy jobs** (final renders, Whisper, final encodes, video-inspect runs, installs).
 - **Never delegate:** script, cuts, storyboard, creative take, layout states, sound map, `brand.md`, final component visuals, render settings, QA, anything on screen that hasn't been reviewed.
 - Low-stakes chain: Copilot → Codex → cursor-agent → Haiku. Check Copilot and Codex usage before each delegation (skip if low or unreadable). cursor-agent has no usage command: run a tiny **canary** before each use; on pass send exactly one small chunk, canary again before the next. CLIs run non-interactively, in the background, with a timeout, logging to `work/delegation/<NN>-<tool>-<task>.log`; on a limit/auth error or a hang, kill and re-run the chunk on the next tool. Verify every result yourself and record tool, usage and fallback in `log.md`.
 - Heavy jobs never use the chain. You write the exact batch (`gpu-run`, flags, paths, timeouts); a Haiku runner launches each job detached, writes `work/jobs/<NN>-<job>.status`, stops and reports on any error. It never changes settings. You read the `.status` files and verify outputs; you don't tail logs.
-- Vision goes through contact sheets and video-inspect reports, judged by the Opus vision subagent (`pipeline/video-inspect.md`), including final visual QA.
+- Vision goes through contact sheets and video-inspect reports, judged by the `vision-qa` subagent (`pipeline/video-inspect.md`), including final visual QA.
 
 ## Inspecting a video
 Whenever a prompt asks to check, review, inspect, QA or "look at" a video, its frames, captions, cuts or edits:
 1. Run video-inspect first (`pipeline/video-inspect.md`, as a heavy job via the Haiku runner, `pipeline/delegation.md`). Never dump frames as images.
 2. Read `report.json` (`summary` and `flags` first).
-3. The Opus vision subagent (`pipeline/video-inspect.md`) judges `contact_sheet.jpg`, the flagged frames and one keyframe per scene (framing, colour, pacing, quality) and returns text: `timestamp · what · severity · fix`. Read that, not the images (exceptions: the 3 approval stills, an ambiguous report).
+3. The `vision-qa` subagent (Opus; `pipeline/video-inspect.md`) judges `contact_sheet.jpg`, the flagged frames and one keyframe per scene (framing, colour, pacing, quality) and returns text: `timestamp · what · severity · fix`. Read that, not the images (exceptions: the 3 approval stills, an ambiguous report).
 4. Use `--thorough` for the final check before publishing.
 5. Report issues with timestamps and a proposed fix for each.
 
@@ -93,7 +93,7 @@ Flags and VLM captions are leads, not verdicts. Judge them against this file and
 - Never modify `raw/` or `assets/`. Work on copies in `work/`.
 - For each paragraph, keep my LAST complete, clean take. Captions follow my actual words, not the script.
 - Playlists: a video may belong to a series. Episodes live in `projects/<playlist>/<NN>-<topic>/` (same structure as any project) and obey the tracked rules file `series/<playlist>.md` on top of this file and `brand.md`. See `README.md` (Playlists).
-- Work in stages, one session each: Prep, Cut, Compose, Deliver (`pipeline/stages.md`). Start every stage from the latest `### Handoff` and open issues in `log.md` (`grep -n '### Handoff'`, read from the last match; never the whole log), then the project files the stage needs. End it with a handoff in `log.md`: decisions and reasons, rejected options, open issues, files produced, next steps. Use `/compact` only as a fallback.
+- Work in stages, one session each: Prep, Cut, Compose, Deliver (`pipeline/stages.md`). Start every stage from the session brief, then the project files the stage needs; never read the whole log. End it with a handoff in `log.md`: decisions and reasons, rejected options, open issues, files produced, next steps. Use `/compact` only as a fallback.
 - Stop at the rough cut (end of Cut) and wait for my OK before composing.
 - Logs go to `work/logs/`, never into the chat. Report a summary.
 - Every turn on a project gets a `log.md` entry (`pipeline/project-log.md`): hooks save my prompt, write the header and add time and tokens; you write only **Changes / Decisions / Not done / Handoff** under it. Never re-type the prompt or compute tokens. Append only.

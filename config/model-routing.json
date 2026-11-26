@@ -47,6 +47,7 @@
       ]
     }
   },
+  "session_default": { "model": "production", "settings_file": ".claude/settings.json" },
   "effort_levels": {
     "supported": true,
     "cli_flag": "--effort",
@@ -71,7 +72,8 @@
     "deliver_final_qa": { "model": "creative", "task": "final_visual_qa" }
   },
   "subagents": {
-    "vision_qa": { "model": "creative", "same_as_main": false },
+    "vision_qa": { "model": "creative", "same_as_main": false, "agent": "vision-qa" },
+    "creative_director": { "model": "creative", "agent": "creative-director" },
     "restate_test": { "model": "worker", "note": "cheapest vision-capable; never passes QA" },
     "heavy_job_runner": { "model": "worker", "no_setting_changes": true }
   }

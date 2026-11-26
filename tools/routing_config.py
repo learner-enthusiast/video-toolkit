@@ -20,6 +20,65 @@ def load_config(path: str | None = None) -> dict:
         return json.load(f)
 
 
+def tier_names(config: dict, tier: str) -> set[str]:
+    """Every string that selects a tier: its id and aliases."""
+    block = (config.get("models") or {}).get(tier) or {}
+    return {n for n in [block.get("id"), *block.get("aliases", [])] if n}
+
+
+def agent_frontmatter(path: str) -> dict:
+    with open(path, encoding="utf-8") as f:
+        parts = f.read().split("---\n", 2)
+    if len(parts) < 3 or parts[0]:
+        return {}
+    pairs = (line.split(":", 1) for line in parts[1].splitlines() if ":" in line)
+    return {key.strip(): value.strip() for key, value in pairs}
+
+
+def validate_claude_files(config: dict, root: str) -> list[dict]:
+    """.claude/agents/*.md and settings.json must use the tier the config assigns them."""
+    errs: list[dict] = []
+
+    def err(code, message, field):
+        errs.append({"code": code, "message": message, "field": field})
+
+    wanted = {
+        spec["agent"]: spec.get("model")
+        for spec in (config.get("subagents") or {}).values() if spec.get("agent")
+    }
+    agents_dir = os.path.join(root, ".claude", "agents")
+    present = (
+        {f[:-3] for f in os.listdir(agents_dir) if f.endswith(".md")}
+        if os.path.isdir(agents_dir) else set()
+    )
+    for name in sorted(present - set(wanted)):
+        err("AGENT_UNROUTED", f"{name}.md has no subagents entry in the routing config", name)
+    for name, tier in sorted(wanted.items()):
+        if name not in present:
+            err("AGENT_MISSING", f".claude/agents/{name}.md not found", name)
+            continue
+        meta = agent_frontmatter(os.path.join(agents_dir, f"{name}.md"))
+        if meta.get("name") != name:
+            err("AGENT_NAME", f"{name}.md frontmatter name is {meta.get('name')!r}", name)
+        if meta.get("model") not in tier_names(config, tier):
+            err("AGENT_MODEL", f"{name} model {meta.get('model')!r} is not the {tier} tier", name)
+        if not meta.get("tools"):
+            err("AGENT_TOOLS", f"{name} must list its tools", name)
+
+    session = config.get("session_default")
+    if session:
+        try:
+            with open(os.path.join(root, session["settings_file"]), encoding="utf-8") as f:
+                model = json.load(f).get("model")
+        except (OSError, ValueError, KeyError):
+            err("SETTINGS_UNREADABLE", "cannot read the session settings file", "session_default")
+        else:
+            if model not in tier_names(config, session.get("model")):
+                err("SETTINGS_MODEL",
+                    f"settings model {model!r} is not the {session.get('model')} tier", "session_default")
+    return errs
+
+
 def tier_id(config: dict, tier: str) -> str | None:
     block = (config.get("models") or {}).get(tier) or {}
     return block.get("id")

@@ -1,5 +1,35 @@
 {
+  "model": "claude-sonnet-5-5",
+  "permissions": {
+    "allow": [
+      "Bash(vt-python tools/*)",
+      "Bash(ffprobe:*)",
+      "Bash(gpu-run nvidia-smi)",
+      "Bash(grep:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)"
+    ],
+    "deny": [
+      "Read(/.claude/skills/cut-video/references/upstream-notes.md)"
+    ]
+  },
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR\"/tools/hooks/session_brief.py", "timeout": 10 }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Read",
+        "hooks": [
+          { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR\"/tools/hooks/read_guard.py", "timeout": 5 }
+        ]
+      }
+    ],
     "UserPromptSubmit": [
       {
         "hooks": [

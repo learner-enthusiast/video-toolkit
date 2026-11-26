@@ -9,13 +9,13 @@
 | Tier | Default effort | Use for |
 |---|---|---|
 | **production** | medium | Implementation, debugging, manifests, FFmpeg batches, normal Remotion, subtitles, social scaffolding, stage handoffs |
-| **creative** | high | Story direction, novel storyboard choices, architectural forks, approval stills judgment, **vision subagent QA** |
+| **creative** | high | Story direction, novel storyboard choices, architectural forks, approval stills judgment, visual QA |
 | **worker** | low | Log summaries, JSON extraction, heavy-job runner, delegation chain last resort |
 | **escalation** (rare) | high | Only when Opus escalation failed or I ask; not routine production |
 
 Long context: use the production tier's `long_context_id` in config when a single stage needs the full script + timeline without `/compact`.
 
-**Start a production stage** on the **production** tier. Cursor: Composer/Sonnet-class unless I open a creative session.
+**Start a production stage** on the **production** tier: `.claude/settings.json` sets it as the session model. Cursor: Composer/Sonnet-class unless I open a creative session.
 
 ## Haiku must never
 
@@ -25,9 +25,9 @@ Approve creative work, pick final cuts, pass storyboard or visual/audio quality,
 
 | When | What |
 |---|---|
-| Compose · storyboard start | Creative take, beat-level concepts, major layout changes |
-| Compose · 3 approval stills | Bigger visual departures from script cues |
-| Deliver · final QA | Vision subagent on every contact sheet (`pipeline/video-inspect.md`) |
+| Compose · storyboard start | `creative-director`: creative take, beat-level concepts, major layout changes |
+| Compose · 3 approval stills | `creative-director`: bigger visual departures from script cues |
+| Deliver · final QA | `vision-qa` on every contact sheet (`pipeline/video-inspect.md`) |
 
 Do **not** spawn Opus for every component tweak, file rename, or validator run.
 
@@ -43,7 +43,8 @@ Use `--effort` per `config/model-routing.json` → `default_by_task_class`. Do n
 
 | Subagent | Tier | Notes |
 |---|---|---|
-| Vision QA | **creative** | Never `same_as_main`; Opus even if main session is Sonnet |
+| `vision-qa` (`.claude/agents/`) | **creative** | Never `same_as_main`; read-only tools |
+| `creative-director` (`.claude/agents/`) | **creative** | Storyboard and stills review; writes only `work/storyboard.md` |
 | Restate test | worker + vision | Pre-screen only |
 | Heavy jobs | worker | Exact commands only (`pipeline/delegation.md` §6) |
 
@@ -54,4 +55,4 @@ Use `--effort` per `config/model-routing.json` → `default_by_task_class`. Do n
 
 ## Maintenance
 
-After a Claude Code upgrade: `vt-python tools/model_verify.py` — update `verified_at` in config only after reviewing that report.
+After a Claude Code upgrade: `vt-python tools/model_verify.py`. `--validate-only` (CI) also checks that each agent's `model:` and the session model in `.claude/settings.json` match their tiers. Update `verified_at` in config only after reviewing the report.

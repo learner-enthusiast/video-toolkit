@@ -23,7 +23,9 @@ In Compose, be a creative co-director: script cues are the baseline, not a limit
 
 ## Starting a stage
 
-- Before doing anything else, read `projects/<name>/project-state.json` (`vt-python tools/project_state.py show projects/<name>`) and only the latest `### Handoff` block and open issues in `log.md` (`grep -n '### Handoff' log.md`, then read from the last match), not the whole file. Then read the project files the stage depends on (`script.md`, `work/cutlist.md`, the EDL, `timeline.json`… as relevant), `brand.md` and this stage's `pipeline/` files. `CLAUDE.md` is already loaded; never Read it again.
+- **Use the session brief.** The `SessionStart` hook (`tools/hooks/session_brief.py`) prints the current project's state, approvals, open issues and latest `### Handoff`. If it names this stage's project, don't re-run `project_state.py show` or re-read the handoff; read more of `log.md` only where the brief says it was truncated.
+- **No brief, or it names another project:** run `vt-python tools/project_state.py show projects/<name>`, then read only the latest `### Handoff` block and open issues in `log.md` (`grep -n '### Handoff' log.md`, read from the last match), never the whole file.
+- Then read the project files the stage depends on (`script.md`, `work/cutlist.md`, the EDL, `timeline.json`… as relevant), `brand.md` and this stage's `pipeline/` files. `CLAUDE.md` is already loaded; never Read it again.
 - If the previous handoff has an unresolved open issue that blocks this stage, raise it with me first.
 - Stage 3 never starts without my OK on the rough cut recorded in `log.md` as `**Approval:** rough_cut=approved` (and mirrored in `project-state.json` after `vt-python tools/project_state.py sync-handoff projects/<name>`).
 

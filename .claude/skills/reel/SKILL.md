@@ -38,7 +38,7 @@ Prompts follow `templates/editing-prompt.md` (topic, path, speed-up cap, notes/s
   4. Still over at the cap: **stop and ask me.** Never cut a line.
 - **Checkpoints.**
   1. Stages, one session each (`pipeline/stages.md`): Prep (voice gate → Whisper → handoff) · Cut (take selection + rough cut; report measured length and speed-up factor; **stop for my OK**) · Compose (storyboard, build, render) · Deliver.
-  2. Storyboard: a scene table with measured length per beat, plus the "Creative take" list (idea, beat, why). Then **3 approval stills** (the prompt names them; otherwise the hook frame and the two strongest beats); wait for my OK on any bigger change.
+  2. Storyboard (by the `creative-director` subagent, `pipeline/composition.md`): a scene table with measured length per beat, plus the "Creative take" list (idea, beat, why). Then **3 approval stills** (the prompt names them; otherwise the hook frame and the two strongest beats); wait for my OK on any bigger change.
   3. Build scene by scene, render through `gpu-run`, run video-inspect (`--thorough` on the final) and QA (`pipeline/qa.md`).
   4. Deliver: main `out/<name>_9x16.mp4` + SRT; trailer = the prompt's `## 60-second cut` if given, else the default (`pipeline/trailer.md`), 9:16 + SRT; cover/thumbnail + ChatGPT kit (`pipeline/thumbnail.md`); `<name>_social.json` (`pipeline/social-copy.md`); carousel twin (`/carousel`).
   5. Save components (`CLAUDE.md`, Components → Deliver) and apply any series-file update the prompt asks for.
