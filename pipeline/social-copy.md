@@ -18,6 +18,7 @@ These are the captions for posting the **video** on each platform, unchanged. Th
 - **YouTube:** title ≤ 70 chars with the main keyword near the front. Description: a 2-line summary first (shown above "more"), then what you'll learn, then chapters from the beat timestamps (`00:00 Intro` first, each chapter ≥ 10 s, at least 3), then links, then 3–5 hashtags (the first 3 show above the title). Also give `tags` (comma-separated keywords, ≤ 500 chars total) and a 9:16 `shorts_title` for the portrait trailer, ending in `#shorts`.
 
 **File**
+- A music credit is added by `tools/music/finalize.py` (`pipeline/music.md`): never type it.
 - Write `out/<name>_social.json`, UTF-8, valid JSON (parse it to check). Use `\n` for line breaks inside strings.
 
 ```json

@@ -30,7 +30,7 @@ Prompts follow `templates/editing-prompt.md`. These rules apply without being re
 **Stage 2 · Cut**
 
 10. **Take selection:** `pipeline/take-selection.md` with `/cut-video` (`balanced`; House numbers pauses and keep-last-take win). Write `work/cutlist.md`.
-11. **CHECKPOINT:** 720p rough cut (talking head + verified audio) to `out/roughcut_preview.mp4`, with the cutlist summary and weak or missing lines. **Wait for my OK**; write the handoff.
+11. **CHECKPOINT:** 720p rough cut (talking head + verified audio) to `out/roughcut_preview.mp4`, with the cutlist summary, weak or missing lines, and the music pick or audition previews (`pipeline/music.md`). **Wait for my OK**; write the handoff.
 
 **Stage 3 · Compose** (only after my OK is in `log.md`)
 
@@ -44,7 +44,7 @@ Prompts follow `templates/editing-prompt.md`. These rules apply without being re
 16. **QA:** `pipeline/qa.md` on the main video and every trailer; `vision-qa` looks at every sheet. Fix failures before reporting.
 17. **Thumbnail:** `pipeline/thumbnail.md`. Always.
 18. **Social copy:** `pipeline/social-copy.md` → `out/<name>_social.json`. A ≤ 2:59 video also gets `/carousel`.
-19. **Save components:** `components/code/README.md`, Library rules; update "Used in" in `icons/icons.md`.
+19. **Save components:** `components/code/README.md`, Library rules; update "Used in" in `icons/icons.md`; with music, the checks and `finalize.py` in `pipeline/music.md`.
 20. **Report:** files in `out/`, durations, loudness, choices, lines worth re-recording, anything not done. Fold lessons into the toolkit.
 21. **Text posts (extra, after the report):** `/text-posts <name>` (its two approval stops).
 

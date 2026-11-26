@@ -12,6 +12,7 @@ Follow `pipeline/hindi-twin.md`; read only the section for the current session. 
 1. The twin is `projects/<name>-hi/`. If it doesn't exist, create it (`tools/twin/new_twin.py`).
 2. **Run the gate first** (`tools/twin/gate.py`). If it refuses, stop and report the reasons. Nothing else runs.
 3. Two sessions: **H1 · Prep + Cut** (ends at the rough cut: **stop for my OK**) and **H2 · Map, render, deliver** (only after my OK is in the twin's `log.md`).
-4. Never write or edit caption text, transliterations or dictionary entries; run the tools and report what they flag.
-5. Never run `/carousel`, `/text-posts`, thumbnail or social-copy steps: a twin ships exactly four files.
-6. Log every turn (`pipeline/project-log.md`).
+4. Music is inherited from the English video (`pipeline/music.md`).
+5. Never write or edit caption text, transliterations or dictionary entries; run the tools and report what they flag.
+6. Never run `/carousel`, `/text-posts`, thumbnail or social-copy steps: a twin ships exactly four files.
+7. Log every turn (`pipeline/project-log.md`).

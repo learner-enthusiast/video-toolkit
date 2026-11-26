@@ -8,7 +8,7 @@
 - Logs go to `work/logs/render-<comp>.log`.
 
 **Delivery encode**
-- Mux the master's picture with `work/audio/mix.wav` (voice + SFX + ducked music, `pipeline/sound.md`; the trailers use their own `mix_trailer_*.wav`), passed separately so the audio is sample-exact. The master's own audio isn't used.
+- Mux the master's picture with `work/audio/mix.wav` (voice + SFX + music bed, `pipeline/sound.md`, `pipeline/music.md`; the trailers use their own `mix_trailer_*.wav`), passed separately so the audio is sample-exact. The master's own audio isn't used.
 - Two-pass `loudnorm` to I=-16, TP=-1.5, LRA=11: measure, then apply with the measured values and `linear=true`, resampled to 48 kHz.
 - Video: `h264_nvenc -preset p6 -tune hq -rc vbr -cq 19 -b:v 0 -maxrate 20M -profile:v high`, with `yuv420p` at 30 fps. Without NVENC, use libx264 veryfast crf 20.
 - Audio: AAC 192k. Add `-movflags +faststart`.

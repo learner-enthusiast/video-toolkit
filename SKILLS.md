@@ -18,6 +18,7 @@ Upstream license files are kept inside each vendored skill folder.
 ## How the skills fit together
 - `/coding-video` and `/reel` use `/cut-video` as the cutting engine for take selection, and `/add-zooms` for punch-ins on emphasised words that also hide jump cuts.
 - Use `/clipify` to turn a long video into reels. Each clip then goes through `/reel`.
+- Background music is `pipeline/music.md` for every video skill: I choose the track, tools mix and check it. No skill's music defaults apply.
 - The Remotion skills drive how compositions are built. `frontend-design` sets taste only where `brand.md` leaves a choice open.
 - `/scriptwriting` writes and tightens `script.md` (hooks, AI-phrase scan, timing). The template format and series rules win over it.
 - Sources, licenses and local changes are listed in `SKILLS.md`.
@@ -92,4 +93,4 @@ Rewritten for this toolkit, no source text copied.
 |---|---|---|
 | [imtamiliniyan/claude-video-skills](https://github.com/imtamiliniyan/claude-video-skills) @ `69b8f5f` (MIT) | SFX synthesis recipes and the event-to-sound pattern | `pipeline/sound.md` |
 | [haidrrrry/claude-remotion-skill](https://github.com/haidrrrry/claude-remotion-skill) @ `1dcbe5e` (MIT) | SFX timing rules | `pipeline/sound.md` |
-| [salomonMuriel/media-production-skills](https://github.com/salomonMuriel/media-production-skills) @ `6ba4284` (MIT) | Music licence rules and voice ducking; the restate test | `pipeline/sound.md`; `pipeline/qa.md` |
+| [salomonMuriel/media-production-skills](https://github.com/salomonMuriel/media-production-skills) @ `6ba4284` (MIT) | Music licence rules and voice ducking; the restate test | `pipeline/music.md`; `pipeline/qa.md` |

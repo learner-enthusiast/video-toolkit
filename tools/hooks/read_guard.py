@@ -11,14 +11,18 @@ import json
 import os
 import sys
 
-# A ranged Read this small is allowed on the two lookup tables (Edit needs a prior Read).
-RANGED_OK = ("icons/icons.md", "components/index-full.md")
+# A ranged Read this small is allowed on the lookup tables (Edit needs a prior Read).
+RANGED_OK = ("icons/icons.md", "components/index-full.md", "music/index.md")
 MAX_RANGE = 40
+# Tables that may be read whole while they are still this small.
+SMALL_OK = ("music/index.md",)
 
 # Matched against the path relative to the toolkit root; `*` also crosses `/`.
 BLOCKED = (
     ("icons/icons.md", "use bash: grep -i '<brand>' icons/icons.md"),
     ("components/index-full.md", "use bash: grep -i '^| \\[<Name>\\]' components/index-full.md"),
+    ("music/index.md", "use bash: grep -i '<id or mood>' music/index.md"),
+    ("music/tracks/*", "binary audio: tools/music/ measures it; music/index.md has the numbers"),
     ("projects/*/raw/*", "originals are never read; probe with ffprobe, work on copies in work/"),
     ("node_modules/*", "use bash grep for the one symbol you need"),
     ("*/node_modules/*", "use bash grep for the one symbol you need"),
@@ -26,6 +30,11 @@ BLOCKED = (
     ("*.mov", "binary media: use ffprobe or video-inspect"),
     ("*.wav", "binary media: use ffprobe or the cleaning report"),
 )
+
+
+def _lines(path: str) -> int:
+    with open(path, "rb") as f:
+        return sum(1 for _ in f)
 
 
 def blocked_reason(file_path: str, root: str, limit=None) -> str | None:
@@ -37,6 +46,8 @@ def blocked_reason(file_path: str, root: str, limit=None) -> str | None:
         for pattern, why in BLOCKED:
             if fnmatch.fnmatchcase(rel.lower() if pattern.startswith("*.") else rel, pattern):
                 if rel in RANGED_OK and isinstance(limit, int) and 0 < limit <= MAX_RANGE:
+                    continue
+                if rel in SMALL_OK and _lines(path) <= MAX_RANGE:
                     continue
                 return why
     return None

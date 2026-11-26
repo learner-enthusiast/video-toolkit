@@ -17,3 +17,6 @@ skills-lock.json
 # Python bytecode
 __pycache__/
 *.pyc
+
+# Music library audio: restored from music/index.md (tools/music/restore.py)
+music/tracks/

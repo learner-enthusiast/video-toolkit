@@ -31,6 +31,8 @@ Prompts follow `templates/editing-prompt.md`. These rules apply without being re
 - **Playlists.** Also follow `series/<playlist>.md`.
 - **Skills.** Cut with `/cut-video` (`aggressive`; House numbers pauses win); punch with `/add-zooms` (punches and ratchets only). For a long source, ask me to run `/clipify` (I start it; dialogue mode) for 3–5 candidates, show them, then build each chosen one.
 
+- **Music.** `pipeline/music.md`: pick (and audition) at the end of Cut, mix in Compose, voice checks and `finalize.py` in Deliver. Never choose a track yourself.
+
 ## Checkpoints
 1. One session per stage: Prep · Cut (take selection + rough cut; report length and speed-up; **stop for my OK**) · Compose · Deliver.
 2. Storyboard by the `creative-director` subagent (`pipeline/composition.md`): scene table with measured length per beat plus the "Creative take" list. Then **3 approval stills** (the prompt's, else the hook frame and the two strongest beats); wait for my OK on any bigger change.

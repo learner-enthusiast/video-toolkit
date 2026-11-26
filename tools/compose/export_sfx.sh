@@ -8,5 +8,12 @@ mkdir -p audio scripts
 (cd remotion && npx esbuild scripts/export_cues.ts --bundle --platform=node --loader:.json=json --preserve-symlinks \
   --log-level=warning --outfile=../scripts/.export_cues.cjs)
 node scripts/.export_cues.cjs audio
-vt-python "$HERE/mix.py" main
-vt-python "$HERE/mix.py" trailer
+for which in main trailer; do
+  vt-python "$HERE/mix.py" "$which"        # lays the voice stem out and mixes voice + SFX
+  rc=0; vt-python "$HERE/../sound/music_bed.py" "$which" || rc=$?
+  case $rc in
+    0) vt-python "$HERE/mix.py" "$which" --music "audio/stems/$which-music.wav" ;;
+    3) ;;                                  # this video has no music bed
+    *) exit "$rc" ;;
+  esac
+done

@@ -71,6 +71,16 @@ gpu-run vt-xlit-python -c "import torch, fairseq; print(torch.__version__, torch
 ```
 The first transliteration downloads the Indic→Roman model (about 130 MB).
 
+## Background music (`pipeline/music.md`)
+
+No new Python packages: the music tools use the shared `vt-python` venv's NumPy, SciPy and soundfile (tempo and loop seam are measured with them), plus FFmpeg. The clarity check runs Whisper through `gpu-run`.
+
+`yt-dlp` is installed once per user, **only to download my own uploads** (e.g. for `/clipify`), never music:
+```bash
+pipx install yt-dlp && yt-dlp --version
+```
+On a new machine, restore the tracks: `vt-python tools/music/restore.py`.
+
 ## Carousel PDF
 
 `/carousel` joins the slide PNGs into one lossless PDF with `img2pdf`, installed once per machine:
