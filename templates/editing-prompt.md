@@ -13,7 +13,7 @@ Everything else (quality bar, layout states, length rule, never cutting lines, c
 
 # Script
 
-<paste the script: hook, business case / motifs, beats with `[mm:ss–mm:ss | HEAD|FULL|SPLIT]` tags and cues>
+<paste the script: hook, business case / motifs, beats tagged `[B07 | mm:ss–mm:ss | HEAD|FULL|SPLIT]` (IDs `B01…`, unique, in order) with cues>
 
 ## 60-second cut
 

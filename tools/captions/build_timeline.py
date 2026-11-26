@@ -9,6 +9,7 @@ import argparse, json, os, re, sys, difflib
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from tools.pipeline_config import load_config  # noqa: E402
+from tools.script_beats import BEAT_ID  # noqa: E402
 
 ap = argparse.ArgumentParser(); ap.add_argument('words'); ap.add_argument('k', type=float)
 ap.add_argument('--config', default='config/build_timeline.json'); ap.add_argument('--edl', default='edl.json')
@@ -22,6 +23,10 @@ TAIL_FRAMES = C['tail_frames']  # 2 s end card by default (reel: ≤ 2 s, counts
 txt = open(args.captions).read()
 toks, beat_of = [], []
 BEATS = re.findall(r'^### (\S+)', txt, flags=re.M)
+if any(BEAT_ID.match(b) for b in BEATS):  # beat IDs (older projects use other headings); sections are in output order
+    if not all(BEAT_ID.match(b) for b in BEATS): sys.exit(f'{args.captions}: mix of beat IDs and other headings: {BEATS}')
+    repeated = sorted({b for b in BEATS if BEATS.count(b) > 1})
+    if repeated: sys.exit(f'{args.captions}: repeated beat IDs: {repeated}')
 NUMW = {}
 for bi, sec in enumerate(re.split(r'^###.*$', txt, flags=re.M)[1:]):
     line = sec.replace('"', '').replace('“', '').replace('”', '').replace('...', ' ')
@@ -149,6 +154,11 @@ for a, b in segs:
     f0, f1 = round(a * FPS), round(b * FPS)
     S.append({'srcIn': f0, 'srcOut': f1, 'from': round(cum / K), 'to': round((cum + f1 - f0) / K)}); cum += f1 - f0
 total = round(cum / K) + TAIL_FRAMES
-json.dump({'fps': FPS, 'k': K, 'total': total, 'segments': S, 'words': out_words}, open(args.out, 'w'))
+# beats in output order, as word index ranges (indices survive the later retime steps; frames would not)
+beats = []
+for j, w in enumerate(out_words):
+    if beats and beats[-1]['id'] == w['b']: beats[-1]['words'][1] = j
+    else: beats.append({'id': w['b'], 'words': [j, j]})
+json.dump({'fps': FPS, 'k': K, 'total': total, 'segments': S, 'words': out_words, 'beats': beats}, open(args.out, 'w'))
 print(f"words={len(out_words)} segments={len(S)} total_frames={total} ({total/FPS:.2f}s)")
 print('\n'.join(report))

@@ -9,17 +9,19 @@
 
 ## Hook, then opener
 **On-screen text (2–5 words, from frame 0):** <bold claim or result>
-**Spoken:** "<hook line: boldest claim or result>", then "Namoshkar!" (timing and delivery: `CLAUDE.md` → House numbers)
+`[B01 | 00:00–00:03 | HEAD]` · "<hook line: boldest claim or result>" → <cue>
+`[B02 | 00:03–00:05 | HEAD]` · "Namoshkar!" (timing and delivery: `CLAUDE.md` → House numbers)
 
 ## Beats
-Format: **ID** · `[mm:ss–mm:ss | HEAD, FULL or SPLIT]` · spoken text → visual cue (trigger word in quotes). The cue says what the viewer must understand; the state tag is the layout plan (`brand.md` Layout). Claude may improve either (`CLAUDE.md`, Creative direction).
+Beats: `[Bnn | mm:ss–mm:ss | HEAD, FULL or SPLIT]` · spoken text → visual cue (trigger word in quotes). IDs are `B01…`, unique and in order across the whole script; a Hindi twin and the scene cues use them. The cue says what the viewer must understand; the state tag is the layout plan (`brand.md` Layout). Claude may improve either (`CLAUDE.md`, Creative direction).
 
-**R1** · `[00:02–00:08 | SPLIT]` · "<line>" → <what the viewer must understand>, on "<word>": <what appears>
-**R2** · `[00:08–00:15 | FULL]` · "<line>" → <cue>
-**R3** · `[00:15–00:20 | HEAD]` · "<line>" → <cue>
+`[B03 | 00:05–00:11 | SPLIT]` · "<line>" → <what the viewer must understand>, on "<word>": <what appears>
+`[B04 | 00:11–00:18 | FULL]` · "<line>" → <cue>
+`[B05 | 00:18–00:23 | HEAD]` · "<line>" → <cue>
 
 ## Close (last 3–5 s; `CLAUDE.md` → House numbers)
-**Spoken:** "<one-line recap: the payoff of the hook>" → <cue>, then "Bye bye, sayonara!" with a wave (HEAD)
+`[B06 | mm:ss–mm:ss | HEAD]` · "<one-line recap: the payoff of the hook>" → <cue>
+`[B07 | mm:ss–mm:ss | HEAD]` · "Bye bye, sayonara!" with a wave
 **End card** (≤ 2 s, optional) → EndCard
 
 ## Assets (mine)

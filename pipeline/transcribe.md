@@ -35,5 +35,5 @@
 - Run `tools/captions/retime_onsets.py` before the first render. Measure caption timing against the energy envelope, not video-inspect's Whisper.
 - Sentence-first words can stay 0.3–1.3 s early: run `tools/captions/fix_starts.py` after the retime, then list words > 0.3 s off CTC; none may start a beat.
 - After the retime, count words starting < 2 frames after the previous one (collapsed onsets).
-- `timeline.json` times are fractional frames: round inside `at()` and for `renderStill`.
+- `timeline.json` times are fractional frames: round them for cues (`resolve_cues.py` does) and `renderStill`.
 - Whisper drops short Hindi phrases: check each `MISSING`/`FILLED` line from `build_timeline`, decode the window with `ctc_window.py` and pin the words (`pins`).

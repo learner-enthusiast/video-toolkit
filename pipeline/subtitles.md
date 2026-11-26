@@ -3,7 +3,7 @@
 **Goal:** SRT files that match the final edit exactly, delivered next to each MP4.
 
 **Tools** (run from `work/`; paths relative to the toolkit root)
-- `vt-python tools/captions/build_timeline.py transcript/words_ctc_fixed.json <K> --config config/build_timeline.json`: script tokens on spoken times. All episode settings (`fix`, `pins`, `time_fix`, `highlights`, `display`, `word_fix` with literal `~`) live in the config.
+- `vt-python tools/captions/build_timeline.py transcript/words_ctc_fixed.json <K> --config config/build_timeline.json`: script tokens on spoken times. `transcript/caption_text.md` has one `### B07` section per beat, in output order. All episode settings (`fix`, `pins`, `time_fix`, `highlights`, `display`, `word_fix` with literal `~`) live in the config.
 - `vt-python tools/captions/make_srt.py --out ../out/<name>_9x16.srt --trailer-ranges audio/trailer_ranges.json --trailer-out ../out/<name>_trailer_9x16.srt`.
 
 **Do**

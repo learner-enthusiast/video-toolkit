@@ -14,8 +14,8 @@ argument-hint: <name>
 
 Prompts follow `templates/editing-prompt.md`. These rules apply without being repeated there; the prompt's notes win where more specific. `CLAUDE.md` (Quality bar, Creative direction) applies in full: it should feel like a premium explainer, not a slideshow.
 
-- **Footage and layout.** Talking head is portrait phone video unless the prompt says otherwise. Every beat is HEAD, FULL or SPLIT (`brand.md` Layout, `components/specs/layout-states.md`); no default, mix all three. The script's `[mm:ss–mm:ss | STATE]` tags are the plan; switch points may move by a beat or two.
-- **Script into the project.** The prompt's `# Script` → `projects/<name>/script.md` in the style of `templates/script-tutorial.md` or `templates/script-project-demo.md` (≤ 2:59: `templates/script-reel.md`), with a Glossary.
+- **Footage and layout.** Talking head is portrait phone video unless the prompt says otherwise. Every beat is HEAD, FULL or SPLIT (`brand.md` Layout, `components/specs/layout-states.md`); no default, mix all three. The script's `[B07 | mm:ss–mm:ss | STATE]` tags are the plan; switch points may move by a beat or two.
+- **Script into the project.** The prompt's `# Script` → `projects/<name>/script.md` in the style of `templates/script-tutorial.md` or `templates/script-project-demo.md` (≤ 2:59: `templates/script-reel.md`), with a Glossary and beat IDs (add `B01…` if the prompt's script has none).
 - **Caption prep (Prep).** In the `script.md` Glossary: caption spellings, number formatting (digits, ₹, %, separators) and orange-highlight words, from the prompt's notes, else derived from the script and listed in the handoff. Captions follow my actual words.
 - **Web captures (Prep).** Take everything in `## Web captures` yourself (`pipeline/web-capture.md`).
 - **Never cut any script line**, including one-word lines, the greeting, the recap and the sign-off. Only retakes, fillers and dead pauses go.

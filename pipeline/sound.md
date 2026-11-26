@@ -46,7 +46,7 @@ Any other component: map it from `components/index.md` by what the viewer sees (
 
 - Each SFX **starts 2–3 frames before its visual lands** (the frame where the spring settles or the element reaches its place). Early reads as in sync; late reads as broken.
 - Riser into a cut: it ends exactly on the cut frame, and the hit (whoosh or sub-boom) starts on the cut.
-- Cues come from the same word-triggered events as the visuals (`timeline.json`, the `at()` lookups), never typed times. Export them to `work/audio/sfx_cues.json`: one entry per sound with `t` (seconds, output timeline), `visual_t` (the landing time it serves), `sound`, `gain_db` and `event` (a short label).
+- Cues come from the same word-triggered events as the visuals (`timeline.json`, the named cues), never typed times. Export them to `work/audio/sfx_cues.json`: one entry per sound with `t` (seconds, output timeline), `visual_t` (the landing time it serves), `sound`, `gain_db` and `event` (a short label).
 - Re-derive the cues for each composition: main and trailer 9:16, plus trailer 16:9 for long-form only (a reel has no 16:9 composition). A trailer that replays Main per segment maps each main cue through its segment offset and drops cues outside the kept ranges.
 
 **4 · Density**
