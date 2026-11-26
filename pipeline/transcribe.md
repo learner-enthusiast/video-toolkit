@@ -13,6 +13,10 @@
 - Where passes disagree or a word is doubtful, re-transcribe just that short window. Then settle it with wav2vec2 CTC forced alignment of the candidate phrasings, which scores what was actually said.
 - Feed the domain vocabulary (tech names from `script.md`) as the initial prompt so terms come out spelled right.
 
+**Tools** (run from `work/`; paths relative to the toolkit root)
+- Cut voice → caption times: `gpu-run vt-python tools/captions/align_ctc.py audio/voice.wav transcript/cut_words.json transcript/words_ctc.json`, then `tools/captions/clamp_ctc.py`, `tools/captions/build_timeline.py`, `tools/captions/retime_onsets.py` and `tools/captions/fix_starts.py` (both take `audio/voice.wav remotion/public/data/timeline.json`).
+- Settle doubts: `tools/captions/ctc_window.py` or `ctc_windows.py` (literal CTC decodes, `gpu-run`); `tools/captions/ctc_scan.py` finds hidden repeats against the script.
+
 **Checks**
 - Every script paragraph is found in the transcript, or reported as missing.
 - Word times are monotonic, with no zero-length words. Spot-check 3 words against the waveform.

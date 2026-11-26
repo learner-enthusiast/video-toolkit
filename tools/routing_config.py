@@ -65,6 +65,13 @@ def validate_claude_files(config: dict, root: str) -> list[dict]:
         if not meta.get("tools"):
             err("AGENT_TOOLS", f"{name} must list its tools", name)
 
+    runner = (config.get("subagents") or {}).get("heavy_job_runner") or {}
+    if runner:
+        if runner.get("type") != "script" or "model" in runner:
+            err("RUNNER_NOT_SCRIPT", "heavy_job_runner must be a script, not a model", "heavy_job_runner")
+        elif not os.path.isfile(os.path.join(root, runner.get("script") or "")):
+            err("RUNNER_MISSING", f"runner script {runner.get('script')!r} not found", "heavy_job_runner")
+
     session = config.get("session_default")
     if session:
         try:

@@ -19,7 +19,7 @@ In Compose, be a creative co-director: script cues are the baseline, not a limit
 
 ## Delegation
 
-**Delegation in every stage:** low-stakes tasks follow the chain in `pipeline/delegation.md` (Copilot → Codex → cursor-agent canary → Haiku); heavy jobs (renders, Whisper, final encodes, video-inspect, installs) go to the detached Haiku runner with `.status` files; creative and QA work stays with Claude. Prep: probing and proxies are low-stakes; voice-cleaning runs and transcription are heavy. Cut: only file moves are delegated. Compose: boilerplate, the SFX kit copy and the cue export are low-stakes, renders and the final mix are heavy, the sound map is yours. Deliver: SRT wrapping, social-copy scaffolding and `log.md` are low-stakes; final encodes and video-inspect are heavy; QA is yours.
+**Delegation in every stage** (`pipeline/delegation.md`): Claude runs single commands directly; only multi-file boilerplate from a final spec goes to the CLI chain; heavy jobs (voice cleaning, renders, Whisper, final encodes, video-inspect, installs) run through `tools/jobs/batch.sh` as a background command, one batch per stage step, read when it ends (no polling, no runner subagent). Creative and QA work stays with Claude; the sound map is yours.
 
 ## Starting a stage
 

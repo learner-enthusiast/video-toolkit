@@ -34,7 +34,7 @@ vt-python tools/clean_audio.py "projects/<name>/raw/<recording>" \
 
 Playlist episodes use `projects/<playlist>/<NN>-<topic>/` in place of `projects/<name>/`. The cleaner refuses a report or output path that already belongs to another recording. A re-run of the same recording keeps the earlier WAV/report as `*.previous-<run_id>`. Use the cleaned WAV for all later Whisper and editing work. When a workflow needs one canonical path (`work/audio/clean.wav`), copy the verified WAV there and record which recording it is. Never edit the unique WAV or report.
 
-The run is a heavy job (Haiku runner, `pipeline/delegation.md`) or a direct command. The checks below are always Claude's.
+The run is a heavy job (`pipeline/delegation.md`) or a direct command. The checks below are always Claude's.
 
 ## Required report checks
 

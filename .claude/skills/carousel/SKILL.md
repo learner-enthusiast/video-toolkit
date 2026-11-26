@@ -29,4 +29,4 @@ Merge script sections to fit the count; a 13-section script still makes ≤ 8 sl
 4. **QA:** `pipeline/carousel.md` → QA, every PNG looked at by the vision subagent (`pipeline/video-inspect.md`, Vision subagent). Fix and re-render any slide that fails, then re-check it.
 5. **Log** the run in `log.md` (`pipeline/project-log.md`) and report the files plus anything not done as specified.
 
-Rendering is a heavy job (detached Haiku runner); PDF assembly and file shuffling are low-stakes (delegation order in `pipeline/delegation.md`). The slide code, layout and every visual judgment stay with Opus.
+Rendering is a heavy job (`tools/jobs/batch.sh`); run PDF assembly and file moves directly (`pipeline/delegation.md`). The slide code, layout and every visual judgment stay with Opus.

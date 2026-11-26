@@ -12,7 +12,7 @@ argument-hint: <name>
 
 Work in `projects/<name>/` (or `projects/<playlist>/<NN>-<topic>/` for a playlist episode; then also follow `series/<playlist>.md`). Read `brand.md` first (`CLAUDE.md` is already loaded). Logos come from `icons/` (look up with `grep -i '<brand>' icons/icons.md` (never Read it whole); download an official one into `icons/` only if missing). Choose components from `components/index.md` first (rows: `grep -i '^| \[<Name>\]' components/index-full.md`); open only the specs you will use. Follow each step's file in `pipeline/`.
 
-Run this as four stages, one session each (`pipeline/stages.md`). Start each stage from the latest `### Handoff` in `log.md` (`pipeline/stages.md`, Starting a stage), and end it with a handoff in `log.md`. Shell work goes to Haiku as exact-command batches (`pipeline/delegation.md`). Vision goes through contact sheets (`pipeline/video-inspect.md`).
+Run this as four stages, one session each (`pipeline/stages.md`). Start each stage from the latest `### Handoff` in `log.md` (`pipeline/stages.md`, Starting a stage), and end it with a handoff in `log.md`. Heavy jobs run through `tools/jobs/batch.sh` (`pipeline/delegation.md`). Vision goes through contact sheets (`pipeline/video-inspect.md`).
 
 ## Brief rules (fixed for every video; the prompt adds only the specifics)
 
