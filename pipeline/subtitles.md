@@ -19,10 +19,12 @@
 - Cue count is sensible. No overlaps, no negative durations.
 - Spot-check three cues against the video at the start, middle and end. Each must land within 1 frame of the word.
 - The SRT's last cue ends before the video ends.
-- Whisper with `--condition_on_previous_text False` can return a long stretch with no punctuation or capitals (`ag-ui`, 0:26–1:35). Captions then page badly and the SRT splits mid-sentence. Add the punctuation to the caption words (a phrase → mark list in the caption text, then capitalise after `.?!`) instead of patching cues; capitalising every cue made it worse.
-- Glossary terms that must stay lower-case (`docker build`) get capitalised by `word_fix` ("docker" → "Docker"): mark them literal in `display` with a `~` prefix (stripped at output). Highlight words that recur light up everywhere unless scoped: put the target in brackets inside a phrase (`'an [image] is'`).
-- Script-driven captions (`docker-is-dead`; now `tools/captions/build_timeline.py`): difflib-align the script tokens to the CTC-timed spoken words; equal/replace blocks take the spoken times and show the script token (spelling, casing, punctuation and agreed misspeak fixes come free), script-only words are interpolated, spoken-only words are dropped unless whitelisted (real extras like "the real reason"). Replaced ~60 hand-written FIX/PUNCT/CAP rules and also dropped Whisper's invented repeats. Print the replace/drop report and read it.
-- A caption token that keeps its own `!` ("Namoshkar!", "sayonara!") plus the stored punctuation field printed "Namoshkar!!" in the SRT (`system-design-of-ai/05`). Strip the token's trailing `!` before appending the punctuation, and grep every SRT for `!!`, `..` and `,,`. Also split a cue after a comma once it passes ~40 characters: an 84-char cap left 45–52-char lines and a line ending on "the".
-- CTC-aligned words can be only ~2 frames long, so a "gap > 18 frames → new cue" rule splits mid-phrase ("Both / cost 25¢", "Next / in AI System Design", `04-cost-metering`). Split on a gap only when the previous word ends in punctuation or the cue already has ≥ 24 characters (`make_srt.py`).
-- The `≥ 24 characters` gap split still broke "…rediscovering code your / team already wrote." (a 0.6 s pause after "your"), and a sentence shorter than the 20-character flush ("team already wrote.") then ran into the next sentence in one cue (`Graphify`). Never split on a gap right after an article, possessive or preposition (a, an, the, your, to, of, in, with, and), and close a cue at `.?!` once it has > 8 characters.
-- Caption display rules (`DISP`) for short tokens must carry context: a rule `U-P → UP` also turned "adds up to 35%" into "adds UP to" (`sdai-12`). Match the phrase ("U-P and Bihar"), never the bare token.
+
+**Gotchas**
+- Unpunctuated Whisper stretches break cues: add the punctuation to the caption words and capitalise after `.?!`; never patch cues.
+- Lower-case terms: `word_fix` capitalises, a `~` prefix in `display` stays literal. Scope recurring highlights as `'an [image] is'`.
+- Captions show script tokens on spoken times (`tools/captions/build_timeline.py`): read its replace/drop report.
+- Grep every SRT for `!!`, `..` and `,,`.
+- Split an SRT cue on a pause only after punctuation or ≥ 24 characters: CTC words are short and leave fake gaps.
+- Never split a cue after an article, possessive or preposition; close it at `.?!` once past 8 characters.
+- `display` rules match a phrase with context ("U-P and Bihar"), never a bare short token.

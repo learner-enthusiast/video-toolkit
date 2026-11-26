@@ -21,12 +21,12 @@
 - Loudness of the final file meets `CLAUDE.md` → House numbers (`ebur128`).
 
 **Gotchas**
-- Stop a render by PID (`pgrep -f 'remotion render'`, then `kill <pid>`), never `pkill -f <script name>` from the same shell: the pattern also matches your own command line and kills it (`sdai-12`).
-- Check the voice WAV's start offset against the timeline. A mis-laid voice track once started 2.5–4 s late, and only the A/V check in `qa.md` caught it.
-- Keep masters until I approve the finals, so re-encoding never means re-rendering.
-- A looped still input (`-loop 1 -i mask.png`) never ends, so `-shortest` alone doesn't stop a `-filter_complex` encode: one ran for 1 h and wrote 1.4 GB. Add `shortest=1` to every framesync filter (`overlay`, `alphamerge`) and `-frames:v <source frames>` as a hard cap.
-- Never edit a stage script while a runner is executing it: bash reads the file as it goes, so the running job picked up half an edit ("JOBS: unbound variable") and skipped every encode (`kafka`). Edit a copy, or wait for the job to finish.
-- Project folders may be renamed mid-project with shell-special characters (`oidc` → `oidc-6&7.11.26`). Stage scripts must not hardcode the project path: derive it (`W="$(cd "$(dirname "$0")/.." && pwd)"`) and quote every path, or an unquoted `&` backgrounds half the command. Tell the Haiku runner to `cd` with the quoted path.
-- A 1080x1920 portrait source with ~44 `OffthreadVideo` segments grew the Remotion compositor to 8.8 GB and the kernel OOM-killed it at frame 1,350 (`jwt-explained`, while another session's render held 5.6 GB). Pass `--offthreadvideo-cache-size-in-bytes=2000000000` and `--concurrency=3`, and check `free -h` for other projects' renders before starting. Stopping a chain: kill by PID; `pkill -f <project path>` also matches (and kills) your own shell.
-- A background render chain can outlive the shell that launched it: on `docker-explained` the notifying shell died (exit 144) while `render_all.sh` kept going, and a manual re-run of its delivery step wrote the same MP4s at the same time. Both "finished" with exit 0 and a valid-looking ebur128, but the files had corrupt H.264 NAL units and an undecodable AAC track (−70 LUFS on re-read). Before re-running any step by hand, `pgrep -f <chain script>`; run chains only through `tools/jobs/batch.sh` (one batch per project) and wait for it to end; verify every delivery with `ffmpeg -v error -i out.mp4 -f null -` (no output = clean).
-- Remotion's default 28 s `delayRender` timeout can expire while `OffthreadVideo` seeks a 1.2 GB 1080x1920 NVENC working copy, killing the whole render at frame 0 (`jwt-is-dead`: both trailers, which nest Main several times, and one still batch). Pass `--timeout=120000` to `remotion render` and `timeoutInMilliseconds: 120000` to `renderStill`.
+- Stop a render by PID (`pgrep -f 'remotion render'`, `kill <pid>`), never `pkill -f` (it matches your own shell and other projects).
+- Check the voice WAV's start offset against the timeline (A/V check in `qa.md`).
+- Keep masters until I approve the finals.
+- A `-loop 1` input never ends: add `shortest=1` to every framesync filter and cap with `-frames:v`.
+- Never edit a script while a job is running it (bash reads as it goes): edit a copy or wait.
+- Project folders may be renamed with shell characters: derive paths, never hard-code them, and quote every path.
+- Many `OffthreadVideo` segments can OOM: `--offthreadvideo-cache-size-in-bytes=2000000000`, `--concurrency=3`, check `free -h` for other renders.
+- Run render chains only through `tools/jobs/batch.sh`; before any manual re-run `pgrep -f <chain>`; decode-check every delivery (`ffmpeg -v error … -f null -`).
+- Pass `--timeout=120000` (stills: `timeoutInMilliseconds`): seeking a large working copy can exceed the 28 s default.

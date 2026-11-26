@@ -131,6 +131,84 @@ class DocLintTest(unittest.TestCase):
         self.assertEqual(bad, [])
 
 
+KB = 1024
+# Files re-sent on every turn or read at every stage start: keep them small.
+BUDGETS = {
+    "CLAUDE.md": 9 * KB,
+    "brand.md": 6 * KB,
+    ".claude/skills/reel/SKILL.md": 7 * KB,
+    ".claude/skills/coding-video/SKILL.md": 7 * KB,
+    "components/index.md": 7 * KB,
+}
+PIPELINE_BUDGET = 10 * KB
+OVER_BUDGET_REASONS = {
+    "pipeline/clean-audio.md": "reference for tools/clean_audio.py internals; read only to debug the cleaner, not by a stage",
+}
+# Files whose Gotchas are one-line rules, with the evidence in docs/lessons.md.
+LEAN_GOTCHAS = ("take-selection", "qa", "composition", "delegation", "transcribe", "video-inspect",
+                "render", "gpu", "thumbnail", "trailer", "subtitles")
+MAX_RULE = 200
+
+
+def size(rel):
+    return (ROOT / rel).stat().st_size
+
+
+def gotcha_lines(text):
+    inside = False
+    for line in text.splitlines():
+        if line.strip() in ("**Gotchas**", "## Gotchas"):
+            inside = True
+        elif inside and (line.startswith("## ") or re.match(r"^\*\*[^*]+\*\*$", line)):
+            inside = False
+        elif inside and line.strip():
+            yield line
+
+
+class SizeBudgetTest(unittest.TestCase):
+    def test_always_and_stage_read_files_fit(self):
+        over = [f"{rel}: {size(rel)} > {limit}" for rel, limit in BUDGETS.items() if size(rel) > limit]
+        self.assertEqual(over, [])
+
+    def test_pipeline_docs_fit(self):
+        over = [
+            f"{path.name}: {path.stat().st_size} > {PIPELINE_BUDGET}"
+            for path in sorted((ROOT / "pipeline").glob("*.md"))
+            if path.stat().st_size > PIPELINE_BUDGET
+            and f"pipeline/{path.name}" not in OVER_BUDGET_REASONS
+        ]
+        self.assertEqual(over, [])
+
+    def test_allow_list_is_not_stale(self):
+        for rel, reason in OVER_BUDGET_REASONS.items():
+            self.assertTrue(reason)
+            self.assertGreater(size(rel), PIPELINE_BUDGET, f"{rel} fits now: remove it from the allow-list")
+
+    def test_gotchas_are_one_line_rules(self):
+        bad = []
+        for name in LEAN_GOTCHAS:
+            lines = list(gotcha_lines(read(f"pipeline/{name}.md")))
+            self.assertTrue(lines, f"{name}.md has no Gotchas list")
+            bad += [f"{name}.md: {len(line)} chars: {line[:90]}" for line in lines
+                    if not line.startswith("- ") or len(line) > MAX_RULE]
+        self.assertEqual(bad, [])
+
+
+class ComponentIndexTest(unittest.TestCase):
+    def test_every_listed_component_has_a_spec(self):
+        text = read("components/index.md")
+        self.assertIn("components/specs/<Name>.md", text)
+        groups = text.split("## Find by intent", 1)[1]
+        names = [
+            item.replace("✓", "").strip()
+            for line in groups.splitlines() if line.startswith("- **")
+            for item in line.split(":**", 1)[1].split(" · ")
+        ]
+        self.assertGreater(len(names), 150)
+        missing = sorted({n for n in names if not (ROOT / "components" / "specs" / f"{n}.md").is_file()})
+        self.assertEqual(missing, [])
+
+
 class DocLintRuleTest(unittest.TestCase):
     """The rules themselves, on known good and bad lines."""
 

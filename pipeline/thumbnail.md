@@ -40,8 +40,11 @@ Also give me what I need to make my own thumbnail in ChatGPT (image generation),
 **Report**
 - Show me all three and recommend one with a one-line reason.
 - List the assets in the ChatGPT kit and where the prompt file is.
-- Measure the headline against the cutout's head box, not just the safe margin. On `redis-invalidation`, 4 of 6 variants ran their second line ("Cache didn't", "can kill your", "at midnight?") under my head, and only the short two-word headlines stayed clear. Keep each line ≤ ~12 characters at 96 px, or wrap it to three lines.
-- rembg `u2net_human_seg` kept a chunk of the chair back and a pink hair fringe on `docker-explained`'s `thumbnail_raw`; `birefnet-portrait` (CPU, ~1 min) gave a clean cut. Try it first. A portrait photo whose shirt reaches the frame edges leaves a hard vertical edge when placed inside a long-form 16:9 frame: fade the cutout's left edge with a CSS mask (`linear-gradient(to right, transparent 0, black 22%)`) or scale it so the edge leaves the frame.
-- **The mic is always in the thumbnail: capsule, body, shock mount and boom arm, recognisable as a microphone at 180x320.** `birefnet-portrait` drops it (`system-design-of-ai/05-model-routing`); `birefnet-general` (CPU, 973 MB model in `~/.rembg`, ~2 min at 1600 px) kept it there but on `jensen-returns` kept only the foam tip (a dark blob on the cheek). Always have the vision subagent list which mic parts survived; if any are missing, segment the mic region alone (crop around mic + arm, `birefnet-general`, `only_mask=True`) and union it with the person mask (`tools/thumbnail/mic_union.py`). Crop so the arm keeps its photo edge and place that edge on the canvas edge (the arm runs off-frame); feather only the other side. Place from the HEAD top, not the alpha bbox, which starts at the arm.
-- Never run a rembg/birefnet job (~9 GB RAM) beside a Remotion render: on `jensen-returns` the OOM killer took the cutout and the render's browser crashed ("Target closed"). Run it before or after.
-- ImageMagick renders some official SVGs blank (Docker press-kit `docker-mark.svg` uses CSS-class fills: a 1.8 KB all-transparent PNG). Rasterise logos for the ChatGPT kit with `vt-python -c "import cairosvg; cairosvg.svg2png(url=…, write_to=…, output_width=1000)"` and check the alpha mean is > 0.
+
+**Gotchas**
+- Keep the headline clear of the cutout's head box: ≤ ~12 characters per line at 96 px, or three lines.
+- Try `birefnet-portrait` first; in 16:9, fade or crop a cutout edge that reaches the photo frame.
+- **The whole mic and boom arm are always in the thumbnail, recognisable at 180x320.** Have vision list the parts that survived the cutout.
+- Missing mic parts: segment the mic region alone and union it (`tools/thumbnail/mic_union.py`); arm off the canvas edge, feather only the other side, place from the head top.
+- Never run rembg/birefnet (~9 GB RAM) beside a Remotion render.
+- Rasterise SVG logos with `cairosvg` (ImageMagick can output blank) and check alpha mean > 0.

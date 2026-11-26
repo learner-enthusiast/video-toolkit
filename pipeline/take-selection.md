@@ -16,14 +16,6 @@
 - `vt-python tools/cut/build_cfg.py --config config/build_cfg.json` writes `config/build_edl.json` from the CTC source decode: sentence/beat onsets, pauses, `pins`, `insert_after`, `end`/`last_out` from `bye_end`.
 - `vt-python tools/cut/build_edl.py config/build_edl.json`, then `tools/cut/nudge_edges.py` (loud edges) and `tools/cut/render_cut.py <K>` (voice and preview filter scripts).
 
-**Gotchas**
-- A retake cut that starts at Whisper's word end can swallow the next word (`sdai-12`: "wants Hindi, for" lost "Hindi"; Whisper put "Hindi" 0.3 s early). Before trusting the cut voice, diff its words against the script and decode each cut edge with a CTC window plus 20 ms energy.
-- MFA word edges can sit inside speech (about 1 in 5 cuts on `sql-vs-nosql`). Snap every cut to measured silence: the first quiet 10 ms run (≥ 60 ms, below room tone + 10 dB) after the last kept word, and the last one before the next. Then check that the 20 ms at every edge is near room tone.
-- Don't start the silence search before the word's end, or a stop-consonant closure inside the word (the "d" in "decide") reads as silence.
-- A false start often runs straight into its retake with no silence ("…interviewer then the interviewer asked"). Search for silence on each side of the removed span separately; searching the whole gap finds the pause BEFORE the false start and keeps it in. Where there is no silence, cut on the MFA edge, then nudge to the 10 ms energy dip within ±100 ms and list those cuts for a listen (`bloom-filter`).
-- MFA parks the first word in the leading silence; take Whisper's time for it. Don't "fix" other words from Whisper, because Whisper collapses repeats ("you say, you say").
-- Render cuts with `trim=start_frame/end_frame` and `atrim=start_sample/end_sample` (1,600 samples per frame at 48 kHz). Time-based `trim` sometimes takes one boundary frame too many, and `concat` then pads the audio to match (+10 frames over 48 cuts).
-
 **Report at the checkpoint**
 - Durations before and after.
 - Missing paragraphs.
@@ -32,23 +24,31 @@
 **Checks**
 - Render the 720p rough cut (talking head + clean audio) to `out/roughcut_preview.mp4` and listen through it.
 - No clipped word starts or ends. Then stop and wait for my OK.
-- Teleprompter recordings: pauses carry room noise and breaths around −45 dB, so the "room tone + 10 dB" silence threshold finds no silence and keeps multi-second gaps. Raise the margin until the pauses go (20 dB on `kafka` and `redis-invalidation`, speech ≈ −12 dB), then check every cut edge's 20 ms is below −35 dB and nudge the rest to the quietest frame boundary within ±100 ms.
-- MFA also parks short words ("then", "the", "one") on breaths inside long pauses, which keeps the pause as "speech". Look for words that start > 1 s from Whisper's time and sit at < −30 dB; pin them from the 50 ms energy envelope (`time_fix` in `config/build_timeline.json`) rather than trusting either aligner.
-- Whisper can invent repeats ("cache cash logic"): settle every "repeat" with CTC before cutting it (`redis-invalidation`: one "cache").
-- Don't align a whole recording as one MFA utterance. On `rate-limiter` (5:27, one utterance) MFA drifted 1–8 s around retakes and put a kept retake inside the cut take. Split the corpus into utterances at real pauses (energy gaps ≥ 0.5 s; place each word by its Whisper end − 0.1 s, since Whisper stretches starts back into silence; merge one-word chunks) and align a TextGrid. Then compare MFA to a CTC greedy decode over every chunk: median offset ≈ −0.07 s, and any word off by > 0.35 s marks a problem.
-- All Whisper passes (plain, VAD, disfluency) can collapse a real restart ("once someone logs in, the… once someone logs in, limit…"; "user, key… user, key, or phone"). The CTC chunk scan (difflib against the corpus, look for inserted words) found both on `rate-limiter`; MFA drift in a stretch with no retake is the tell.
-- One-take teleprompter reads (no retakes, `ag-ui`): skip MFA. An energy EDL is enough: 10 ms RMS, speech threshold −24 dB (±2 frame smoothing), compress gaps to 0.25 s, then snap each cut to the quietest 30 fps frame boundary inside its gap (plain rounding put 15 edges into speech). Don't merge short "breath" bursts between gaps: a −19 dB burst was the soft "th" of "they" and merging it clipped the word.
-- Before cutting a "stumble" Whisper reports inside continuous speech, check the duration and energy: on `oidc`, "OpenID 2 bundle 2.0" was 0.9 s of unbroken speech (no dip below -17 dB), the natural length of "OpenID 2.0", and pass B heard just that. MFA squeezing the extra words into 0.03–0.07 s each is the tell. Don't cut it.
-- Two-part recordings: one `build_edl` config per part (its own `start`/`end`, `cuts` and `out`); the tool exits on a cut outside the part's range. List `build_timeline` `time_fix` pins latest-first, or a moved word can make a later pin for the same word ambiguous.
-- Re-transcribe the cut voice (plate `voice.wav`) and read it against `script.md` before composing. On `rag-pipeline`, all three source passes collapsed "evaluation, measure… measure retrieval" (3 s apart) into one "measure"; the energy EDL then cut "evaluation" and kept a stray "measure". Only the cut-voice pass showed it ("ask about measure measure retrieval").
-- Rendering a cut's PICTURE with one `trim` branch per segment from a single 1080x1920 input buffers every branch's frames in RAM: 44 segments hit the kernel OOM killer at 16 GB (`jwt-explained`, exit 137). Audio `atrim` branches are fine. For picture use one `select='between(n,f0,f1-1)+…',setpts=N/(30*TB)` stream (frame-exact, no buffering).
-- Look at frame 0 of the cut: on `jwt-is-dead` it landed mid-blink, 0.1 s before the first word. Start the first segment on an open-eyes frame a few frames earlier (`first_in` in the EDL config), then shift the word times by the added frames / speed.
-- Breaths between sentences can sit at about −30 dB and pass a −32 dB speech threshold as a 0.6–0.8 s "speech" run, which leaves ~1.2 s of dead air after the cut (`system-design-of-ai/01-streaming`: after "same flow" and "as it thinks"). The cut-voice Whisper pass shows them as a word lasting > 1 s. Map that output time back through the EDL, check the source energy (a flat −30 dB plateau with no −13 dB peaks is a breath), and add an explicit cut for it.
-- A beat pause the brief asks for ("half-beat before 'But'") may have no source silence to stretch: on `system-design-of-ai/03`, "search.But" was spoken with a 40 ms gap and the 1.1 s pause came after "But", and Whisper put "But" on the next word ("being"), so a `long_before` hold landed between "But" and "being". Find the word from the energy runs, not Whisper; then split at the dip and splice in a slice of real pause from the same take (`hold_inserts: [[split_t, sil_a, sil_b]]` in the `build_edl` config). Cover the two jump cuts with the HEAD punch-in.
-- Phone recordings in the home room (`system-design-of-ai/08-long-running-requests`): breaths between beats sat at −29…−34 dB for 0.4–0.6 s, so a −32 dB speech threshold kept five 1.1–1.4 s gaps (the cut-voice Whisper showed "but", "so" lasting > 1 s). Raising `thresh_db` to −29 removed them (163.9 s → 158.2 s) with every edge still ≤ −35 dB after `nudge_edges.py`. Check the cut-voice Whisper for words > 0.9 s before accepting a cut.
-- Snapping sentence starts to measured onsets (`build_cfg.py`): use the same speech threshold as the EDL (−29 dB on the phone setup), and search up to +0.9 s after Whisper's start. Whisper puts sentence starts on the breath before them (up to 0.4 s early: "Last" at 35.22 s, speech at 35.6 s), so a ±0.4 s window found no onset for 26 of 63 starts on `system-design-of-ai/10-batch-inference` and those gaps fell back to the 0.15 s within-sentence pause.
-- CTC parks the first and last words early ("Namoshkar!" 0.07 s long, "sayonara" 0.36 s before its energy). Pin them from the 10 ms energy envelope (`pins` in `config/build_timeline.json`) before anchoring the opener hold or the end card on them (`system-design-of-ai/10-batch-inference`).
-- `build_edl`: `end` stays at `last_out` (sayonara end + ~1.25 s; the default when `end` is omitted), never the source length. On `system-design-of-ai/11-max-tokens-and-truncation` a sound after the wave (246.97 s) became a speech run past `last_out` (245.3 s); `last_out` then set that segment's end before its start, and the voice came out 1.66 s longer than the EDL with the recording's tail appended. After every EDL build, assert no segment has `end <= start` and that `sum(frames)` equals the rendered voice length.
-- Whisper can merge a retake of a short line into one sentence: "Your stopped mid-sentence… Your AI stopped mid-sentence" came back as one "Your AI stopped mid-sentence" spanning both takes (`11-max-tokens-and-truncation`, 16.7–19.1 s). Run the windowed CTC source decode (`ctc_windows.py`, 8 s / 7 s hop) before choosing takes; it heard both attempts.
-- Whisper word times can drift seconds off on a long teleprompter read (`system-design-of-ai/09-prompt-caching`: "So remember" 245.1 vs real 250.9 s, "Namoshkar" 5.54 vs 3.44 s), which put a 0.5 s hold on a breath. Snap sentence starts from the windowed CTC source decode (`ctc_src.txt`, onset = last energy start within −0.45/+0.06 s of the CTC time) instead.
-- Hook-first reorder of a first-recorded "Namoshkar!": `insert_after: [[hook_end, a, b]]` in the `build_edl.py` config moves the source range to right after the hook segment (`09-prompt-caching`).
+
+**Gotchas**
+- A cut starting at Whisper's word end can swallow the next word: diff the cut voice against the script and decode each cut edge (CTC window + 20 ms energy).
+- MFA edges can sit inside speech: snap each cut to a measured quiet run (≥ 60 ms below room tone + 10 dB) on both sides; check every edge's 20 ms is near room tone.
+- Start the silence search at the word's end, or a stop closure inside the word reads as silence.
+- False start into retake: search silence on each side of the removed span separately; with none, cut on the MFA edge, nudge to the 10 ms dip (±100 ms) and list for a listen.
+- MFA parks the first word in the leading silence: use Whisper's time for that word only (Whisper collapses repeats elsewhere).
+- Render cuts with `trim=start_frame/end_frame` and `atrim=start_sample/end_sample` (1,600 samples per frame); time-based `trim` adds frames.
+- Teleprompter pauses sit near −45 dB: raise the silence margin (~20 dB) until they go; every edge's 20 ms below −35 dB, else nudge to the quietest frame within ±100 ms.
+- MFA parks short words on breaths: for starts > 1 s from Whisper at < −30 dB, pin from the 50 ms envelope (`time_fix` in `work/config/build_timeline.json`).
+- Whisper invents repeats: confirm every repeat with CTC before cutting it.
+- Never align a recording as one MFA utterance: split at pauses ≥ 0.5 s (word = Whisper end − 0.1 s), then compare to CTC per chunk; > 0.35 s off is a problem.
+- Every Whisper pass can collapse a real restart: diff a CTC chunk scan for inserted words; MFA drift with no retake is the tell.
+- One-take reads: energy EDL, no MFA (10 ms RMS, −24 dB, ±2 frames, gaps 0.25 s, quietest frame in each gap). Never merge short breath bursts: soft consonants clip.
+- Check duration and energy before cutting a 'stumble' inside unbroken speech; MFA squeezing extra words into 30–70 ms each means don't cut.
+- Two-part recordings: one `build_edl` config per part (own range, cuts, `out`). List `time_fix` pins latest-first.
+- Re-transcribe the cut voice and read it against `script.md` before composing: source passes can all collapse a repeat that only the cut pass shows.
+- Never use one video `trim` branch per segment (RAM OOM). Picture: one `select='between(n,f0,f1-1)+…',setpts=N/(30*TB)` stream; audio `atrim` branches are fine.
+- Check frame 0 for a mid-blink: start on an open-eyes frame (`first_in`) and shift word times by the added frames / speed.
+- A −30 dB breath can pass a −32 dB threshold: any cut-voice word > 1 s → check the source energy and add an explicit cut.
+- A requested beat pause with no source silence: find the dip from energy runs (not Whisper) and splice real pause with `hold_inserts: [[split_t, sil_a, sil_b]]`; hide with a punch-in.
+- Phone/home-room setup: use `thresh_db` −29 (breaths at −29…−34 dB survive −32); check the cut-voice Whisper for words > 0.9 s.
+- Onset snapping uses the EDL's speech threshold and searches up to +0.9 s after Whisper's start (it puts sentence starts on the breath).
+- CTC parks the first and last words early: pin them from the 10 ms envelope (`pins` in `work/config/build_timeline.json`) before anchoring the opener hold or end card.
+- Keep `end` at `last_out` (sayonara + ~1.25 s). After every EDL, assert no segment has `end <= start` and frame sum = rendered voice length.
+- Run the windowed CTC source decode (8 s / 7 s hop) before choosing takes: Whisper can merge a short retake into one sentence.
+- Long reads: Whisper drifts seconds. Snap sentence starts from the windowed CTC decode (last energy start −0.45/+0.06 s from the CTC time).
+- Hook-first reorder of a first-recorded "Namoshkar!": `insert_after: [[hook_end, a, b]]` in the `build_edl` config.

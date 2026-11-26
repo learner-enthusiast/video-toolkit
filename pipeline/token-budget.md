@@ -1,75 +1,63 @@
 # Token budget
 
-**Why:** Claude Code re-sends the whole context every turn, so a file read at turn 1 is paid again on every later turn, and model-written boilerplate costs output tokens. Keep always-read files small and let hooks write the log boilerplate.
+**Why:** Claude Code re-sends the whole context every turn, so a file read at turn 1 is paid again on every later turn, and model-written boilerplate costs output tokens.
 
 **Two kinds of numbers:**
-
-1. **Estimated context savings** (below): `bytes / 4` on always-read files — useful for scoping, **not** measured production spend.
-2. **Measured usage:** hook `**Tokens:**` lines + `vt-python tools/vt_log.py summary|compare` (`docs/optimization/benchmark-protocol.md`).
+1. **Estimated context size** (below): `bytes / 4` of fixed repo reads. Useful for scoping, **not** measured spend.
+2. **Measured usage:** the hook `**Tokens:**` lines and `vt-python tools/vt_log.py summary|compare` (`docs/optimization/benchmark-protocol.md`).
 
 ## Rules that keep it small
-- `CLAUDE.md` is auto-loaded: never Read it again. Skills say "read only what the current stage needs".
-- Stage start: latest `### Handoff` in `log.md`, not the whole log (`pipeline/stages.md`).
+- `CLAUDE.md` is auto-loaded: never Read it again. Read only what the current stage needs.
+- Stage start uses the SessionStart brief, not the log (`pipeline/stages.md`).
 - `components/index.md` for intent + ✓; rows by `grep -i '^| \[<Name>\]' components/index-full.md`. Icons by `grep -i '<brand>' icons/icons.md`. Never read `components/index-full.md` or `icons/icons.md` whole.
-- Images only in the Opus vision subagent (`pipeline/video-inspect.md`); the main session reads text.
-- Prompt, time and tokens are logged by hooks (`pipeline/project-log.md`). Each turn records **`Stage:`** from `project-state.json` at prompt time. Token footers separate **main** vs **subagent** models (`; models main: … | sub: …`). Aggregate with `vt-python tools/vt_log.py summary projects/<name>/log.md` (`by_stage`, `by_model`, `by_stage_model`).
-- Optional skill material lives in `references/`; load it only when that path is used.
-- Editing prompts follow `templates/editing-prompt.md`; fixed rules live in `/reel` and `/coding-video`.
+- Images only in `vision-qa` (`pipeline/video-inspect.md`); the main session reads text.
+- Run tracked tools from `tools/` with a `work/config/` file; read a tool's code only to change it.
+- Incident evidence lives in `docs/lessons.md`, which no stage reads; pipeline Gotchas are one-line rules.
+- Size budgets are enforced in CI (`tests/test_doc_lint.py`): `CLAUDE.md` 9 KB, `brand.md` 6 KB, the `/reel` and `/coding-video` skills 7 KB each, `components/index.md` 7 KB, each `pipeline/*.md` 10 KB (allow-list with a reason).
 
-## Fixed starting cost per stage (reel, before → after)
+## Fixed repo reads per stage (reel)
 
-Sum of what each stage loads before any work: `CLAUDE.md` (auto; before: also re-read), the prompt (#11 brief 19,288 B → its script + 60-s cut + slim header 10,539 B), `log.md` (before: whole, ~9–12 KB by Compose/Deliver; after: one handoff ~1.3 KB), `brand.md`, `stages.md`, `/reel`, and the stage's own files (Prep: voice-cleaning, probe-and-trim, transcribe, gpu, delegation · Cut: take-selection, `/cut-video`, delegation · Compose: composition, index, layout-states, sound, icons, `/add-zooms`, video-inspect · Deliver: subtitles, trailer, qa, thumbnail, social-copy, carousel ×2, video-inspect, index, icons, project-log). After: index = `index.md` + ~10 grep'd rows (~3 KB), icons = grep hits (~1 KB). Images (contact sheets, keyframes, stills) are not counted; they now stay out of the main session entirely.
+**Before** = `main` before PR #10 (`3a4738b`). **After** = PR #13. Both use the same files: `CLAUDE.md`, `brand.md`, `pipeline/stages.md` and `/reel` for every stage, plus that stage's docs and skills.
 
-| Stage | Before (bytes / ~tokens) | After (bytes / ~tokens) | Saved |
-|---|---|---|---|
-| Prep | 100,663 / 25,166 | 79,179 / 19,795 | 5,371 tokens (21%) |
-| Cut | 124,057 / 31,014 | 88,108 / 22,027 | 8,987 tokens (28%) |
-| Compose | 214,664 / 53,666 | 113,063 / 28,266 | 25,400 tokens (47%) |
-| Deliver | 207,443 / 51,861 | 104,289 / 26,072 | 25,789 tokens (49%) |
+Not counted on either side, because they depend on the video: the prompt, the handoff or session brief (≤ 4 KB), grep rows, component specs, tool output and images. `pipeline/job-results.md` (about 2 KB) is also left out: it is read when writing a tool config.
 
-Each saved token is saved again on every later turn of the session. Output tokens saved per turn: the re-typed prompt (up to ~5k for a full brief) and the token `jq` call.
+| Stage | Before bytes (~tokens) | After bytes (~tokens) | Change |
+|---|---:|---:|---:|
+| Prep | 72,045 (18,011) | 48,256 (12,064) | -23,789 B (-33%) |
+| Cut | 81,815 (20,454) | 59,575 (14,894) | -22,240 B (-27%) |
+| Compose | 101,670 (25,418) | 72,173 (18,043) | -29,497 B (-29%) |
+| Deliver | 95,733 (23,933) | 69,218 (17,304) | -26,515 B (-28%) |
 
-## Per file (before → after)
+Each saved token is saved again on every later turn of the session. Not measured here: output tokens no longer spent writing or adapting pipeline scripts on each video (`tools/`), which is likely the larger saving but needs a real benchmark.
 
-| File | Before bytes | ~tokens | After bytes | ~tokens | Δ tokens |
-|---|---:|---:|---:|---:|---:|
-| `.claude/settings.json` | 0 | 0 | 384 | 96 | +96 |
-| `.claude/skills/add-zooms/SKILL.md` | 9,119 | 2,279 | 8,882 | 2,220 | -60 |
-| `.claude/skills/carousel/SKILL.md` | 2,787 | 696 | 2,853 | 713 | +16 |
-| `.claude/skills/clipify/README.md` | 3,880 | 970 | 3,689 | 922 | -48 |
-| `.claude/skills/clipify/SKILL.md` | 19,303 | 4,825 | 15,641 | 3,910 | -916 |
-| `.claude/skills/clipify/references/action-mode.md` | 0 | 0 | 1,532 | 383 | +383 |
-| `.claude/skills/clipify/references/split-screen.md` | 0 | 0 | 960 | 240 | +240 |
-| `.claude/skills/clipify/references/time-warp.md` | 0 | 0 | 1,361 | 340 | +340 |
-| `.claude/skills/coding-video/SKILL.md` | 6,814 | 1,703 | 8,675 | 2,168 | +465 |
-| `.claude/skills/cut-video/README.md` | 6,590 | 1,647 | 6,388 | 1,597 | -51 |
-| `.claude/skills/cut-video/SKILL.md` | 36,385 | 9,096 | 23,331 | 5,832 | -3,264 |
-| `.claude/skills/cut-video/references/2a-legacy.md` | 0 | 0 | 811 | 202 | +202 |
-| `.claude/skills/cut-video/references/benchmark.md` | 0 | 0 | 698 | 174 | +174 |
-| `.claude/skills/cut-video/references/manual-editor.md` | 0 | 0 | 3,026 | 756 | +756 |
-| `.claude/skills/cut-video/references/upstream-notes.md` | 0 | 0 | 16,577 | 4,144 | +4,144 |
-| `.claude/skills/reel/SKILL.md` | 6,324 | 1,581 | 8,364 | 2,091 | +510 |
-| `.claude/skills/scriptwriting/SKILL.md` | 11,279 | 2,819 | 10,762 | 2,690 | -130 |
-| `.claude/skills/scriptwriting/references/upstream-step0.md` | 0 | 0 | 829 | 207 | +207 |
-| `CLAUDE.md` | 12,686 | 3,171 | 12,956 | 3,239 | +67 |
-| `README.md` | 2,551 | 637 | 2,635 | 658 | +21 |
-| `SKILLS.md` | 7,581 | 1,895 | 8,420 | 2,105 | +209 |
-| `brand.md` | 5,703 | 1,425 | 5,768 | 1,442 | +16 |
-| `components/code/README.md` | 1,255 | 313 | 1,321 | 330 | +16 |
-| `components/index-full.md` | 0 | 0 | 44,758 | 11,189 | +11,189 |
-| `components/index.md` | 54,164 | 13,541 | 10,387 | 2,596 | -10,945 |
-| `icons/icons.md` | 32,870 | 8,217 | 32,821 | 8,205 | -13 |
-| `pipeline/carousel.md` | 2,597 | 649 | 2,668 | 667 | +17 |
-| `pipeline/clean-audio.md` | 11,111 | 2,777 | 11,159 | 2,789 | +12 |
-| `pipeline/composition.md` | 13,002 | 3,250 | 13,297 | 3,324 | +73 |
-| `pipeline/gpu.md` | 4,802 | 1,200 | 4,800 | 1,200 | -1 |
-| `pipeline/project-log.md` | 3,397 | 849 | 4,647 | 1,161 | +312 |
-| `pipeline/qa.md` | 7,000 | 1,750 | 7,118 | 1,779 | +29 |
-| `pipeline/stages.md` | 7,659 | 1,914 | 3,824 | 956 | -959 |
-| `pipeline/transcribe.md` | 9,100 | 2,275 | 8,732 | 2,183 | -92 |
-| `pipeline/video-inspect.md` | 12,881 | 3,220 | 14,464 | 3,616 | +395 |
-| `pipeline/voice-cleaning.md` | 7,176 | 1,794 | 8,957 | 2,239 | +445 |
-| `templates/editing-prompt.md` | 0 | 0 | 1,118 | 279 | +279 |
-| `tools/hooks/log_prompt.sh` | 0 | 0 | 247 | 61 | +61 |
-| `tools/hooks/log_tokens.sh` | 0 | 0 | 464 | 116 | +116 |
-| `tools/hooks/projlog.py` | 0 | 0 | 9,926 | 2,481 | +2,481 |
+## Per file (bytes)
+
+| File | Before | After | Change |
+|---|---:|---:|---:|
+| `CLAUDE.md` | 15,023 | 9,190 | -5,833 |
+| `brand.md` | 5,768 | 5,768 | +0 |
+| `pipeline/stages.md` | 4,419 | 4,478 | +59 |
+| `.claude/skills/reel/SKILL.md` | 8,914 | 5,126 | -3,788 |
+| `pipeline/voice-cleaning.md` | 8,957 | 9,067 | +110 |
+| `pipeline/probe-and-trim.md` | 1,332 | 1,332 | +0 |
+| `pipeline/transcribe.md` | 8,732 | 4,131 | -4,601 |
+| `pipeline/gpu.md` | 4,800 | 3,020 | -1,780 |
+| `pipeline/delegation.md` | 14,100 | 6,144 | -7,956 |
+| `pipeline/take-selection.md` | 10,260 | 5,611 | -4,649 |
+| `.claude/skills/cut-video/SKILL.md` | 23,331 | 23,258 | -73 |
+| `pipeline/composition.md` | 13,379 | 8,727 | -4,652 |
+| `components/index.md` | 10,745 | 5,262 | -5,483 |
+| `components/specs/layout-states.md` | 5,300 | 5,300 | +0 |
+| `pipeline/sound.md` | 13,982 | 9,454 | -4,528 |
+| `.claude/skills/add-zooms/SKILL.md` | 8,882 | 8,651 | -231 |
+| `pipeline/video-inspect.md` | 15,258 | 10,217 | -5,041 |
+| `pipeline/subtitles.md` | 3,941 | 2,539 | -1,402 |
+| `pipeline/trailer.md` | 3,266 | 2,421 | -845 |
+| `pipeline/qa.md` | 8,019 | 5,098 | -2,921 |
+| `pipeline/thumbnail.md` | 6,090 | 4,690 | -1,400 |
+| `pipeline/social-copy.md` | 3,124 | 3,124 | +0 |
+| `pipeline/carousel.md` | 2,668 | 2,668 | +0 |
+| `.claude/skills/carousel/SKILL.md` | 2,853 | 2,827 | -26 |
+| `pipeline/project-log.md` | 5,645 | 5,810 | +165 |
+| `.claude/skills/coding-video/SKILL.md` | 9,115 | 5,385 | -3,730 |
+| `.claude/skills/scriptwriting/SKILL.md` | 10,762 | 10,510 | -252 |

@@ -15,6 +15,13 @@ Upstream license files are kept inside each vendored skill folder.
 
 **Toolkit skills** (written here, not third-party): `/setup`, `/new-video`, `/coding-video`, `/reel`, `/carousel` (turns a reel's `script.md` into a 6–8 slide 1080x1350 Instagram carousel with PDF, caption and alt text), and `/text-posts` (writes the ready-to-paste LinkedIn post and X post from `script.md` and renders the 1080x1350 LinkedIn hook photo).
 
+## How the skills fit together
+- `/coding-video` and `/reel` use `/cut-video` as the cutting engine for take selection, and `/add-zooms` for punch-ins on emphasised words that also hide jump cuts.
+- Use `/clipify` to turn a long video into reels. Each clip then goes through `/reel`.
+- The Remotion skills drive how compositions are built. `frontend-design` sets taste only where `brand.md` leaves a choice open.
+- `/scriptwriting` writes and tightens `script.md` (hooks, AI-phrase scan, timing). The template format and series rules win over it.
+- Sources, licenses and local changes are listed in `SKILLS.md`.
+
 ## What I changed
 
 **All three video skills (add-zooms, cut-video, clipify)** now start with a "Linux adaptation (video-toolkit)" section, and the commands below it were rewritten:

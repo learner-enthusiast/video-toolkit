@@ -1,6 +1,6 @@
 # Video inspect
 
-**Goal:** see a video's content and measure its defects for a few thousand tokens, instead of reading frames one by one. Local tools scan every frame and write a compact text report; Opus reads the report, and an Opus vision subagent looks at the images that matter. Every image read stays in the session context for every later turn, so images never enter the main session (exceptions below).
+**Goal:** see a video's content and measure its defects for a few thousand tokens, instead of reading frames one by one. Local tools scan every frame into a compact text report, and `vision-qa` looks at the images that matter. An image read is re-sent every later turn, so images stay out of the main session (exceptions below).
 
 **Inputs:** a video path, optional `--start/--end` (seconds), optional `--thorough` (final pre-publish check).
 **Output:** `work/inspect/<deliverable>/` (`<deliverable>` = the file's stem): `report.json`, `contact_sheet.jpg`, `keyframes/` (one per scene, plus every flagged frame), and `sheet_NN.jpg` for beat QA.
@@ -11,18 +11,7 @@
 
 **Run the tracked tool** from `work/` (never copy or rebuild it): `gpu-run vt-python tools/inspect/video_inspect.py <video> [--thorough] [--start S --end E] [--glossary ../script.md]` (tool paths here are relative to the toolkit root). It calls `tools/inspect/video_inspect_ocr.py` through `vt-ocr-python` (PaddleOCR's own venv, `setup.md`) and writes `inspect/<deliverable>/`. Run it as a heavy job (`tools/jobs/batch.sh`, `pipeline/delegation.md` §5). `--cpu-test` is for CI only and is never a QA result. Run the GPU stages one after another, never at the same time (4 GB card). All times are in source seconds (add `--start`), 2 decimals; boxes are normalised 0–1, 3 decimals.
 
-| Stage | Tool and exact settings |
-|---|---|
-| Probe | `ffprobe -v error -show_entries format=duration:stream=codec_type,codec_name,width,height,r_frame_rate,avg_frame_rate,nb_frames,sample_rate,channels -of json` |
-| Detectors (one decode) | `ffmpeg -hide_banner -nostats -hwaccel cuda [-ss S -to E] -i V -vf "blackdetect=d=0.03:pix_th=0.10,freezedetect=n=-60dB:d=3" -af "silencedetect=n=-40dB:d=0.6,ebur128=peak=true" -f null -`; parse stderr (`black_start/end`, `lavfi.freezedetect.freeze_start/end`, `silence_start/end`, the ebur128 Summary I / LRA / Peak) |
-| Scenes | PySceneDetect API: `detect(V, AdaptiveDetector(adaptive_threshold=3.0, min_scene_len=8), start_time=S, end_time=E)`. CLI for a quick look: `scenedetect -i V detect-adaptive list-scenes -n` |
-| Frames | one ffmpeg seek per sample: `ffmpeg -v error -ss T -i V -frames:v 1 -vf scale=960:-2 -q:v 3 out.jpg`. Default: middle of each scene. Thorough: also scene start+2 and end−2 frames, and every 1 s |
-| Caption band | `ffmpeg -ss S -to E -i V -vf "fps=2,crop=iw:ih*0.30:0:ih*0.70" cap_%05d.jpg` (fps=6 thorough). Reels: the band from the face track and brand layout, not a fixed crop |
-| Transcript | faster-whisper `WhisperModel("large-v3", device="cuda", compute_type="int8_float16")`, `transcribe(wav, language="en", word_timestamps=True, vad_filter=True, best_of=1, condition_on_previous_text=False)` on a 16 kHz mono WAV (`ffmpeg -vn -ac 1 -ar 16000`). Free the model before OCR |
-| OCR | PaddleOCR 3.x: `PaddleOCR(lang="en", device="gpu:0", use_doc_orientation_classify=False, use_doc_unwarping=False, use_textline_orientation=False, text_detection_model_name="PP-OCRv5_mobile_det", text_recognition_model_name="PP-OCRv5_mobile_rec")`; `r = ocr.predict(path)[0]` → `rec_texts`, `rec_scores`, `rec_boxes`. Keep score ≥ 0.6. Fallback: `easyocr.Reader(["en"], gpu=True)` |
-| Face | MediaPipe Tasks `FaceLandmarker` (`~/.cache/mediapipe/face_landmarker.task`, `output_face_blendshapes=True`, `num_faces=2`), CPU. Per frame: face count, box, `eyeBlinkLeft/Right` |
-| VLM | Ollama `POST localhost:11434/api/generate` `{"model":"qwen2.5vl:3b","prompt":"Describe this video frame in one short sentence.","images":[b64 of the 512 px keyframe],"stream":false,"keep_alive":"30s","options":{"temperature":0,"num_predict":40,"num_ctx":2048}}`. After the first call, read `/api/ps` and put `size_vram/size` in `summary.notes` if < 100%. Unload every Ollama model (`keep_alive: 0`) before Whisper and after this stage. A hint only, never a verdict |
-| Contact sheet | `ffmpeg [-ss S -to E] -i V -vf "fps=48/DUR,scale=320:-2,drawtext=text='%{pts\:hms\:S}':x=6:y=h-th-6:fontsize=18:fontcolor=white:box=1:boxcolor=black@0.6,tile=8x6" -frames:v 1 -q:v 3 contact_sheet.jpg` (48 tiles, one image, ~1.5k tokens). Portrait: `scale=-2:320` and `tile=12x4` (an 8x6 portrait sheet is ~4k tokens) |
+**Stages** (all in the tool, one decode for the FFmpeg detectors): probe → black / freeze / silence / loudness → scenes (PySceneDetect) → keyframes (`--thorough` adds scene edges and every 1 s) → caption band → Whisper large-v3 → PaddleOCR → MediaPipe face (CPU) → qwen2.5vl captions (a hint only, never a verdict) → flags → 48-tile contact sheet. Exact settings: `tools/inspect/README.md` (only needed when changing the tool).
 
 **report.json** (compact JSON, no indent)
 - `summary`: duration, resolution, fps, LUFS/TP/LRA, scene count, flag counts by type. Read this first.
@@ -35,18 +24,25 @@
 - `static_hold`: freeze ≥ 3 s (the "no screenshot holds still > 3 s" rule). `dead_air`: silence ≥ 0.6 s inside the video.
 - `text_cut_off`: an OCR box within 0.5% of a frame edge. `outside_margin`: an OCR box outside the 5% safe margin.
 - `misspelling`: an OCR word (score ≥ 0.9, ≥ 3 letters, box ≥ 2% of frame height, so background text like a monitor behind me is skipped) that is not in the transcript, the `script.md` glossary or `/usr/share/dict/american-english`.
-- `caption_desync`: a caption's first word seen > 0.4 s after, or > 0.6 s before, Whisper's start for it (resolution is the sample rate). `caption_not_spoken`: no transcript match within ±2 s. Band text counts as a caption only if it has ≥ 3 characters and ≥ 50% of its words are spoken within ±2 s (a lone "5" matched a spoken "5" on IntroVideo).
+- `caption_desync`: a caption's first word seen > 0.4 s after, or > 0.6 s before, Whisper's start for it (resolution is the sample rate). `caption_not_spoken`: no transcript match within ±2 s. Band text counts as a caption only if it has ≥ 3 characters and ≥ 50% of its words are spoken within ±2 s.
 - `eyes_closed`: both blink scores > 0.5 on a keyframe or on a scene's first/last frame (a cut on a blink).
 - `face_edge`: face box within 1% of an edge. `face_lost`: no face where the neighbouring samples in the same scene had one. `text_over_face`: an OCR box overlapping the face box.
 
 **Contact sheets for QA**
 - One frame from the middle of every beat (or every 5 s for a cut without beats), scaled to 480 px wide, with its output timestamp burned in at the bottom-left. Tile them 4x3 (12 frames per sheet) into `work/inspect/<deliverable>/sheet_NN.jpg`.
 - The vision subagent looks at sheets, not single frames. It pulls a full-size frame only to settle something a sheet or a flag raises (text near the margin, face under an overlay, caption legibility).
-- For QA and the face/margin checks, the beat frames come from `pipeline/qa.md`; this file only defines how they're laid out.
 
 **Who looks**
 - A delegated helper (order in `pipeline/delegation.md`) may **pre-screen** sheets during a stage and list the timestamps worth a look. A pre-screen never passes anything.
 - **Final visual QA before deliverables is done by the `vision-qa` subagent below, looking at every contact sheet** (and one keyframe per scene in `--thorough`), plus the report's flags and intervals. Every flag, freeze, silence or black interval is either explained (an intended hold, the end card) or fixed.
+
+## When I ask you to look at a video
+Whenever a prompt asks to check, review, inspect, QA or "look at" a video, its frames, captions, cuts or edits:
+1. Run video-inspect first (`pipeline/video-inspect.md`, as a heavy job, `pipeline/delegation.md`). Never dump frames as images.
+2. Read `report.json` (`summary` and `flags` first).
+3. The `vision-qa` subagent (Opus; `pipeline/video-inspect.md`) judges `contact_sheet.jpg`, the flagged frames and one keyframe per scene (framing, colour, pacing, quality) and returns text: `timestamp · what · severity · fix`. Read that, not the images (exceptions: the 3 approval stills, an ambiguous report).
+4. Use `--thorough` for the final check before publishing.
+5. Report issues with timestamps and a proposed fix for each.
 
 ## Vision subagent (images stay out of the main session)
 Every look at stills, contact sheets, keyframes, flagged frames or carousel slides runs in a subagent; the main session reads its text report, never the images.
@@ -61,21 +57,21 @@ Every look at stills, contact sheets, keyframes, flagged frames or carousel slid
 - The job's batch or log includes `nvidia-smi --query-compute-apps=pid,used_memory --format=csv` sampled during the Whisper and OCR stages, and the Ollama log line `offloaded N/N layers to GPU`. Any stage on the CPU (except MediaPipe) is a failure, not a pass (`pipeline/gpu.md`).
 
 **Gotchas**
-- Never name the script `inspect.py`: it shadows the stdlib `inspect`, and numpy's import then fails as a circular import of scenedetect.
-- Phone footage stores 1920x1080 with a 90° rotation flag, and ffmpeg auto-rotates on decode. Read `stream_side_data=rotation` (or the `rotate` tag) and swap W/H, or the summary says landscape while every frame is portrait (IntroVideo `main.mp4`).
-- moondream (100% GPU, 1.2 GB) captioned me as "urn of flowers on a desk…" on IntroVideo; qwen2.5vl:3b got "A man in a blue hoodie… talking". Use qwen. On the 4 GB GTX 1650 it runs ~57% on the GPU whatever `num_ctx` is (the weights don't fit): ~25 s to load, then fast per frame. That's a hardware limit, stated in the report's notes, not a silent fallback. Use `qwen2.5vl:7b` on ≥ 8 GB.
-- An Ollama model still loaded from earlier (keep-alive) holds ~2 GB: Whisper then dies with "CUDA failed with error out of memory". The script unloads Ollama first.
-- `ollama run <model> "prompt"` from a non-TTY shell with open stdin waits forever. Use the HTTP API, or `< /dev/null`.
-- `pip check` reports "scenedetect requires opencv-python". That's expected: it was installed `--no-deps` and uses the headless OpenCV.
-- The first PaddleOCR run downloads PP-OCRv5 mobile into `~/.paddlex/official_models` (~30 s). After that it does ~0.1 s per frame in ~0.4 GB VRAM.
-- B-roll / vlog footage (no talking head) also needs a quality pass, which the table above doesn't cover: at 5 fps on 480 px greyscale, Laplacian variance (sharpness), mean luma (dark < 40, blown > 215), `cv2.phaseCorrelate` shift between frames minus its 1 s moving average (camera shake, % of width), and mean abs frame diff (content motion). Report it per scene and per second; it's what ranks shots. No tracked implementation exists yet.
-- On an edited cut, every hard cut reads as a huge phase-correlation jump, so `shaky` fired on 9 cuts of `fannout-day-01`'s rough cut. Zero the jitter within 0.4 s of each scene boundary.
-- `freezedetect` prints no `freeze_end` when the freeze runs to the end of the file (an end card, a slate). Close it at the video's duration, or the report shows a nonsense length.
-- Phone desk footage can show private screens (Gmail inbox, Google account recovery on `fannout-day-01`). Look at the monitors on the contact sheet before you plan any punch-in on a screen, and blur them when you're unsure.
-- No flag catches a scene that was never built. On `redis-invalidation` Part 1, the storyboard beat D8 (Facebook memcache leases) had no component, so the SPLIT grid card sat empty for ~6 s and inspect raised nothing. Before the final render, check every storyboard row against a component, and on the contact sheet look for blank cards in SPLIT.
-- `text_over_face` with tiny OCR strings like `ATX3`, `AYAD`, `AT23` is the red wall sticker behind me (and the signature at the end), not overlay text. Treat it as a false positive.
-- `caption_desync` pairs a caption's first word with the nearest same word within 2 s, so a short word ("a", "the") can match an earlier occurrence and report +1.7 s (`jwt-explained` "a JWKS"). Check the timeline word time before acting. `misspelling` fires on intentional strings (a JWT token, `wordlist.txt`): treat code/token text as false positives.
-- PySceneDetect finds very few scenes on a reel whose cuts are spring morphs (9 scenes in 2:51), so keyframes alone miss most beats: always look at the 48-tile contact sheet as well.
-- Once captions are CTC-aligned (`pipeline/transcribe.md`), `caption_desync` at +0.5…+0.7 s is Whisper's early-start bias, not a late caption: on `jwt-explained` (thorough, 6 fps band) all 19 flags had the caption within 1–3 frames of the CTC onset. Check flagged words against the CTC word times before changing anything; consider comparing to CTC-corrected starts in the script itself. Same on `sdai-03` (51 flags, +0.6…+1.4 s): frame grabs at the timeline word start showed the karaoke word already lit; the +1 s+ ones were footer chips under the card ("LLM call ×4", "Same meaning → close together") read as captions. A fast check: grab the caption band at the timeline start of 2–3 flagged words and look. Again: `caption_desync` reported a median +0.7 s on `system-design-of-ai/08-long-running-requests` (44 flags) while the captions actually led speech by 0.03 s at every clean energy onset (20 ms envelope of `audio/voice.wav`). Check a handful of flagged starts against the envelope before touching the timeline; the flag also fires on FULL-card footers (FootCap text), which aren't captions.
-- Back-to-back inspect runs in one shell loop can OOM at the next run's Whisper load while the previous process is still freeing VRAM. Wait for an empty `--query-compute-apps` between runs.
-- `--thorough` grabs 1 s keyframes up to the end; a frame at t = duration (153.00 s of a 153.033 s file) comes back empty and crashed face detection (`cv2.cvtColor … !_src.empty()`) on `system-design-of-ai/10-batch-inference`. The keyframe loop stops at `DUR − 0.1` (kept in `tools/inspect/video_inspect.py`).
+- Never name a script `inspect.py` (shadows the stdlib; numpy import fails).
+- Phone footage has a 90° rotation flag: read rotation and swap width/height.
+- Use `qwen2.5vl:3b` (7b on ≥ 8 GB), not moondream; partial GPU offload on 4 GB is a stated limit, not a silent fallback.
+- Unload Ollama models before Whisper (kept-alive VRAM causes OOM); the tool does it.
+- Never `ollama run` from a non-TTY with open stdin (hangs): use the HTTP API or `< /dev/null`.
+- `pip check` complaining that scenedetect needs `opencv-python` is expected (headless OpenCV).
+- The first PaddleOCR run downloads its models (~30 s).
+- B-roll needs a manual quality pass per scene (sharpness, luma, camera shake, motion); no tracked tool does it yet.
+- Shake measures: zero the jitter within 0.4 s of each scene boundary (hard cuts read as shake).
+- `freezedetect` omits `freeze_end` at end of file: close it at the duration (the tool does).
+- Desk footage can show private screens: check monitors on the sheet before any punch-in, and blur when unsure.
+- No flag catches an unbuilt scene: match every storyboard row to a component and look for blank SPLIT cards.
+- `text_over_face` on tiny strings like `ATX3` is the wall sticker: false positive.
+- `caption_desync` can match an earlier short word, and `misspelling` fires on code/tokens: check the timeline time first.
+- Spring-morph reels give few scenes: always view the 48-tile contact sheet too.
+- With CTC captions, `caption_desync` +0.5–1.4 s is usually Whisper bias or footer text: check 2–3 against the envelope before touching the timeline.
+- Between back-to-back inspect runs, wait for an empty `--query-compute-apps` (OOM).
+- `--thorough` keyframes stop at `DUR − 0.1` (an end frame comes back empty); keep that in the tool.

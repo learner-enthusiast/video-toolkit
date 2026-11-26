@@ -4,6 +4,8 @@
 
 **When:** Stage 1 · Prep, after the voice-cleaning gate and transcription, from the script's `## Web captures` list (or the prompt's). Also in Compose, when a beat turns out to need a still nobody listed. I only supply what's private or behind my own login, in `assets/`.
 
+- If a script cue names a page or a fact ("the Redis docs say…", "this headline") and no URL is given, find the original source yourself, capture it, and log the URL in `work/captures/captures.md`.
+
 **Tools**
 - Playwright (Chromium) is installed for this toolkit (`/setup` checks it). Use the Playwright MCP tools if they're connected in the session; otherwise write a small script in `work/captures/capture.mjs` (Node, `playwright` installed globally) and run it. Reuse the same script for the whole project: one browser, many pages.
 - Fetching a page's text (to find the right paragraph, number or date) is fine with any web tool; the screenshot itself always comes from Playwright.

@@ -17,47 +17,57 @@
 - Read `brand.md` into one `theme.ts` (colors, fonts, radius, shadow, border, FPS).
 - Read the `script.md` cues. Choose components from `components/index.md` first (single rows: `grep -i '^| \[<Name>\]' components/index-full.md`; never read `index-full.md` whole), never bulk-read `components/`. For each component the cues need: if `index.md` marks it ✓, import `shared/<Name>/<Name>` (`src/shared` → `components/code/`) and set props, extending the library component with a new prop (old props keep working) when a variation fits; otherwise write its spec (`components/specs/<Name>.md`) first, then the code in the project. The library is the default, not a limit (`CLAUDE.md`, Creative direction).
 - Wire the shared libraries when creating the Remotion project: symlink `public/icons` → `icons/` and `src/shared` → `components/code/` (relative links), add `Config.overrideWebpackConfig((c) => ({...c, resolve: {...c.resolve, symlinks: false}}))` to `remotion.config.ts` and `"preserveSymlinks": true` to `tsconfig.json`, so shared code resolves `remotion` from the project's `node_modules`. Use the Remotion version in `components/code/REMOTION_VERSION`.
-- **Storyboard first.** At Compose start, spawn the `creative-director` subagent (`.claude/agents/creative-director.md`, Opus) with the project path; the session itself stays on the production tier. Read what it wrote, and send the 3 approval stills back to it for review before showing me. It writes `work/storyboard.md`: one line per beat with its layout state (HEAD / FULL / SPLIT, from the script's `[mm:ss–mm:ss | STATE]` tags, moved if another state explains better) and the visual. Add a **Creative take** list: each idea, the beat it touches, one line on why it helps the explanation or retention (`CLAUDE.md`, Creative direction). Small improvements are just done and logged; bigger ones (a different visual concept for a whole beat, reordered beats, a new recurring motif) are shown in 3 approval stills, and I wait for my OK.
+- **Storyboard first.** At Compose start, spawn the `creative-director` subagent (`.claude/agents/creative-director.md`, Opus) with the project path; the session itself stays on the production tier. Read what it wrote, and send the 3 approval stills back to it for review before showing me. It writes `work/storyboard.md`: one line per beat with its layout state (HEAD / FULL / SPLIT, from the script's `[mm:ss–mm:ss | STATE]` tags, moved if another state explains better) and the visual. It includes the **Creative take** list (Creative direction process, below).
+- Write the punch/ratchet map with `/add-zooms` from the word timestamps: it places the ~108% framing that hides each jump cut, applied in the composition. No Ken Burns from add-zooms; slow pushes are Remotion ease-in-out. For long-form HEAD framing, say whether you crop or use `PresenterSplit` (`components/specs/layout-states.md`) and why.
 - Use one geometry module for the three layout states (HEAD, FULL, SPLIT; `components/specs/layout-states.md`) on the 5% grid. A reel (≤ 2:59) is laid out for 9:16 only: no 16:9 layout, no dual-aspect geometry, no landscape variant. Long-form (> 3:00) only: 16:9 TALK / SCREEN + BUBBLE map onto HEAD / SPLIT-style states the same way. Components take rects; they don't invent positions.
-- Be a co-director, not an executor: the script's cues are the baseline; bring a better visual take where it explains better, within the limits in `CLAUDE.md`.
 - Use one composition per deliverable sharing the beats. Reel: main 9:16 and trailer 9:16. Long-form: main 16:9, trailer 16:9, trailer 9:16.
 - Sound: follow `pipeline/sound.md`.
+
+## Creative direction process
+What may and may not change: `CLAUDE.md` → Creative direction.
+- Bring your own take wherever it explains better or keeps viewers watching: a sharper metaphor animation, a better reveal order, a cleaner diagram, a stronger transition, sound design, pacing, a visual callback, a punchier end card.
+- **Process:**
+  1. In the storyboard step, add a **"Creative take"** list: each idea, the beat it touches, and one line on why it helps the explanation or retention.
+  2. Small improvements (polish, timing, SFX, transitions): just do them and list them in the project log.
+  3. Bigger changes (a different visual concept for a whole beat, reordering beats, a new recurring motif): show them in the 3 approval stills and wait for my OK.
+  4. If my cue and your idea are close, use yours and mention mine as the fallback.
+- Don't ask permission for every small choice. Be opinionated, then show me.
 
 **Checks**
 - Every stills or sheet check in this file runs through the vision subagent (`pipeline/video-inspect.md`, Vision subagent); only the 3 approval stills are opened in the main session.
 - `npx tsc --noEmit` passes. Render stills of 3–4 beats and have them checked before any full render.
 
 **Gotchas**
-- Code in a 9:16 grid card (972 px wide) needs ≥ 28 px JetBrains Mono to read on a phone; 23–26 px looked fine in the editor and was unreadable at half scale. Wrap long lines and drop trailing comments instead of shrinking the font (`graphql-vs-rest` resolvers card).
-- A still `N` frames after a trigger word can land in the next scene; pick still frames inside the scene's own window (between its trigger and the next scene's).
-- Draw scenes once in a fixed logical card (972x900) and scale it into the card: in long-form, one scene file serves its 16:9 main and 9:16 trailer. A reel only ever scales into the 9:16 card.
-- A dark question card with a kicker ("Today's interview question:") must start TYPING after the words the kicker already shows, but the kicker itself lands on the first spoken word. Typing from the first word duplicated the kicker; delaying both left the card empty for 1.4 s (`rate-limiter`: `kickerAt` prop on Question).
-- `at()` throws only at render time, so `tsc` passing proves nothing about phrases. Render one still per scene (a bundle-once still script, half scale) right after writing the scenes; it catches missing phrases and layout collisions in one pass.
-- "HEAD, dark style" punch on a portrait talking head (`ag-ui`): keep me full frame, dimmed (`brightness(0.38) saturate(0.6)` via the layout blend), and put the punch graphic on the wall above my head (y ≈ 96–500). Hiding me (bloom-filter's DARK) loses the HEAD beat the brief asked for.
-- Whisper on the cut voice parks short words ("a" before "spinner") in the preceding pause, up to 1 s early; video-inspect's `caption_desync` catches it. Pin it from the energy envelope (`pins` in `config/build_timeline.json`), and recheck any trailer segment that starts there.
-- A wordmark logo inside a small UI element (a sign-in button, a 56 px lane header) shrinks to unreadable; use the company's official mark there (Google's four-colour "G", saved as `google-g.svg`) and keep the wordmark for logo walls (`oidc`). Likewise, A wide wordmark (MCP 1338×195) in a square logo slot shrinks to a hairline. Give wide logos a wide box (`logoW`), never a square.
-- An SVG whose `width`/`height` don't match its `viewBox` aspect (`oidc` `openid.svg`: 320×120 around a portrait viewBox) renders at its declared box. Size the tile to the declared aspect; editing the attributes clipped the wordmark to "Op".
-- Lane headers that start larger for an intro beat overlap once three share a 972 px card; move them (spring the y) but keep their size (`SequenceFlow`).
-- Hyphenated and possessive words are one token in the word data ("platform-issued", "company's", MFA-merged "a one-time"), so `at("or a platform")` or `at("lets the company")` throws at render time. Write the token as spoken (`at("a-one-time")`, `at("lets the company's")`) and run a phrase check over every `at("…")` against `timeline.json` before any still render (`tools/captions/check_phrases.py`, run from `work/remotion/`): one crash costs a whole bundle + render pass.
-- Rows scrolling out of a clipped list leave half-chips under the header; fade the list's top edge with a CSS mask (`linear-gradient(to bottom, transparent 0, black 56px)`).
-- Spreading `style={{ opacity: undefined }}` into a component whose own `style` sets opacity from its spring wipes the entrance (React drops the key). Wrap the component in a div for extra opacity or filter instead.
-- An unscoped `at("its client id")` resolves to the FIRST time I say it: in `oidc` Part 2 that was the login step 2 line, 1 min early, so a later scene showed a row before I spoke it. Scope repeated phrases to their beat (`at(phrase, from)`); the phrase check lists every unscoped phrase spoken more than once.
-- Remotion composition ids allow only a-z, A-Z, 0-9 and `-`: `Short_p1` throws at bundle time (validateCompositionId), and every still/render in that batch dies with it. Use `Short-p1`.
-- Word data stores number words as digits ("one" → `1`, "five" → `5`, "fifty" → `50`), so `at("best one first")` and `at("two indexes")` throw. Apply the same number map inside `at()` and the phrase check, and in the highlight-phrase matcher, or highlight words like "top five" silently never light up (`rag-pipeline`). Also: The phrase lookup's number map turns "Three" into "3", so `at('Three')` matched "under 3 minutes" in the hook and idea 3's card rendered over every scene from 0:09 on (`scion`). Anchor numbered list items with the next word (`at('Three source')`) or a `from` frame.
-- Running canvas (`components/specs/PipelineCanvas.md`): stations have transparent backgrounds, so connectors drawn centre-to-centre cut through titles and gauges. Draw them edge-to-edge inside the gaps.
-- An element whose `style` sets a positioning `transform` (`translate(-50%,-50%)`, a flip) and then spreads `enter()`/`popIn()` loses the positioning: the entrance transform overwrites it, and the "Works offline" badge slid half off-frame (`scion`). Put the positioning transform on an outer div and the entrance on an inner one.
-- Check the contact sheets for scenes whose first visual waits for a later word: a SPLIT card sat nearly empty for 1–2 s at the start of 4 scenes (`scion`). Bring the scene's base layout in on the scene's first word; trigger only the details on later words.
-- A 10-frame overlap between card scenes (old one fading while the new one springs in) ghosts a busy card under the next one on the beat sheet (`jwt-is-dead`: PublicVerify under TypedKeyGate). Use a 2-frame overlap.
-- An end-card links panel "over my chest" at y 1250 covered my chin and the mic on `vectorless-rag` (I sat lower in frame than on `bloom-filter`). Place it from the face track: top edge ≥ face centre y + 0.75 × face width (y 1340 here), and check the last frame's still.
-- A sentence that starts a dark HEAD/FULL punch needs its first word's time verified against CTC before the first render (see `pipeline/transcribe.md`, sentence-first words): state switches trigger on those words more than on any others.
-- Stamps have an opaque panel: a 78 px BLOCKED stamp hid the whole sedan it was stamping. Size the stamp to ≤ 60% of the object's width and land it on the lower half so the object still reads.
-- Step badges (①②③) on a full-width code card: anchor them on a SHORT line of each step (`res.flushHeaders();`, `stream: true,`, the `for await` line) and light the long line with a highlight instead. A badge at the right edge of a 52+ char line at 28 px covered its last characters (`sdai-01-streaming` SSE card).
-- Something that "drops" from one panel into another (tokens falling from a server box onto a phone) must be rendered AFTER the target panel in the JSX: an opaque panel drawn later hid the falling chips completely (`sdai-01-streaming` two-lanes scene).
-- A script can give a code card its own `[mm:ss | SPLIT]` cue with no spoken words under it (the lines are said during the diagram before it). After the cut there is no time for that card. Put the code under the diagram in the same FULL card and light each line on the word that names it, or the card flashes by unsynced (`system-design-of-ai/02-token-rate-limiting`: rate-limiter flow + `redis.incr` card, budget bar + hold/settle card).
-- A to-scale bar can make the point invisible: a 2,200-token hold on a 50,000 budget is a 4% sliver. Show a labelled zoom ("the last 5,000 tokens") instead of faking the proportions. Check the script's on-screen arithmetic too (that script's "unused 900" was 300).
-- A dark FULL scene whose first element waits for a number said 1.5 s in ("…costs around twenty rupees") is an empty black card until then; in a trailer segment that starts there it is the opening frame. Bring the counter in at ₹0 on the scene's first frame.
-- The end card runs past the last EDL segment, and `SegVideos` kept playing the source there: on `system-design-of-ai/06-cancellation` the 4 s card showed me reaching for the phone (source after the out-point). Hold the out-point frame instead (`<Freeze frame={0}>` around an `OffthreadVideo` that starts at `last.srcOut − 1`, that project's `lib/layout.tsx`) and dim it with a dark layout key under the card.
-- JetBrains Mono ligatures turn `=>` into ⇒ and `??`/`!=` into glyphs, so on-screen code no longer matches the script character for character. Set `fontVariantLigatures: 'none'` on every code/terminal span (done in the shared `CodeCard`).
-- Bundle scripts (`renderStill` via `@remotion/bundler`) don't read `remotion.config.ts`: with the shared `src/shared` symlink they fail with "Can't resolve '@remotion/google-fonts/Inter' in components/code". Pass `webpackOverride: (c) => ({...c, resolve: {...c.resolve, symlinks: false}})` to `bundle()` too.
-- A dark HEAD punch keyed a few frames before the face cut dims the end of the previous shot. Key it on the segment boundary (`TL.segments[i].from`) when the punch starts on a cut.
-- FULL-card footers (`FootCap`) are one nowrap line in a ~900 px box: Inter Black runs ~0.6 em per character, so keep a footer ≤ 40 characters at 34 px (≤ 30 at 44 px). Three footers clipped at 42–44 px on `system-design-of-ai/10-batch-inference`; the contact sheet caught them, the 0.5x stills did not (they were sampled before the footers appeared). Sample one still after each footer's trigger word.
+- Code in a 972 px card is ≥ 28 px JetBrains Mono: wrap lines and drop trailing comments, don't shrink.
+- Pick still frames inside the scene's own window, not just N frames after a trigger.
+- Draw each scene once in a logical 972x900 card and scale it into every aspect.
+- A typing question card starts after the kicker's words, and the kicker lands on the first spoken word (`kickerAt`).
+- `tsc` doesn't check `at()` phrases: right after writing scenes, render one half-scale still per scene from a single bundle.
+- Dark HEAD punch: keep me full frame, dimmed (`brightness(0.38) saturate(0.6)`), graphic above my head (y ≈ 96–500).
+- Whisper can put short words up to 1 s early in a pause: pin from the envelope (`pins`) and recheck trailer segments starting there.
+- Small UI slots take the official mark, not the wordmark; wide wordmarks get a wide box (`logoW`), never a square.
+- SVG `width`/`height` that don't match its `viewBox` aspect: size the tile to the declared aspect; don't edit the attributes.
+- Oversized intro lane headers overlap once three share a card: move them, keep their size.
+- Hyphenated and possessive words are one token: write `at()` as spoken and run `tools/captions/check_phrases.py` from `work/remotion/` before any still.
+- Fade a clipped scrolling list's top edge with a CSS mask, or half-chips show under the header.
+- Never spread `opacity: undefined` into a spring-animated component: wrap it in a div for extra opacity or filter.
+- Scope repeated phrases to their beat (`at(phrase, from)`); the phrase check lists unscoped repeats.
+- Remotion composition ids allow only a-z, A-Z, 0-9 and `-`; an underscore fails the whole batch.
+- Number words are digits in word data: apply the map in `at()`, the phrase check and highlights; anchor list numbers with the next word or `from`.
+- `PipelineCanvas` stations are transparent: draw connectors edge-to-edge in the gaps.
+- Put a positioning `transform` on an outer div and `enter()`/`popIn()` on an inner one, or the entrance overwrites it.
+- Bring each scene's base layout in on its first word; trigger only details on later words.
+- Overlap card scenes by 2 frames, not 10 (ghosting).
+- Place the end-card links panel from the face track: top ≥ face centre y + 0.75 × face width; check the last frame.
+- Verify against CTC the first word of any sentence that triggers a dark punch or state switch.
+- Stamps are opaque: ≤ 60% of the object's width, on its lower half.
+- Anchor step badges on a short code line and highlight the long one.
+- An element dropping into a panel renders after that panel in JSX, or the opaque panel hides it.
+- A code cue with no spoken words: put the code under the preceding diagram and light lines on the words that name them.
+- If a to-scale bar hides the point, show a labelled zoom, never fake proportions; check the script's on-screen arithmetic.
+- A dark FULL scene waiting on a late number starts empty: show the counter at zero from its first frame.
+- Under the end card, freeze the out-point frame (`<Freeze>` at `srcOut − 1`) and dim it; never play past it.
+- Set `fontVariantLigatures: 'none'` on every code and terminal span (done in `CodeCard`).
+- `renderStill` bundle scripts ignore `remotion.config.ts`: pass the same `webpackOverride` (`resolve.symlinks: false`) to `bundle()`.
+- Key a dark punch that starts on a cut to the segment boundary (`TL.segments[i].from`).
+- `FootCap` is one line: ≤ 40 characters at 34 px (≤ 30 at 44 px); sample a still after each footer's trigger.
