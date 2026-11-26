@@ -143,6 +143,18 @@ echo '{{"segments": []}}' > "$out/voice.json"
         self.assertIn("CACHE STORE", self.pass_(*flags).stdout)
         self.assertEqual(len(self.calls()), 3)
 
+    def test_language_adds_word_timestamps_and_is_part_of_the_key(self):
+        def hindi(*extra):
+            return cli("captions/transcribe.py", self.td.name, "voice.wav", "--out-dir", "transcript/A",
+                       "--language", "hi", *extra, cwd=self.work, env=self.env)
+
+        self.assertIn("CACHE STORE", self.pass_().stdout)
+        self.assertIn("CACHE STORE", hindi().stdout)
+        self.assertIn("CACHE HIT", hindi().stdout)
+        self.assertIn("--language hi --word_timestamps True", self.calls()[-1])
+        r = hindi("--", "--language", "en")
+        self.assertNotEqual(r.returncode, 0)
+
     def test_exit_zero_without_json_fails_and_caches_nothing(self):
         r = self.pass_(env={"FAKE_OOM": "1"})
         self.assertNotEqual(r.returncode, 0)

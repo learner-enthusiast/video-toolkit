@@ -1,0 +1,9 @@
+{
+  "similarity": 0.6,
+  "check_below": 0.75,
+  "learn_similarity": 0.75,
+  "translit": {
+    "backend": "indicxlit",
+    "command": ["gpu-run", "vt-xlit-python", "{repo}/tools/captions/xlit_worker.py"]
+  }
+}

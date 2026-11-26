@@ -2,7 +2,7 @@
 """Whisper through the asset cache: reuse a pass only when the WAV, model, flags and this script match.
 
 usage (from work/): vt-python tools/captions/transcribe.py <project> <wav> --out-dir transcript/A \
-    [--model large-v3] [--force] -- <other whisper-ctranslate2 flags, e.g. --compute_type int8 --language en>
+    [--language hi] [--model large-v3] [--force] -- <other whisper-ctranslate2 flags, e.g. --compute_type int8>
 
 Run the voice-cleaning gate first (pipeline/voice-cleaning.md). Always on the GPU. A pass succeeds only if
 its JSON exists: whisper-ctranslate2 exits 0 on CUDA out-of-memory.
@@ -47,8 +47,15 @@ def main(argv=None) -> int:
     ap.add_argument("wav")
     ap.add_argument("--out-dir", required=True)
     ap.add_argument("--model", default="large-v3")
+    ap.add_argument("--language", help="spoken language, e.g. hi; turns word timestamps on and is part of the cache key")
     ap.add_argument("--force", action="store_true", help="run again even on a cache hit")
     args = ap.parse_args(argv)
+    if args.language:
+        if "--language" in {a.split("=")[0] for a in extra}:
+            ap.error("give the language with --language before `--`, not in the extra flags")
+        extra = ["--language", args.language, *extra]
+        if not any(a.split("=")[0] == "--word_timestamps" for a in extra):
+            extra += ["--word_timestamps", "True"]
     clash = sorted({a.split("=")[0] for a in extra} & set(FIXED))
     if clash:
         ap.error(f"set by this tool, remove from the extra flags: {' '.join(clash)}")

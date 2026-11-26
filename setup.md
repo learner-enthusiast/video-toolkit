@@ -53,6 +53,24 @@ vt-python -m unittest tests.test_clean_audio            # 16 tests, ~1 min, CPU;
 
 A missing dependency or a failed, skipped or unverifiable stage stops the run with exit 1 and publishes no output. See `pipeline/voice-cleaning.md` for per-recording paths, report checks, listening and approval.
 
+## Hindi captions (`/hindi-twin`)
+
+Used by `tools/captions/hindi_captions.py`.
+
+**Aligner:** no new environment. `tools/captions/align_mms.py` runs on the `torch` and `transformers` already in `vt-python` and does the CTC alignment itself. It downloads `MahmoudAshraf/mms-300m-1130-forced-aligner` (revision pinned in the script, about 1.2 GB) into `~/.cache/huggingface` on first use. **The model's licence is CC-BY-NC 4.0 (non-commercial).**
+
+**Transliterator (AI4Bharat IndicXlit):** its own Python 3.8 venv, because Fairseq 0.12.2 ships ready-made wheels only up to Python 3.8. About 5.3 GB. `tools/xlit.lock.txt` freezes the working set.
+```bash
+uv venv --python 3.8 ~/video-toolkit/xlit-venv
+uv pip install --python ~/video-toolkit/xlit-venv/bin/python -r tools/xlit.lock.txt
+# the package downloads its models into itself: point that folder at ~/.cache first
+M=~/video-toolkit/xlit-venv/lib/python3.8/site-packages/ai4bharat/transliteration/transformer/models
+mkdir -p ~/.cache/ai4bharat-xlit && { [ -L $M ] || { [ -d $M ] && cp -a $M/. ~/.cache/ai4bharat-xlit/ && rm -rf $M; ln -s ~/.cache/ai4bharat-xlit $M; }; }
+printf '#!/bin/bash\n# IndicXlit (Indic -> Roman); own Python 3.8 venv (setup.md).\nexec "$HOME/video-toolkit/xlit-venv/bin/python" "$@"\n' > ~/bin/vt-xlit-python && chmod +x ~/bin/vt-xlit-python
+gpu-run vt-xlit-python -c "import torch, fairseq; print(torch.__version__, torch.cuda.is_available(), fairseq.__version__)"   # 2.4.1+cu121 True 0.12.2
+```
+The first transliteration downloads the Indic→Roman model (about 130 MB).
+
 ## Carousel PDF
 
 `/carousel` joins the slide PNGs into one lossless PDF with `img2pdf`, installed once per machine:
