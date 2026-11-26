@@ -4,7 +4,7 @@
 
 **Who writes what**
 - **Hooks (automatic, `.claude/settings.json`, scripts in `tools/hooks/`):**
-  - `UserPromptSubmit` (`log_prompt.sh`): finds the project from a `projects/<…>/` path in the prompt (else `.current-project` at the repo root, which it updates whenever a prompt names a project; no project → nothing). Saves the prompt verbatim to `work/prompts/<YYYY-MM-DD_HHMMSS>.md` and appends the entry header to `log.md`.
+  - `UserPromptSubmit` (`log_prompt.sh`): finds the project from a `projects/<…>/` path in the prompt, else from `.current-project` at the repo root, **only if this same Claude session set it** (the file stores the project and the session id); otherwise nothing is logged, so toolkit maintenance never lands in a video's log. In a new session, name the project path in the first prompt. Saves the prompt verbatim to `work/prompts/<YYYY-MM-DD_HHMMSS>.md` and appends the entry header to `log.md`.
   - `Stop` (`log_tokens.sh`): appends `**Finished** · **Took**` and `**Tokens:**` (main session + subagents) under that entry, before its handoff block if there is one.
   - Errors go to `work/logs/hooks.log` (or `.hook-state/hooks.log`); the hooks never print into the conversation and never fail a turn.
 - **Claude:** writes only **Changes / Decisions / Not done** (and the handoff at a stage end) under the hook's header. Never re-type the prompt, never compute tokens or times. Log turns that only answer a question too, with "No changes". Never edit or delete old entries.

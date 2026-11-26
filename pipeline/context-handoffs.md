@@ -39,6 +39,8 @@ At handoff, optionally write `work/context/prep-context.md` (etc.) containing:
 
 Start each stage with:
 
+The `SessionStart` brief (`pipeline/stages.md`, Starting a stage) already carries items 1 and 2; run them only when there is no brief for this project.
+
 1. `project-state.json` (or `vt-python tools/project_state.py show`)
 2. Latest `### Handoff` from `log.md` (`grep -n '### Handoff'`, read from last match)
 3. Open issues from state or handoff
