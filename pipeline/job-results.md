@@ -2,9 +2,13 @@
 
 **Goal:** Claude reads a short JSON summary; full logs stay on disk.
 
+## Tool settings
+
+Pipeline tools live in `tools/` and are never copied into a project. Everything video-specific (phrases, cuts, pins, time fixes, ranges, word fixes, spans, output names) goes in `work/config/<tool>.json`; each tool's header lists its keys, unknown keys are an error and `_`-prefixed keys are comments. Run tools from `work/`.
+
 ## Heavy jobs
 
-After reading `work/jobs/<NN>-<job>.status`, prefer:
+Run them with `tools/jobs/batch.sh` (`pipeline/delegation.md` §5). When it ends, for each job:
 
 ```bash
 vt-python tools/job_report.py projects/<name>/work/jobs/<NN>-<job>.status
@@ -41,7 +45,7 @@ Failures return exit 1 and a JSON `errors[]` with `code`, `message`, `file`.
 ```bash
 # After inspect completes:
 vt-python tools/inspect_cache.py store projects/<name> out/main.mp4 work/inspect/main --mode thorough \
-  --inspect-script projects/<name>/work/scripts/video_inspect.py
+  --inspect-script tools/inspect/video_inspect.py
 
 # Before intermediate QA:
 vt-python tools/inspect_cache.py lookup projects/<name> out/main.mp4 --mode default

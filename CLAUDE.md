@@ -31,20 +31,20 @@ The only copy of these values; other files point here.
 - Exception: when the GPU is busy with another heavy job (a render, Whisper), run small side jobs (stills, thumbnails, rembg, contact sheets) on the CPU instead of waiting (Remotion: no `gpu-run`, `--gl=swangle`). Say so in the log and report. Never move the main render, transcription or final encodes to the CPU.
 
 ## Model routing
-- Default production: **Sonnet**, set in `.claude/settings.json` (`pipeline/model-routing.md`, `config/model-routing.json`). **Opus** only at creative checkpoints and visual QA, through the `creative-director` and `vision-qa` subagents (`.claude/agents/`); **Haiku** for bounded worker tasks and the heavy-job runner only.
+- Default production: **Sonnet**, set in `.claude/settings.json` (`pipeline/model-routing.md`, `config/model-routing.json`). **Opus** only at creative checkpoints and visual QA, through the `creative-director` and `vision-qa` subagents (`.claude/agents/`); **Haiku** only as the last resort of the boilerplate chain.
 - Deterministic checks first: `vt-python tools/validate/vt_validate.py`, ffprobe, reports on disk (`pipeline/job-results.md`). Never spend Opus on work a script can verify.
 - Start each stage from the session brief (`pipeline/stages.md`, Starting a stage). `log.md` wins on conflict.
 
 ## Delegation
-- You orchestrate. Two kinds of delegated work (`pipeline/delegation.md`): **low-stakes tasks** (scaffolding, renames, ffprobe reads, proxies, logo downloads into `icons/` + `icons/icons.md` rows, SRT wrapping, social JSON scaffold, `log.md`, boilerplate from a final spec) and **heavy jobs** (final renders, Whisper, final encodes, video-inspect runs, installs).
+- You orchestrate (`pipeline/delegation.md`). **Run single deterministic commands yourself** (ffprobe, renames, scaffolding, SRTs, social JSON, `log.md`, logo downloads into `icons/` + `icons/icons.md` rows). Only multi-file boilerplate from a final spec goes to the chain **Copilot → Codex → cursor-agent → Haiku** (check usage first; canary before each cursor-agent chunk; verify and log every result).
 - **Never delegate:** script, cuts, storyboard, creative take, layout states, sound map, `brand.md`, final component visuals, render settings, QA, anything on screen that hasn't been reviewed.
-- Low-stakes chain: Copilot → Codex → cursor-agent → Haiku. Check Copilot and Codex usage before each delegation (skip if low or unreadable). cursor-agent has no usage command: run a tiny **canary** before each use; on pass send exactly one small chunk, canary again before the next. CLIs run non-interactively, in the background, with a timeout, logging to `work/delegation/<NN>-<tool>-<task>.log`; on a limit/auth error or a hang, kill and re-run the chunk on the next tool. Verify every result yourself and record tool, usage and fallback in `log.md`.
-- Heavy jobs never use the chain. You write the exact batch (`gpu-run`, flags, paths, timeouts); a Haiku runner launches each job detached, writes `work/jobs/<NN>-<job>.status`, stops and reports on any error. It never changes settings. You read the `.status` files and verify outputs; you don't tail logs.
+- **Heavy jobs** (voice cleaning, final renders, Whisper, final encodes, video-inspect, installs): never the chain, no runner subagent. Write the exact batch (`gpu-run`, flags, paths, timeouts) and run `tools/jobs/batch.sh` as a background command. It runs one job at a time and stops at the first failure; read the `.status` files when it ends. Never poll or tail logs.
+- Pipeline scripts live in `tools/` and take per-video settings from `work/config/`; never copy or rewrite one inside a project (`pipeline/job-results.md`).
 - Vision goes through contact sheets and video-inspect reports, judged by the `vision-qa` subagent (`pipeline/video-inspect.md`), including final visual QA.
 
 ## Inspecting a video
 Whenever a prompt asks to check, review, inspect, QA or "look at" a video, its frames, captions, cuts or edits:
-1. Run video-inspect first (`pipeline/video-inspect.md`, as a heavy job via the Haiku runner, `pipeline/delegation.md`). Never dump frames as images.
+1. Run video-inspect first (`pipeline/video-inspect.md`, as a heavy job, `pipeline/delegation.md`). Never dump frames as images.
 2. Read `report.json` (`summary` and `flags` first).
 3. The `vision-qa` subagent (Opus; `pipeline/video-inspect.md`) judges `contact_sheet.jpg`, the flagged frames and one keyframe per scene (framing, colour, pacing, quality) and returns text: `timestamp · what · severity · fix`. Read that, not the images (exceptions: the 3 approval stills, an ambiguous report).
 4. Use `--thorough` for the final check before publishing.

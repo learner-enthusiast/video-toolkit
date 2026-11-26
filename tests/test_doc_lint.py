@@ -34,6 +34,9 @@ PATH_PREFIXES = ("pipeline/", "components/", "tools/", "templates/", "config/", 
 PER_PROJECT_PREFIXES = ("work/", "projects/")
 # Gitignored and installed per clone by /setup, so absent in CI.
 PER_CLONE_PREFIXES = (".claude/skills/remotion-",)
+# Per-video tool settings, written as paths relative to a project's work/ folder.
+PER_PROJECT_CONFIGS = {f"config/{name}.json" for name in
+                       ("build_cfg", "build_edl", "build_timeline", "qa_sync", "render_chain")}
 PLACEHOLDER = re.compile(r"[<>*{}$…|]")
 
 
@@ -71,7 +74,8 @@ def repo_paths(text):
         for token in span.split():
             token = token.strip("\"'(),;").rstrip(".:")
             token = re.split(r"#|:\d", token)[0]
-            if token.startswith(PER_PROJECT_PREFIXES + PER_CLONE_PREFIXES) or PLACEHOLDER.search(token):
+            if (token.startswith(PER_PROJECT_PREFIXES + PER_CLONE_PREFIXES) or token in PER_PROJECT_CONFIGS
+                    or PLACEHOLDER.search(token)):
                 continue
             if token.startswith(PATH_PREFIXES):
                 yield token

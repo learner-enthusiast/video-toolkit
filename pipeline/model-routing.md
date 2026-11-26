@@ -1,6 +1,6 @@
 # Model routing
 
-**Goal:** use the right model for each decision. Sonnet runs most production work; Opus owns creative direction, hard problems, and final visual QA; Haiku runs bounded, verifiable tasks. Deterministic scripts beat any LLM when the answer is checkable.
+**Goal:** use the right model for each decision. Sonnet runs most production work; Opus owns creative direction, hard problems, and final visual QA; Haiku is the last resort for bounded, verifiable boilerplate. Deterministic scripts beat any LLM when the answer is checkable.
 
 **Authority:** `config/model-routing.json` is the only place **model IDs** and CLI selectors are defined. This file uses **tiers** only. Verify locally: `vt-python tools/model_verify.py`.
 
@@ -10,7 +10,7 @@
 |---|---|---|
 | **production** | medium | Implementation, debugging, manifests, FFmpeg batches, normal Remotion, subtitles, social scaffolding, stage handoffs |
 | **creative** | high | Story direction, novel storyboard choices, architectural forks, approval stills judgment, visual QA |
-| **worker** | low | Log summaries, JSON extraction, heavy-job runner, delegation chain last resort |
+| **worker** | low | Log summaries, JSON extraction, boilerplate-chain last resort |
 | **escalation** (rare) | high | Only when Opus escalation failed or I ask; not routine production |
 
 Long context: use the production tier's `long_context_id` in config when a single stage needs the full script + timeline without `/compact`.
@@ -46,7 +46,8 @@ Use `--effort` per `config/model-routing.json` → `default_by_task_class`. Do n
 | `vision-qa` (`.claude/agents/`) | **creative** | Never `same_as_main`; read-only tools |
 | `creative-director` (`.claude/agents/`) | **creative** | Storyboard and stills review; writes only `work/storyboard.md` |
 | Restate test | worker + vision | Pre-screen only |
-| Heavy jobs | worker | Exact commands only (`pipeline/delegation.md` §6) |
+
+Heavy jobs use no model: `tools/jobs/batch.sh` runs them (`pipeline/delegation.md` §5).
 
 ## Verification
 

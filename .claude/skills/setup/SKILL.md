@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # Setup
 
-1. **Check.** Run these probes (Haiku runner, per `pipeline/delegation.md`) to report each item as present (with version) or missing, without installing anything:
+1. **Check.** Run these probes (directly; installs run as a heavy-job batch, `pipeline/delegation.md`) to report each item as present (with version) or missing, without installing anything:
    - `ffmpeg`/`ffprobe`, and whether `-encoders` lists `h264_nvenc` and `-filters` lists `arnndn`/`afftdn`/`loudnorm`
    - `nvidia-smi`, `~/bin/gpu-run`, and `~/bin` on PATH
    - Node ≥ 20 and `npx`

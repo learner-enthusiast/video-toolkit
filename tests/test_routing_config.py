@@ -28,6 +28,8 @@ class RoutingConfigTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             shutil.copytree(os.path.join(REPO, ".claude", "agents"), os.path.join(td, ".claude", "agents"))
             shutil.copy(os.path.join(REPO, ".claude", "settings.json"), os.path.join(td, ".claude"))
+            os.makedirs(os.path.join(td, "tools", "jobs"))
+            shutil.copy(os.path.join(REPO, "tools", "jobs", "batch.sh"), os.path.join(td, "tools", "jobs"))
             mutate(os.path.join(td, ".claude"))
             return {e["code"] for e in validate_claude_files(load_config(), td)}
 
@@ -48,6 +50,13 @@ class RoutingConfigTest(unittest.TestCase):
         codes = self.claude_errors(lambda d: os.rename(
             os.path.join(d, "agents", "vision-qa.md"), os.path.join(d, "agents", "other.md")))
         self.assertEqual(codes, {"AGENT_MISSING", "AGENT_UNROUTED"})
+
+    def test_heavy_job_runner_must_be_an_existing_script(self):
+        for runner, code in (({"model": "worker"}, "RUNNER_NOT_SCRIPT"),
+                             ({"type": "script", "script": "tools/jobs/gone.sh"}, "RUNNER_MISSING")):
+            cfg = load_config()
+            cfg["subagents"]["heavy_job_runner"] = runner
+            self.assertEqual({e["code"] for e in validate_claude_files(cfg, REPO)}, {code})
 
     def test_wrong_session_model_is_rejected(self):
         codes = self.claude_errors(lambda d: self.rewrite(

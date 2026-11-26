@@ -9,7 +9,7 @@
 1. Run plain + VAD + disfluency passes (unchanged).
 2. Compare against `script.md` paragraphs → flag `MISSING_PARAGRAPH`.
 3. Flag low-confidence / cross-pass disagreement windows.
-4. Windowed re-transcribe + optional CTC (`align_ctc.py` patterns per project).
+4. Windowed re-transcribe + optional CTC (`tools/captions/align_ctc.py`).
 5. Write `work/transcripts/discrepancy-report.json` (compact).
 
 ## Benchmark before enable

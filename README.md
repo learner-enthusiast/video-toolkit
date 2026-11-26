@@ -84,7 +84,7 @@ projects/<name>/
 │   ├── logs/            # hooks.log, delegation logs, stage logs
 │   ├── transcripts/     # Whisper JSON, SRT sources, word timings
 │   ├── remotion/        # npm project; symlinks to repo icons/ and components/code/
-│   ├── jobs/            # Heavy job scripts + *.status for Haiku runner
+│   ├── jobs/            # Job batches + *.log / *.status (tools/jobs/batch.sh)
 │   ├── captures/        # Playwright screenshots/clips + captures.md
 │   └── cache/           # Asset manifest, inspect cache, operation bundles
 └── out/                 # Deliverables only
@@ -144,7 +144,7 @@ Vendor provenance and local patches: `SKILLS.md`.
 |------|---------------------|-----|
 | **production** | `claude-sonnet-5-5` | Default implementation, cuts after your OK, Remotion, FFmpeg, most pipeline steps |
 | **creative** | `claude-opus-5-5` | Story direction, approval stills, **final visual QA** (vision subagent — always creative, never main session) |
-| **worker** | `claude-haiku-5-5` | Heavy job runner only; delegation-chain fallback |
+| **worker** | `claude-haiku-5-5` | Last resort of the boilerplate chain |
 | **escalation** | (configured) | Rare escalation path (`pipeline/escalation.md`) |
 
 - **Single source of truth for model IDs:** `config/model-routing.json`
@@ -291,9 +291,9 @@ Standing rules that apply to every video: **`CLAUDE.md`** (auto-loaded in Claude
 
 ## Delegation and heavy jobs
 
-**Low-stakes** (scaffolding, ffprobe reads, SRT wrap, logo fetch into `icons/`, boilerplate logs): delegated through a chain **Copilot → Codex → cursor-agent → Haiku** with timeouts and logs in `work/delegation/`. The orchestrator verifies every result.
+Single deterministic commands are run directly. Only multi-file boilerplate from a final spec goes through **Copilot → Codex → cursor-agent → Haiku**, with timeouts and logs in `work/delegation/`; the orchestrator verifies every result.
 
-**Heavy jobs** (final renders, Whisper, encodes, video-inspect): **never** use that chain. The main agent writes exact commands (`gpu-run`, paths, timeouts); a Haiku runner detaches jobs, writes `work/jobs/<NN>-<job>.status`, and stops on error without changing settings.
+**Heavy jobs** (final renders, Whisper, encodes, video-inspect) never use that chain. The main agent writes an exact batch; `tools/jobs/batch.sh` runs it one job at a time, writes `work/jobs/<NN>-<job>.status` and stops at the first failure. Pipeline scripts live in `tools/` and read per-video settings from `work/config/`.
 
 **Never delegate:** script, storyboard, creative take, layout states, sound map, `brand.md`, final component visuals, render settings, final QA, or anything on screen not yet reviewed.
 

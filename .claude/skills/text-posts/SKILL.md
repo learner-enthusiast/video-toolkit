@@ -21,4 +21,4 @@ Extra posts, on top of the video: I still post the video on LinkedIn and X with 
 5. **QA:** `pipeline/text-posts.md` → QA. Open the PNG yourself and read every file in full. Fix and re-check anything that fails.
 6. **Log** the run in `log.md` (`pipeline/project-log.md`) and report the files plus anything not done as specified.
 
-Rendering is a heavy job (detached Haiku runner); file shuffling is low-stakes (`pipeline/delegation.md`). The writing, the photo design and every judgment stay with Opus.
+Rendering is a heavy job (`tools/jobs/batch.sh`, `pipeline/delegation.md`). The writing, the photo design and every judgment stay with Opus.

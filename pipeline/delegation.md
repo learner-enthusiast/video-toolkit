@@ -1,49 +1,20 @@
 # Delegation
 
-**Goal:** The primary session (Sonnet by default, `pipeline/model-routing.md`) makes every decision. Low-stakes work goes to scripts or outside CLIs so production turns are not spent on mechanical work. Haiku (`claude-haiku-5-5`) is the delegation-chain last resort and the heavy-job runner — not the default production model.
+**Goal:** the Sonnet session makes every decision; mechanical work goes wherever it costs the fewest tokens.
 
-## 1. What may be delegated
+## 1. Who does what
 
-**Low-stakes** = a task whose result can't lower the quality of the final video if it's slightly off, because Claude checks it afterwards:
-- folder/project scaffolding, renaming, moving files, cleaning up `work/`
-- ffprobe/metadata reads, duration measurements, proxy/low-res transcodes
-- downloading official logos into `icons/` and adding their `icons/icons.md` rows
-- SRT formatting/line-wrapping, social copy JSON scaffolding, `log.md` updates
-- boilerplate for a component whose spec is already final (Claude reviews every line before use)
+| Work | Who |
+|---|---|
+| One command or small edit: ffprobe, renames, proxies, `log.md`, SRTs (`tools/captions/make_srt.py`), scaffolding (`tools/scaffold_remotion.py`), social JSON, a logo into `icons/` + its row | **Claude, directly.** One Bash call costs less than usage check + canary + launch + monitor + verify. |
+| Multi-file boilerplate from a **final** spec | CLI chain (§2). Claude reviews every line before use. |
+| Heavy jobs: voice cleaning (`tools/clean_audio.py`, exact command from `pipeline/voice-cleaning.md`), final renders, Whisper, final encodes, video-inspect, installs | `tools/jobs/batch.sh` (§5). No LLM runner. Never the chain: its timeouts, sandboxes and quotas can kill a long GPU job. |
 
-**Never delegated (Claude keeps these):** script, cut decisions, storyboard, creative take, layout states, `brand.md` decisions, final component visuals, render settings, QA, the voice-cleaning gate decision (reading the cleaning reports, listening, passing a recording), and anything visible on screen that hasn't been reviewed. Vision is never delegated for a final judgment (`pipeline/video-inspect.md`).
+**Never delegated:** script, cuts, storyboard, creative take, layout states, `brand.md`, final visuals, render settings, QA, the voice-cleaning gate decision, final vision judgment, or anything on screen not yet reviewed. (`creative-director` and `vision-qa` are the creative tier, not delegation.)
 
-## Two kinds of delegated work
+## 2. Boilerplate chain
 
-| Kind | Examples | Who runs it |
-|---|---|---|
-| Low-stakes tasks | scaffolding, renames, ffprobe reads, proxies, logo downloads into `icons/` + `icons/icons.md` rows, SRT wrapping, social JSON scaffold, `log.md`, boilerplate from a final spec | CLI chain: Copilot → Codex → cursor-agent (canary) → Haiku |
-| Heavy jobs | voice-cleaning runs (`tools/clean_audio.py`, exact command from `pipeline/voice-cleaning.md`), final renders, Whisper, final encodes, video-inspect runs, installs | Haiku runner (section 6); Claude only observes |
-
-Heavy jobs never go through the CLI chain: command timeouts, sandboxes and quota limits can kill a long GPU job midway.
-
-## 2. Low-stakes chain
-
-1. GitHub Copilot CLI (`copilot`)
-2. OpenAI Codex CLI (`codex`)
-3. Cursor agent (`cursor-agent`)
-4. Haiku subagent: only when all three are out of usage, not installed, not logged in, or failing
-
-```
- task ──▶ low-stakes? ──no──▶ heavy: Haiku runner (§6) · else Claude does it
-              │yes
-              ▼
-   Copilot usage ok? ──yes──▶ run (bg, timeout, log) ──▶ monitor ──▶ verify
-         │no / error                                        │fail/hang
-         ▼                                                  ▼
-   Codex usage ok?   ──yes──▶ same ...              kill → next tool
-         │no
-         ▼
-   cursor canary ok? ──yes──▶ ONE small chunk, short timeout, re-canary before the next
-         │no
-         ▼
-       Haiku subagent
-```
+Copilot → Codex → cursor-agent (canary) → Haiku subagent (only when all three are unavailable or failing). If the permission classifier refuses a tool, try the next, else write it yourself and say so. Never work around a refusal.
 
 ## 3. Per-tool commands (verified on this machine, Nov 2026)
 
@@ -57,95 +28,26 @@ Heavy jobs never go through the CLI chain: command timeouts, sandboxes and quota
 | Hard spend cap | `--max-ai-credits <n>` (**minimum 30**; a probe-sized task used ~0.3) | none (use the timeout) | none (use the timeout) |
 | Limit/auth errors to grep | `quota`, `rate limit`, `429`, `premium`, `exceeded`, `not authenticated`, `login` | `rate_limit_reached_type` non-null, `usage limit`, `429`, `not logged in`, `"type":"error"` | `usage limit`, `rate limit`, `429`, `not logged in`, `Error:` |
 
-**Usage-check rules (mandatory before every delegation)**
-- **Copilot:** OK when `percent_remaining ≥ 15` and overage isn't needed. `gh api /copilot_internal/user` is an undocumented endpoint; it worked here. If it errors, treat Copilot as unreadable → skip.
-- **Codex:** `rate_limits` is only partly filled on this plan (`plan_type: go`, `primary`/`secondary` null, so no percentage). Run `codex login status`; read the last `rate_limits` line with `grep -o '"rate_limits":{.*' <newest rollout> | tail -1`. OK when logged in and `rate_limit_reached_type` is null and, if `primary`/`secondary` carry `used_percent`, both are < 85. Treat it as a **partial reading**: send one small chunk per call.
-- **cursor-agent (canary):** no usage-read command is confirmed, so a canary is its check. Before **each** use run `timeout 60 cursor-agent -p --force --sandbox disabled --workspace <dir> "Reply with exactly: OK"`. If it fails, times out, doesn't print `OK`, or shows a limit/auth error, skip to Haiku. If it passes, send exactly **one small chunk** with a short timeout (≤ 300 s), monitored; run the canary again before the next chunk. If a real usage/status command turns up, use it instead and update the table.
-- **Haiku:** no check.
-- A low-headroom or unreadable tool (Copilot, Codex) is skipped, not retried. Say which tool was skipped and why in `log.md`.
+**Check usage before every delegation.** Skip a tool that is low or unreadable (don't retry it) and say why in `log.md`.
+- **Copilot:** OK at `percent_remaining ≥ 15` with no overage needed; endpoint error = unreadable.
+- **Codex:** OK when logged in, `rate_limit_reached_type` is null and any `used_percent` is < 85 (`grep -o '"rate_limits":{.*' <newest rollout> | tail -1`). Often partial on this plan: one small chunk per call.
+- **cursor-agent:** no usage command, so before **each** use: `timeout 60 cursor-agent -p --force --sandbox disabled --workspace <dir> "Reply with exactly: OK"`. On `OK`, send **one** small chunk (timeout ≤ 300 s).
+- Size each chunk to finish on its own.
 
-**Size the batch to the headroom.** Split big jobs into chunks that each finish on their own (one logo set, one folder, one SRT), so a limit hit loses one chunk, not the job.
+## 4. Running one
 
-## 4. How to run one
+Non-interactive, in the background, with a hard timeout, output to `projects/<name>/work/delegation/<NN>-<tool>-<task>.log` ending in `EXIT <code>`. The prompt names the exact files, the expected output (name and format) and "Do not touch `raw/`, `script.md`, `brand.md`, `CLAUDE.md`, or anything outside `<dir>`." A limit/auth error from the table, no output for 120 s or a permission prompt → kill it and re-run the chunk on the next tool. Verify every result yourself, and log task, tool, usage before, result and fallback in `log.md`.
 
-Always non-interactive (prompt as an argument, auto-approve scoped to the project folder), in the background, with a hard timeout, output to `projects/<name>/work/delegation/<NN>-<tool>-<task>.log`:
+## 5. Heavy jobs: `batch.sh`
 
-```bash
-D=projects/<name>/work/delegation; mkdir -p $D
-# example: Copilot, 10-minute cap
-( cd projects/<name> && timeout 600 copilot -p "<task>" --allow-all-tools --no-ask-user --no-color \
-    --max-ai-credits 30 --usage-output-file work/delegation/01-copilot-probe.usage.json \
-    > work/delegation/01-copilot-probe.log 2>&1; echo "EXIT $?" >> work/delegation/01-copilot-probe.log ) &
-```
+1. Claude writes the exact batch to `work/jobs/<stage>.batch`, one job per line: `NN-name | timeout-seconds | output-path | command`. Every GPU command is wrapped in `gpu-run`, with all flags and paths. Commands run from `work/`.
+2. Launch it with the **Bash tool in the background** (`run_in_background: true`): `tools/jobs/batch.sh projects/<name>/work/jobs/<stage>.batch` (toolkit-root path). Jobs run strictly one at a time; the first failure or timeout stops the batch.
+3. **Don't poll.** You are notified when it ends. Then read `vt-python tools/job_report.py <status>` per job and verify outputs (ffprobe streams and duration, size). Read a `.log` only on a failure or an odd number (duration off by > 1 frame, wrong fps/resolution, loudness outside House numbers, tiny file).
+4. Change settings only for a diagnosed reason. Installs are global.
 
-Every task prompt contains: the exact files/paths, the exact expected output (file name and format), and **"Do not touch `raw/`, `script.md`, `brand.md`, `CLAUDE.md`, or anything outside `<dir>`."**
+`tools/jobs/run.sh` writes each `<NN>-<job>.log` and, only when the job ends, its `.status`. `batch.sh` clears old results and won't start beside another batch in the same folder.
 
-**Monitor**
-- `tail` the log every 30–60 s (Monitor with an until-loop, no sleep polling). No new output for 120 s, an `EXIT` marker ≠ 0, or any limit/auth/rate error from the table → `kill` it, mark the chunk failed, re-run that chunk on the next tool in the order.
-- A tool that asks for permission and waits is a hang: kill it and fix the flags, don't wait.
-
-**Verify every result yourself** before using it (files exist, `ffprobe`/`diff`/spot-check). The other tool only did the work.
-
-**Log it** in the project's `log.md`: task, tool used, usage before (e.g. `copilot premium 99.6%`), result, any fallback.
-
-## 5. Code helpers
-
-Boilerplate for a component with a final spec goes through the same order. Give exact specs (props, geometry, timing). Claude writes the visual components and reviews every line a helper writes. If a tool is refused by Claude Code's auto-mode permission classifier (it sends code to an outside service), go to the next tool; if all are refused, do it yourself and tell me. Never work around a refusal.
-
-## 6. Heavy jobs: Haiku runner, Claude observes
-
-```
-Claude ─ writes exact command batch (gpu-run, flags, paths, timeouts)
-   ▼
-Haiku runner ─ launches each job DETACHED (setsid/nohup) ─ watches logs
-   │  on error/stall: STOP, report. Never change settings or retry differently.
-   ▼
-work/jobs/<NN>-<job>.status  (done/failed, duration, output path, last 20 log lines)
-   ▼
-Claude ─ reads .status or `vt-python tools/job_report.py <status>` ─ verifies output (ffprobe streams/duration, size) ─ next step
-```
-
-- Claude hands Haiku an **exact** batch: full commands, every GPU job wrapped in `gpu-run`, all flags, input/output paths and a timeout per job.
-- Haiku runs them exactly as written. It must not change flags, codecs, quality, resolution, paths or order, and must not retry with different settings.
-- Every job is launched **detached** (`setsid nohup … &`) and writes its own log to `work/jobs/<NN>-<job>.log` and its own `.status` file, so it keeps running even if the Haiku session ends.
-- On fail or stall Haiku stops the batch and reports. Any fix is Claude's decision.
-- Claude does not tail logs. It reads the `.status` files and verifies outputs (ffprobe streams/duration, size); only on a failure or an odd number does it read the log and debug.
-- Installs are always global (not per project); Haiku runs them from Claude's exact list.
-
-**Job wrapper.** Claude writes this once per project as `work/jobs/run.sh` (a project file, never in the toolkit) and every heavy job is launched through it, so `.status` is identical for all jobs:
-
-```bash
-#!/bin/bash
-# usage: run.sh <NN-job> <timeout-seconds> <output-path> -- <command...>
-N=$1; T=$2; OUT=$3; shift 4; D="$(cd "$(dirname "$0")" && pwd)"
-t0=$(date +%s); timeout "$T" "$@" > "$D/$N.log" 2>&1; rc=$?
-{ echo "state=$([ $rc = 0 ] && echo done || echo failed)"; echo "exit=$rc"
-  echo "seconds=$(( $(date +%s) - t0 ))"; echo "output=$OUT"; echo "log_tail<<"; tail -20 "$D/$N.log"
-} > "$D/$N.status.tmp" && mv "$D/$N.status.tmp" "$D/$N.status"
-```
-
-Launch (the runner does exactly this): `setsid nohup work/jobs/run.sh 01-render 1200 out/x.mp4 -- gpu-run ffmpeg … > /dev/null 2>&1 &`. The `.status` file appears only when the job ends (atomic `mv`); while it's absent the job is running (`pgrep -f <NN-job>`). Delete stale `.status` files before a re-run.
-
-**Handoff template (Haiku)**
-
-```text
-Step: <step>   Project: projects/<name>   CWD: projects/<name>/work
-Run these jobs exactly as written, in order, ONE per message. Do not change, add, or skip anything.
-Launch each detached through `work/jobs/run.sh` as shown. Wait for its .status file (check every 15 s, hard limit = its timeout + 30 s).
-On a failed/stalled job: stop the batch and report. Never retry with different settings.
-1. <job command with wrapper>
-2. <job command with wrapper>
-Report (nothing else): for each job the .status path, state, exit, seconds; and every error/warning line verbatim.
-```
-
-**Gotchas**
-- Haiku may send two numbered commands in one message and run them in parallel (a 33-segment 1080x1920 plate encode ran beside the voice encode at 0.25x and timed out). Always write "ONE per message"; give such an encode ≥ 2400 s.
-- Stopping a polling runner kills jobs it launched unless they were started with `setsid`; that is why every job is detached.
-- Any non-zero exit, unexpected warning, or number outside spec (duration off by > 1 frame, wrong fps/resolution, LUFS off target, suspiciously small file): Claude reads the log, debugs, and sends a corrected batch.
-- **Haiku fallback for low-stakes tasks** (when the chain is exhausted) uses the same runner and report format, with output in `work/logs/<step>.log`.
-- The Haiku runner can't wait: foreground `sleep` is blocked in subagents, so a runner told to poll returns "still running" and the job's end is never reported (`system-design-of-ai/07-provider-failover`, Whisper job). Make the runner launch-only (`setsid nohup … & sleep 2; pgrep … && echo LAUNCHED`), and have Claude watch the `.status` file with a background `until [ -f …status ]` loop started from a neutral cwd (`cd /tmp`). A watcher whose cwd is the project and whose command line names the job is caught by the `pgrep -f`/cwd kill sweep below.
-- Never stop jobs with `pkill -f <pattern>`: the pattern also matches the shell running the pkill (exit 144, the rest of the command never runs), and another session's identical script (`qa_inspect.sh` from `Graphify`) ran beside ours on `system-design-of-ai/06-cancellation`. List with `pgrep -f`, check `readlink /proc/<pid>/cwd`, and `kill` only this project's PIDs.
-
-**Logo downloads (low-stakes, but verify the picture).** On `system-design-of-ai/07-provider-failover` both CLIs returned "verified SVG" files that were docs-template placeholders: Copilot's `litellm.svg` was Docusaurus's default dinosaur (`static/img/logo.svg`, fills `#3ECC5F`), and Codex's `portkey.svg` was a Mintlify "Starter Kit" wordmark (`mintlify/logo/light.svg`, contains `<!-- mintlify wordmark` and `<text>Starter Kit`). A file-type check passes both. Before accepting a delegated logo, grep it for `docusaurus|mintlify|<text` and the template greens, and look at it in a still. Good sources: the product's own README `<img>` (Portkey: `cfassets.portkey.ai/logo/dew-color.svg`), the docs site's navbar/favicon `brand/` folder (LiteLLM: `docs.litellm.ai/img/brand/litellm-favicon.svg`). Company GitHub avatars can be a different brand (BerriAI = grapes, not LiteLLM) or tiny (Portkey 76 px).
-
-**Copilot needs the toolkit root as its cwd for icon tasks.** On `system-design-of-ai/10-batch-inference` a logo task launched from `projects/<name>/` hung on "Denied, no one to approve shell path (../../../icons)": non-interactive Copilot can't approve writes outside its cwd. Launch icon/library tasks with `cd` to the toolkit root and repo-relative paths (`icons/logos/…`), and grep the log for `Denied` when a run stalls.
+## Gotchas
+- Never stop jobs with `pkill -f <pattern>`: it matches your own shell and other sessions' identical scripts. `pgrep -f`, check `readlink /proc/<pid>/cwd`, kill only this project's PIDs.
+- A delegated "verified SVG" can be a docs-template placeholder (grep `docusaurus|mintlify|<text`, view a still); use the product's README or brand-folder logo, not a GitHub avatar.
+- Non-interactive Copilot can't write outside its cwd: launch icon tasks from the toolkit root, and grep a stalled run's log for `Denied`.
