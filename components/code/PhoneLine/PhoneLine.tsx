@@ -9,20 +9,20 @@ import {sp, pop, ease} from '../anim';
 import {Logo} from '../glyphs';
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
-const Ico: React.FC<{size?: number; color?: string; sw?: number; children: React.ReactNode; style?: React.CSSProperties}> = ({size = 48, color = C.ink, sw = 3, children, style}) => (
+const Ico: React.FC<{size?: number; color?: string; sw?: number; children: React.ReactNode; style?: React.CSSProperties}> = ({size = 48, color = C.text, sw = 3, children, style}) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0, overflow: 'visible', ...style}}>{children}</svg>
 );
-export const Scissors: React.FC<{size?: number; color?: string; close?: number}> = ({size = 44, color = C.ink, close = 0}) => (
+export const Scissors: React.FC<{size?: number; color?: string; close?: number}> = ({size = 44, color = C.text, close = 0}) => (
   <Ico size={size} color={color}>
     <g transform={`rotate(${-18 * (1 - close)} 24 24)`}><circle cx="11" cy="36" r="6" /><path d="M15.5 32 L40 10" /></g>
     <g transform={`rotate(${18 * (1 - close)} 24 24)`}><circle cx="11" cy="12" r="6" /><path d="M15.5 16 L40 38" /></g>
   </Ico>
 );
-export const ServerIco: React.FC<{size?: number; color?: string}> = ({size = 72, color = C.ink}) => (
+export const ServerIco: React.FC<{size?: number; color?: string}> = ({size = 72, color = C.text}) => (
   <Ico size={size} color={color} sw={2.6}><rect x="8" y="6" width="32" height="14" rx="3" /><rect x="8" y="26" width="32" height="14" rx="3" /><circle cx="15" cy="13" r="1.8" fill={C.accent} stroke="none" /><circle cx="15" cy="33" r="1.8" fill={C.accent} stroke="none" /><path d="M22 13h12M22 33h12" /></Ico>
 );
-export const LockIco: React.FC<{size?: number; color?: string}> = ({size = 40, color = C.ink}) => (
-  <Ico size={size} color={color} sw={3.4}><rect x="10" y="21" width="28" height="21" rx="4" fill={C.white} /><path d="M16 21v-6a8 8 0 0 1 16 0v6" /><path d="M24 29v6" /></Ico>
+export const LockIco: React.FC<{size?: number; color?: string}> = ({size = 40, color = C.text}) => (
+  <Ico size={size} color={color} sw={3.4}><rect x="10" y="21" width="28" height="21" rx="4" fill={C.surface} /><path d="M16 21v-6a8 8 0 0 1 16 0v6" /><path d="M24 29v6" /></Ico>
 );
 /* ---------------- PhoneLine (specs/PhoneLine.md) ---------------- */
 export const GEO = {app: {x: 46, y: 300, w: 184, h: 310}, srv: {x: 742, y: 335, w: 184, h: 230}, wy: 455, ax: 230, bx: 742, sag: 26, booths: [362, 486, 610]};
@@ -69,7 +69,7 @@ const BoothTile: React.FC<{b: Booth}> = ({b}) => {
       {/* limit / timer pill above */}
       {(b.timer && f >= b.timer.t0 - 1) || (b.limit && f >= (b.limitAt ?? 1e9)) ? (
         <div style={{position: 'absolute', left: 58, top: -62, transform: `translateX(-50%) scale(${b.timer ? 1 + (hot ? 0.12 * Math.sin(Math.PI * clamp01((f - b.timer.hotAt!) / 10)) : 0) : 0.8 + 0.2 * Math.min(1, pop(f, b.limitAt!))})`, opacity: b.timer ? Math.min(1, pop(f, b.timer.t0) * 1.5) : Math.min(1, pop(f, b.limitAt!) * 1.5)}}>
-          <div style={{padding: '6px 14px', borderRadius: 99, border: BORDER, background: hot || (!b.timer && lock) ? C.accent : C.white, color: hot || (!b.timer && lock) ? C.white : C.ink, fontFamily: mono, fontWeight: 700, fontSize: 26, whiteSpace: 'nowrap'}}>{b.timer ? `${tv} s` : b.limit}</div>
+          <div style={{padding: '6px 14px', borderRadius: 99, border: BORDER, background: hot || (!b.timer && lock) ? C.accent : C.surface, color: hot || (!b.timer && lock) ? C.onAccent : C.text, fontFamily: mono, fontWeight: 700, fontSize: 26, whiteSpace: 'nowrap'}}>{b.timer ? `${tv} s` : b.limit}</div>
         </div>
       ) : null}
       <div style={{width: 116, height: 84, boxSizing: 'border-box', background: C.surface, border: lock ? `4px solid ${C.accent}` : BORDER, borderRadius: R, boxShadow: SHADOW, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
@@ -78,7 +78,7 @@ const BoothTile: React.FC<{b: Booth}> = ({b}) => {
       <div style={{position: 'absolute', left: 58, top: 92, transform: 'translateX(-50%)', fontFamily: inter, fontWeight: 700, fontSize: 22, color: C.text, whiteSpace: 'nowrap', background: C.bg, padding: '0 6px', borderRadius: 6}}>{b.label}</div>
       {sc && (
         <div style={{position: 'absolute', left: 88, top: -22, transform: `scale(${Math.min(1, pop(f, b.scissorsAt!) * 1.2)})`, background: C.surface, border: `2px solid ${scDim ? C.textDim : C.border}`, borderRadius: 99, padding: 4, opacity: scDim ? 0.55 : 1}}>
-          <Scissors size={34} color={scDim ? C.textDim : C.ink} />
+          <Scissors size={34} color={scDim ? C.textDim : C.text} />
         </div>
       )}
       {lock && (
@@ -86,7 +86,7 @@ const BoothTile: React.FC<{b: Booth}> = ({b}) => {
       )}
       {b.badge && f >= b.badge.at - 1 && (
         <div style={{position: 'absolute', left: 58, top: 128, transform: 'translateX(-50%)'}}><div style={{opacity: Math.min(1, pop(f, b.badge.at) * 1.5), transform: `scale(${0.8 + 0.2 * pop(f, b.badge.at)})`}}>
-          <div style={{padding: '8px 16px', borderRadius: 99, border: BORDER, background: C.ink, color: C.white, fontFamily: inter, fontWeight: 800, fontSize: 24, whiteSpace: 'nowrap'}}>{b.badge.text}</div></div>
+          <div style={{padding: '8px 16px', borderRadius: 99, border: BORDER, background: C.inkFill, color: C.onInk, fontFamily: inter, fontWeight: 800, fontSize: 24, whiteSpace: 'nowrap'}}>{b.badge.text}</div></div>
         </div>
       )}
     </div>
@@ -101,11 +101,11 @@ export const AppTile: React.FC<{at: number; label?: string; screen?: React.React
   const {x, y, w, h} = GEO.app;
   return (
     <div style={{position: 'absolute', left: x, top: y, width: w, height: h, opacity: Math.min(1, v * 1.5), transform: `scale(${0.85 + 0.15 * v})`}}>
-      <div style={{position: 'absolute', inset: 0, borderRadius: 30, border: `${ring ? 5 : 4}px solid ${ring ? C.accent : C.border}`, background: C.ink, boxSizing: 'border-box', padding: 6, boxShadow: SHADOW}}>
+      <div style={{position: 'absolute', inset: 0, borderRadius: 30, border: `${ring ? 5 : 4}px solid ${ring ? C.accent : C.border}`, background: C.inkFill, boxSizing: 'border-box', padding: 6, boxShadow: SHADOW}}>
         <div style={{position: 'relative', width: '100%', height: '100%', borderRadius: 22, overflow: 'hidden', background: C.bg}}>
           {screen}
-          <div style={{position: 'absolute', inset: 0, background: C.ink, opacity: dark}} />
-          <div style={{position: 'absolute', left: '50%', top: 6, width: 46, height: 10, borderRadius: 99, background: C.ink, transform: 'translateX(-50%)'}} />
+          <div style={{position: 'absolute', inset: 0, background: C.inkFill, opacity: dark}} />
+          <div style={{position: 'absolute', left: '50%', top: 6, width: 46, height: 10, borderRadius: 99, background: C.inkFill, transform: 'translateX(-50%)'}} />
         </div>
       </div>
       <div style={{position: 'absolute', left: 0, right: 0, top: h + 10, textAlign: 'center', fontFamily: inter, fontWeight: 800, fontSize: 28, color: C.text}}>{label}</div>
