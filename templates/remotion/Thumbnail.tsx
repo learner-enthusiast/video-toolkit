@@ -37,6 +37,8 @@ export type ThumbnailProps = {
   /** the key phrase; it must sit inside one headline line */
   hl: string;
   scene?: React.ReactNode;
+  /** scene elements drawn over me, for what the boom cable would otherwise cross; never over my face */
+  front?: React.ReactNode;
   texture?: Texture;
   sparks?: boolean;
   /** headline size in px; fitted to the longest line when left out */
@@ -52,7 +54,7 @@ const layoutFor = ({w, h}: Size) =>
     : {badgeTop: 262, head: {top: 366, left: 0, width: w, align: 'center' as const}, font: [104, 124], faceAt: w / 2, headY: 1040, scale: 0.65};
 
 /** spread into the one focal element of the scene: the brand's ring and glow */
-export const focal: React.CSSProperties = {border: `4px solid ${C.accent2}`, boxShadow: `0 0 0 8px ${accent2A(0.18)}, 0 0 56px 10px ${accent2A(0.45)}`};
+export const focal: React.CSSProperties = {border: `4px solid ${C.accent2}`, borderColor: C.accent2, boxShadow: `0 0 0 8px ${accent2A(0.18)}, 0 0 56px 10px ${accent2A(0.45)}`};
 
 const range = (n: number) => Array.from({length: n}, (_, i) => i);
 
@@ -138,7 +140,7 @@ export const Badge: React.FC<{text: string; ep?: string; top: number; left?: num
 );
 
 const Sparks: React.FC = () => (
-  <svg width={70} height={70} viewBox="0 0 70 70" fill="none" stroke={C.accent2} strokeWidth={6} strokeLinecap="round" style={{position: 'absolute', left: '100%', top: -22, marginLeft: 4}}>
+  <svg width={70} height={70} viewBox="0 0 70 70" fill="none" stroke={C.accent2} strokeWidth={6} strokeLinecap="round" style={{position: 'absolute', left: '100%', top: -4, marginLeft: 8}}>
     <path d="M10 28 L18 7" />
     <path d="M26 40 L50 22" />
     <path d="M32 58 L60 54" />
@@ -194,7 +196,7 @@ export const Cutout: React.FC<{cutout: CutoutSource; place?: CutoutPlacement; si
   const fadeL = p.left > 1 ? 'transparent 0, black 70px' : 'black 0';
   const fadeR = p.left + p.width < size.w - 1 ? 'black calc(100% - 70px), transparent 100%' : 'black 100%';
   const mask = `linear-gradient(90deg, ${fadeL}, ${fadeR})`;
-  const rim = [[3, 0], [-3, 0], [0, -3]].map(([x, y]) => `drop-shadow(${x}px ${y}px 0 ${C.accent})`).join(' ');
+  const rim = [[2.5, 0], [-2.5, 0], [0, -2.5]].map(([x, y]) => `drop-shadow(${x}px ${y}px 0 ${C.accent})`).join(' ');
   return (
     <>
       <AbsoluteFill style={{background: [
@@ -209,13 +211,14 @@ export const Cutout: React.FC<{cutout: CutoutSource; place?: CutoutPlacement; si
 };
 
 /** the whole cover. Order: background, scene, me (the scene may run behind), then the badge and headline on top. */
-export const Thumbnail: React.FC<ThumbnailProps> = ({cutout, place, badge, headline, hl, scene, texture = 'none', sparks = true, headlineSize, size = CANVAS}) => {
+export const Thumbnail: React.FC<ThumbnailProps> = ({cutout, place, badge, headline, hl, scene, front, texture = 'none', sparks = true, headlineSize, size = CANVAS}) => {
   const layout = layoutFor(size);
   return (
     <AbsoluteFill>
       <Background texture={texture} size={size} />
       <AbsoluteFill>{scene}</AbsoluteFill>
       <Cutout cutout={cutout} place={place} size={size} />
+      <AbsoluteFill>{front}</AbsoluteFill>
       <Badge text={badge.text} ep={badge.ep} top={layout.badgeTop} left={size.w > size.h ? layout.head.left : undefined} />
       <Headline lines={headline} hl={hl} sparks={sparks} fontSize={headlineSize} size={size} />
     </AbsoluteFill>
