@@ -20,3 +20,6 @@ __pycache__/
 
 # Music library audio: restored from music/index.md (tools/music/restore.py)
 music/tracks/
+
+# Reference captures of another creator: study only, never committed
+docs/thumbnail-refs/
