@@ -34,6 +34,7 @@ export const brand2: Theme = {
   phoneEdge: '#1F2A25',
   bubblePunch: '#0D1310',
   logoTile: '#FFFFFF',
+  gradientEnd: '#3DFFA2',
   shadow: '0 10px 28px rgba(0,0,0,.5)',
   gridStyle: 'lines-scanlines',
   headlineFont: 'inter',

@@ -54,6 +54,12 @@ import {BarCompare} from '../BarCompare/BarCompare';
 import {FlowLanes} from '../FlowDiagram/FlowDiagram';
 import {LineChart} from '../LineChart/LineChart';
 import {ChatBubble} from '../ChatBubble/ChatBubble';
+import {CamFrame} from '../brand2/CamFrame/CamFrame';
+import {HighlighterText} from '../brand2/HighlighterText/HighlighterText';
+import {ReceiptCard} from '../brand2/ReceiptCard/ReceiptCard';
+import {AlertFlash} from '../brand2/AlertFlash/AlertFlash';
+import {NumberList} from '../brand3/NumberList/NumberList';
+import {TimerRing} from '../brand3/TimerRing/TimerRing';
 
 /** the 972x970 grid card every scene is drawn in */
 const Stage: React.FC<{children: React.ReactNode}> = ({children}) => (
@@ -151,6 +157,13 @@ const previews: Record<string, React.FC> = {
   PrefixMatch: () => <Stage><At x={160} y={380}><PrefixMatch at={0} step={3} size={28} rows={[['You', 'are', 'the', 'claims', 'assistant', '…'], ['You', 'are', 'the', 'claims', 'bot', '…']]} /></At></Stage>,
   KycCounter: () => <Stage><At x={50} y={160}><KycCounter mode="every" visits={[0, 30]} /></At></Stage>,
   BillCard: () => <Stage><At x={150} y={330}><BillCard w={740} logo="openai.svg" tag="example" strike="₹35.6 lakh" amount="₹3.6 lakh" line="same 5,000 tokens · cached" /></At></Stage>,
+  // brand signature pieces: render each preview.png in its own brand
+  CamFrame: () => <Stage><CamFrame cam={3} startTime="14-03-2026 02:13:07" kicker="server room" at={0} /></Stage>,
+  HighlighterText: () => <Stage><At x={70} y={330}><HighlighterText size={62} lines={['A retry is only safe', 'if the write is', 'idempotent.']} marks={[{word: 'retry', at: 14}, {word: 'idempotent', at: 30}]} /></At></Stage>,
+  ReceiptCard: () => <Stage><At x={166} y={220}><ReceiptCard title="usage" rows={[{label: 'input tokens', value: '1,200'}, {label: 'output tokens', value: '2,000'}, {label: 'retries', value: '0'}]} alertRow={{row: 2, value: '14', at: 36}} at={0} /></At></Stage>,
+  AlertFlash: () => <Stage><AlertFlash word="Power failure" sub="write not flushed" at={20} size={104} /></Stage>,
+  NumberList: () => <Stage><At x={36} y={260}><NumberList items={['Token', 'Context', 'Embedding', 'RAG', 'Agent', 'Eval']} litAt={[10, 20, 30]} /></At></Stage>,
+  TimerRing: () => <Stage><At x={276} y={275}><TimerRing from={60} at={0} size={420} /></At></Stage>,
 };
 
 export const Root: React.FC = () => (

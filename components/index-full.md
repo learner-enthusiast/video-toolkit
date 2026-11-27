@@ -8,6 +8,7 @@ Row lookup only: `grep -i '^| \[<Name>\]' components/index-full.md`. Never read 
 |---|---|---|---|---|---|
 | [AccountQuotaBar](specs/AccountQuotaBar.md) | One heavy user exhausts a shared quota; everyone else blocked | `label`, `floodAt`, `users`, `heavyIndex`, `blockAt`, `caption`, `rect`, `at`, … | spec-only | — | — |
 | [AdoptionHonest](specs/AdoptionHonest.md) | Honest adoption picture: one vendor library, few ports, no standard | `at`, `out`, `oktaAt`, `jpasetoAt`, `barsAt`, `auditAt`, `langsAt`, `honestAt`, … | spec-only | — | — |
+| [AlertFlash](specs/AlertFlash.md) | Full-frame failure punch with a flicker in | word, sub, at, out, icon, size | ✓ | default or custom icon · brands: 2 | — |
 | [AlgAttack](specs/AlgAttack.md) | JWT flaw: the token header tells the server how to verify | `at`, `out`, `arrowAt`, `noneAt`, `skipAt`, `swapAt`, `secretAt`, `adminAt`, … | needs-cleanup | — | — |
 | [AnswerGrid](specs/AnswerGrid.md) | Recap pairing "limit by what" with "how to count" per case | `part1At`, `keysAt`, `backupAt`, `part2At`, `rowsAt`, `holdTo`, `rect`, `at`, `out`. | spec-only | — | — |
 | [Avatar](specs/Avatar.md) | Story character as a generic illustrated face with a name label (no likeness) | `who`, `mood`, `size`, `label`, `focus`, `at`, `out`, `shakeAt`, `bounceAt`, `dim`. | needs-cleanup | — | — |
@@ -22,6 +23,7 @@ Row lookup only: `grep -i '^| \[<Name>\]' components/index-full.md`. Never read 
 | [CacheTiers](specs/CacheTiers.md) | A request falls through cache layers until one tier answers | `tiers`, `hitAt`, `failAt`, `rect`, `out`. | needs-cleanup | — | — |
 | [CalendarFlip](specs/CalendarFlip.md) | Repeated work across days/sessions: each day flips in, the same item stack slides in again, greyer | days [{label, at}], files, sub, again, forgetAt, forgetText, w, forgetY, ghostAt | ✓ | with/without closing warning | — |
 | [CallTimeline](specs/CallTimeline.md) | A request's life on one time axis: read vs paid, with a token and ₹ counter; replays with a different outcome | w, seconds, leaveAt, run {start,leave,end}, stopAt, tokRate, money {perTok,prefix}, tag, foot, verdict {at,text,tone}, rewindFrom, labels, at, out | ✓ | before (stopAt = seconds) / after fix (stopAt ≈ leaveAt, rewindFrom), with/without money | system-design-of-ai/06-cancellation |
+| [CamFrame](specs/CamFrame.md) | CCTV viewfinder overlay: REC, camera number, live timestamp | cam, startTime, kicker, at, out | ✓ | with/without kicker · brands: 2 | — |
 | [CanvasZoomOut](specs/CanvasZoomOut.md) | Closing pull-back showing every pipeline station lighting as named | `zoomAt`, `pulses`, `card`, `out`. | spec-only | — | — |
 | [Captions](specs/Captions.md) | Word-by-word captions following the spoken words | `words`, `mode`, `avoid` rects . | needs-cleanup | — | — |
 | [Card](specs/Card.md) | Base panel container other graphics sit in | `rect` or `x/y/w`, `at`, `out`, `accent`, `children`. | needs-cleanup | — | — |
@@ -79,6 +81,7 @@ Row lookup only: `grep -i '^| \[<Name>\]' components/index-full.md`. Never read 
 | [Headline](specs/Headline.md) | Big editorial title framing a section or the video's question | `text`, `emph`, `at`, `out`, `size`. | needs-cleanup | — | — |
 | [HiddenThinking](specs/HiddenThinking.md) | Short visible reply vs a tall stack of billed, hidden reasoning pages | `at`, `thinkAt`, `labelAt`, `neverAt`, `linesAt` / `pagesAt`, `pages`, `out`. Dark style. | needs-cleanup | — | — |
 | [Highlight](specs/Highlight.md) | Points at one region of a screenshot | `box`, `at`, `out`, `dim` . | spec-only | — | — |
+| [HighlighterText](specs/HighlighterText.md) | A marker sweeps under chosen words in order | lines, marks [{word,at}], size, at | ✓ | one or many marks · brands: 2 | — |
 | [HoldSettle](specs/HoldSettle.md) | Reserved amount locked up front, then split into used and released | `unit`, `total`, `hold`, `settle`, `releaseAt`, `labels`, `variant`, `leak`, … | spec-only | — | — |
 | [HostingOptions](specs/HostingOptions.md) | Three ways to host user code and what the browser isolates | `options`, `focus`, `verdict`, `rect`, `at`, `out`. | spec-only | — | — |
 | [HttpReply](specs/HttpReply.md) | Rate-limit response; default server error becomes the right status | `cardAt`, `headerAt`, `nginxAt`, `swapAt`, `rect`, `at`, `out`. | spec-only | — | — |
@@ -114,6 +117,7 @@ Row lookup only: `grep -i '^| \[<Name>\]' components/index-full.md`. Never read 
 | [LockDrawer](specs/LockDrawer.md) | Drawer of mismatched locks versus one fitted lock per version | `at`, `out`, `jwtAt`, `pickAt`, `pasetoAt`, `fittedAt`, `rect`. | needs-cleanup | — | — |
 | [LowerThird](specs/LowerThird.md) | Names and titles the presenter on first appearance | `name`, `title`, `at`, `out`, `side`. | spec-only | — | — |
 | [MathStrip](specs/MathStrip.md) | Equation built term by term, result lands as punchline | terms [{text, at, op?}], size, style; also exports inr | ✓ | none | system-design-of-ai/12-tokenizers |
+| [NumberList](specs/NumberList.md) | Numbered term cards that light up in spoken order | items, litAt, cols, w, at, out | ✓ | 1 or more columns · brands: 3 | — |
 | [OtpSpam](specs/OtpSpam.md) | Hook: repeated resend taps each cost money | `taps`, `toastAt`, `chipsAt`, `rect`, `at`, `out`. | spec-only | — | — |
 | [OutputShuffle](specs/OutputShuffle.md) | Batch output comes back shuffled; mapping by line number leaks data (dark DATA LEAK flash), re-mapping by `custom_id` snaps reports to the right phones | `rows`, `order`, `shuffleAt`, `mapByLineAt`, `leakAt`, `fixAt`, `snapAt`, `at`, `out` | ✓ | shuffled output, wrong mapping by line number (⚠), rewind, custom_id tags, right mapping (✓) | system-design-of-ai/10-batch-inference |
 | [PartBadge](specs/PartBadge.md) | Persistent marker for which part of a multi-part short | `topic`, `part`, `of`, `at`, `hideFrom` . | needs-cleanup | — | — |
@@ -142,6 +146,7 @@ Row lookup only: `grep -i '^| \[<Name>\]' components/index-full.md`. Never read 
 | [RaceTimeline](specs/RaceTimeline.md) | Two requests race on a clock; a lease rejects the stale write | `ruler`, `lanes`, `steps`, `tokens`, `rect`, `out`. | spec-only | — | — |
 | [RankedList](specs/RankedList.md) | Results re-sort: relevant item rises, weak match drops | `query`, `items`, `orderBefore`, `orderAfter`, `at`, `winner`, `loser`, `out`. | spec-only | — | — |
 | [RationBags](specs/RationBags.md) | Identical units on a counter: sameness makes counting enough | `drops`, `tallyLabel`, `cardAt`, `sameAt`, `rect`, `at`, `out`. | spec-only | — | — |
+| [ReceiptCard](specs/ReceiptCard.md) | Torn-edge mono receipt; one row can flip to an alert value | title, rows [{label,value}], alertRow {row,value,at}, at, out, w | ✓ | plain · alert row · brands: 2 | — |
 | [ReceiptStack](specs/ReceiptStack.md) | Receipts slam down with an ENROLLED stamp each, counter ticking | `receipts`, `counter`, `darkLast`, `fan`, `rect`, `out`. | spec-only | — | — |
 | [ReelSplit](specs/ReelSplit.md) | Presenter docked under a graphic card for simple visuals | `face` track, `segments`, `states`, `punch` per segment. | spec-only | — | — |
 | [RegistryCalls](specs/RegistryCalls.md) | Same two HTTP requests reach three registries, all answer | `registries`, `calls`, `tickAt`, `out`. | spec-only | — | — |
@@ -187,6 +192,7 @@ Row lookup only: `grep -i '^| \[<Name>\]' components/index-full.md`. Never read 
 | [TicketSlip](specs/TicketSlip.md) | Orange paper ticket (#0427) for an async job ID: pops in, morphs from a JSON jobId, docks small as a callback | TicketArt {w,id,label,sub,dim}, TicketSlip {x,y,w,id,at,out,sub,morphFrom,dock,dim} | ✓ | pop-in, morph from JSON, docked mini | system-design-of-ai/08-long-running-requests |
 | [Timeline](specs/Timeline.md) | Past start date drawing forward to today ("around since") | `stops`, `orientation`, `rect`, `out`. | spec-only | — | — |
 | [Timer](specs/Timer.md) | Two-second stopwatch plus step counter: how fast one click works | `seconds`, `at`, `dur`, `steps`, `out`, `rect`, `dark` . | spec-only | — | — |
+| [TimerRing](specs/TimerRing.md) | Circular countdown with a big number and SEC | from, at, size, out | ✓ | any start value · brands: 3 | — |
 | [TocTreeWalk](specs/TocTreeWalk.md) | Retrieval as walking a table-of-contents tree to the answer | `nodes`, `mode`, index: `rows`, `stops`; build: `llmAt`, `treeAt`, `nodeAt`, … | spec-only | — | — |
 | [TokenAnatomy](specs/TokenAnatomy.md) | Token split into labelled parts, claims revealed as named | `token`, `parts`, at}]) — any count, `splitAt`, `claims` shown in the payload card, … | needs-cleanup | — | — |
 | [TokenBlocks](specs/TokenBlocks.md) | A string as a row of rounded token blocks from real tokenizer output; coin drop + running counter; byte pieces as grey blocks | pieces, at, stagger, size, font, label, counter, highlight, charCount | ✓ | stacked rows, one word per row; Latin, Devanagari, Bengali | system-design-of-ai/12-tokenizers |

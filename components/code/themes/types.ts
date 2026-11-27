@@ -64,6 +64,8 @@ export type Theme = {
   bubblePunch: string;
   /** tile behind a logo that would vanish on a dark card */
   logoTile: string;
+  /** second stop of the big-number gradient (the first is accent) */
+  gradientEnd: string;
   /** the one shadow */
   shadow: string;
   /** page pattern drawn by gridBg() */
