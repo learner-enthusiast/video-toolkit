@@ -1,7 +1,7 @@
 // Spec: components/specs/CircuitBreakerMCB.md
 import React from 'react';
 import {useCurrentFrame, random, interpolate, Easing} from 'remotion';
-import {C, R, BORDER, SHADOW, inter, mono, serif} from '../theme';
+import {C, R, BORDER, SHADOW, inter, mono, blackA} from '../theme';
 import {sp, pop, ease, enter, popIn, tween, shake} from '../anim';
 import {XMark, TickMark, WarnMark} from '../glyphs';
 import {ProviderNode, Packet, LogoRef} from '../ProviderNode/ProviderNode';
@@ -15,8 +15,8 @@ export const CircuitBreakerMCB: React.FC<{at: number; tripAt: number; failAts: n
   return (
     <div style={{position: 'relative', width: w, height: h + 70, ...popIn(f, at)}}>
       <div style={{position: 'absolute', left: 0, top: 0, width: w, height: h, boxSizing: 'border-box', background: C.surface, border: `3px solid ${C.border}`, borderRadius: 18, boxShadow: SHADOW}}>
-        <div style={{position: 'absolute', left: w * 0.32, top: h * 0.14, width: w * 0.36, height: h * 0.66, borderRadius: 12, background: '#EEEAE3', border: BORDER}} />
-        <div style={{position: 'absolute', left: w * 0.24, top: leverY, width: w * 0.52, height: h * 0.2, borderRadius: 10, background: trip > 0.5 ? C.textDim : C.border, boxShadow: '0 4px 0 rgba(0,0,0,.25)'}} />
+        <div style={{position: 'absolute', left: w * 0.32, top: h * 0.14, width: w * 0.36, height: h * 0.66, borderRadius: 12, background: C.barBg, border: BORDER}} />
+        <div style={{position: 'absolute', left: w * 0.24, top: leverY, width: w * 0.52, height: h * 0.2, borderRadius: 10, background: trip > 0.5 ? C.textDim : C.border, boxShadow: `0 4px 0 ${blackA(0.25)}`}} />
         <div style={{position: 'absolute', left: 0, right: 0, top: h * 0.02, textAlign: 'center', fontFamily: mono, fontWeight: 700, fontSize: w * 0.11, color: C.text}}>ON</div>
         <div style={{position: 'absolute', left: 0, right: 0, bottom: h * 0.02, textAlign: 'center', fontFamily: mono, fontWeight: 700, fontSize: w * 0.11, color: trip > 0.5 ? C.accent : C.textDim}}>OFF</div>
         <div style={{position: 'absolute', right: 12, top: 12, width: 18, height: 18, borderRadius: 4, background: trip > 0.5 ? C.textDim : C.accent}} />

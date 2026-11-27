@@ -1,13 +1,13 @@
 // Spec: components/specs/CustomerBurn.md
 import React from 'react';
 import {useCurrentFrame, random, interpolate, Easing} from 'remotion';
-import {C, R, BORDER, SHADOW, inter, mono, serif} from '../theme';
+import {C, R, BORDER, SHADOW, inter, mono, whiteA} from '../theme';
 import {sp, pop, ease, enter, popIn, tween, shake} from '../anim';
 import {XMark, TickMark, WarnMark} from '../glyphs';
 import {ProviderNode, Packet, LogoRef} from '../ProviderNode/ProviderNode';
 
 /* ---------- CustomerBurn (dark) ---------- */
-const Person: React.FC<{size?: number; color?: string}> = ({size = 40, color = C.white}) => (
+const Person: React.FC<{size?: number; color?: string}> = ({size = 40, color = C.onPunch}) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill={color}><circle cx="24" cy="15" r="9" /><path d="M7 45c1-11 8-17 17-17s16 6 17 17z" /></svg>
 );
 export const inrFmt = (n: number) => {
@@ -29,8 +29,8 @@ export const CustomerBurn: React.FC<{tagAt: number; gridAt: number; leaveAt: num
       {!grid && (
         <div style={{position: 'absolute', left: 330, top: 300, ...popIn(f, tagAt - 6)}}>
           <Person size={220} />
-          {f >= tagAt && <div style={{position: 'absolute', left: 170, top: 10, ...popIn(f, tagAt)}}><span style={{fontFamily: inter, fontWeight: 900, fontSize: 64, color: C.white, background: C.accent, borderRadius: 14, padding: '6px 22px', border: '2px solid #fff', whiteSpace: 'nowrap'}}>{unit}</span></div>}
-          {f >= tagAt + 8 && <div style={{position: 'absolute', left: -30, top: 250, width: 300, textAlign: 'center', fontFamily: inter, fontWeight: 700, fontSize: 30, color: 'rgba(255,255,255,.75)', ...enter(f, tagAt + 8)}}>{unitNote}</div>}
+          {f >= tagAt && <div style={{position: 'absolute', left: 170, top: 10, ...popIn(f, tagAt)}}><span style={{fontFamily: inter, fontWeight: 900, fontSize: 64, color: C.onAccent, background: C.accent, borderRadius: 14, padding: '6px 22px', border: `2px solid ${C.onPunch}`, whiteSpace: 'nowrap'}}>{unit}</span></div>}
+          {f >= tagAt + 8 && <div style={{position: 'absolute', left: -30, top: 250, width: 300, textAlign: 'center', fontFamily: inter, fontWeight: 700, fontSize: 30, color: whiteA(0.75), ...enter(f, tagAt + 8)}}>{unitNote}</div>}
         </div>
       )}
       {grid && (
@@ -42,15 +42,15 @@ export const CustomerBurn: React.FC<{tagAt: number; gridAt: number; leaveAt: num
             const out = leave(i) && f >= leaveAt ? ease(f, leaveAt + (r % 4) * 3, leaveAt + 30 + (r % 4) * 3) : 0;
             return (
               <div key={i} style={{position: 'absolute', left: gx + c * cell * 1.06 + out * 340, top: gy + r * cell * 1.14, transform: `scale(${s})`, opacity: 1 - 0.65 * out}}>
-                <Person size={cell} color={out > 0.3 ? C.textDim : C.white} />
+                <Person size={cell} color={out > 0.3 ? C.textDim : C.onPunch} />
               </div>
             );
           })}
-          <div style={{position: 'absolute', left: gx, top: 220, ...enter(f, gridAt + 6)}}><span style={{fontFamily: inter, fontWeight: 900, fontSize: 52, color: C.white}}>{gridLabel}</span></div>
+          <div style={{position: 'absolute', left: gx, top: 220, ...enter(f, gridAt + 6)}}><span style={{fontFamily: inter, fontWeight: 900, fontSize: 52, color: C.onPunch}}>{gridLabel}</span></div>
           {f >= leaveAt && (
             <div style={{position: 'absolute', left: 760, top: 400, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, ...popIn(f, leaveAt + 10)}}>
-              <div style={{width: 150, height: 210, boxSizing: 'border-box', background: C.surface, borderRadius: 26, border: '3px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: inter, fontWeight: 900, fontSize: 30, color: C.text, textAlign: 'center'}}>{leaveTo}</div>
-              <span style={{fontFamily: inter, fontWeight: 800, fontSize: 30, color: 'rgba(255,255,255,.75)'}}>{leaveNote}</span>
+              <div style={{width: 150, height: 210, boxSizing: 'border-box', background: C.surface, borderRadius: 26, border: `3px solid ${C.onPunch}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: inter, fontWeight: 900, fontSize: 30, color: C.text, textAlign: 'center'}}>{leaveTo}</div>
+              <span style={{fontFamily: inter, fontWeight: 800, fontSize: 30, color: whiteA(0.75)}}>{leaveNote}</span>
             </div>
           )}
         </>
@@ -58,7 +58,7 @@ export const CustomerBurn: React.FC<{tagAt: number; gridAt: number; leaveAt: num
       {f >= countAt && (
         <div style={{position: 'absolute', left: 0, right: 0, top: 790, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, ...enter(f, countAt, 1e9, 16)}}>
           <div style={{fontFamily: inter, fontWeight: 900, fontSize: 116, lineHeight: 1, color: C.accent, fontVariantNumeric: 'tabular-nums', transform: `scale(${land})`}}>{prefix}{inrFmt(val)}</div>
-          <div style={{fontFamily: serif, fontStyle: 'italic', fontSize: 52, color: C.white}}>{counterNote}</div>
+          <div style={{...headline, fontSize: 52, color: C.onPunch}}>{counterNote}</div>
         </div>
       )}
       {fewLabel && f >= fewAt && (

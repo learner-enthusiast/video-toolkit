@@ -23,13 +23,13 @@ export const CalendarFlip: React.FC<{days: {label: string; at: number}[]; files:
           <div key={d.label} style={{position: 'absolute', left: 30 + i * (colW + gap), top: 60, width: colW}}>
             <div style={{transform: `perspective(900px) rotateX(${(1 - flip) * -85}deg)`, transformOrigin: 'top center', opacity: Math.min(1, flip * 2)}}>
               <div style={{borderRadius: R, border: BORDER, background: C.surface, boxShadow: SHADOW, overflow: 'hidden'}}>
-                <div style={{background: C.accent, borderBottom: BORDER, padding: '10px 0', textAlign: 'center', fontFamily: inter, fontWeight: 900, fontSize: 50, color: C.white}}>{d.label}</div>
+                <div style={{background: C.accent, borderBottom: BORDER, padding: '10px 0', textAlign: 'center', fontFamily: inter, fontWeight: 900, fontSize: 50, color: C.onAccent}}>{d.label}</div>
                 <div style={{padding: '10px 0 14px', textAlign: 'center', fontFamily: inter, fontWeight: 700, fontSize: 26, color: C.textDim}}>{sub}</div>
               </div>
             </div>
             <div style={{display: 'flex', flexDirection: 'column', gap: 18, marginTop: 30}}>
               {files.map((fl, j) => (
-                <div key={fl} style={{...enter(f, d.at + 6 + j * 4, 1e9, 30), padding: '16px 12px', borderRadius: 10, border: `2px solid ${grey > 0.5 ? C.textDim : C.border}`, background: C.surface, fontFamily: mono, fontWeight: 700, fontSize: 22, color: grey > 0.5 ? C.textDim : C.ink, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{fl}</div>
+                <div key={fl} style={{...enter(f, d.at + 6 + j * 4, 1e9, 30), padding: '16px 12px', borderRadius: 10, border: `2px solid ${grey > 0.5 ? C.textDim : C.border}`, background: C.surface, fontFamily: mono, fontWeight: 700, fontSize: 22, color: grey > 0.5 ? C.textDim : C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{fl}</div>
               ))}
             </div>
             {i > 0 && f >= d.at + 6 + files.length * 4 && (

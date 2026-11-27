@@ -30,7 +30,7 @@ export const CallTimeline: React.FC<{
   const lv = left ? sp(f, run.leave - 2, {damping: 10, stiffness: 170}) : 0;
   const box = (label: string, value: string, tone: 'ink' | 'orange', bumpAt?: number) => (
     <div style={{flex: 1, boxSizing: 'border-box', borderRadius: R, border: `2px solid ${tone === 'orange' ? C.accent : C.border}`, background: C.surface, padding: '10px 14px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2}}>
-      <span style={{fontFamily: inter, fontWeight: 900, fontSize: 60, lineHeight: 1.05, color: tone === 'orange' ? C.accent : C.ink, fontVariantNumeric: 'tabular-nums', transform: `scale(${bumpAt !== undefined ? bump(f, bumpAt) : 1})`, whiteSpace: 'nowrap'}}>{value}</span>
+      <span style={{fontFamily: inter, fontWeight: 900, fontSize: 60, lineHeight: 1.05, color: tone === 'orange' ? C.accent : C.text, fontVariantNumeric: 'tabular-nums', transform: `scale(${bumpAt !== undefined ? bump(f, bumpAt) : 1})`, whiteSpace: 'nowrap'}}>{value}</span>
       <span style={{fontFamily: inter, fontWeight: 700, fontSize: 22, color: C.textDim, whiteSpace: 'nowrap'}}>{label}</span>
     </div>
   );
@@ -38,10 +38,10 @@ export const CallTimeline: React.FC<{
     <div style={{position: 'relative', width: w, height: verdict ? 450 : 380, boxSizing: 'border-box', background: C.surface, border: BORDER, borderRadius: R, boxShadow: SHADOW, opacity: ease(f, out - 8, out, 1, 0), ...(f < at + 10 ? popIn(f, at) : {})}}>
       {tag && <div style={{position: 'absolute', right: 18, top: 16}}><Tag label={tag} tone="dim" size={22} /></div>}
       {/* track */}
-      <div style={{position: 'absolute', left: x0, top: by, width: x1 - x0, height: bh, borderRadius: 10, background: '#EEEAE3', border: `2px solid ${C.grid}`, boxSizing: 'border-box'}} />
+      <div style={{position: 'absolute', left: x0, top: by, width: x1 - x0, height: bh, borderRadius: 10, background: C.barBg, border: `2px solid ${C.grid}`, boxSizing: 'border-box'}} />
       <div style={{position: 'absolute', left: x0, top: by, width: Math.max(0, X(Math.min(t, leaveAt)) - x0), height: bh, borderRadius: '10px 0 0 10px', background: C.accent}} />
       {t > leaveAt && (
-        <div style={{position: 'absolute', left: X(leaveAt), top: by, width: X(t) - X(leaveAt), height: bh, background: `repeating-linear-gradient(135deg, #B9B3A8 0 10px, #E2DDD4 10px 20px)`, borderRadius: '0 10px 10px 0'}} />
+        <div style={{position: 'absolute', left: X(leaveAt), top: by, width: X(t) - X(leaveAt), height: bh, background: `repeating-linear-gradient(135deg, ${C.hatch} 0 10px, ${C.hatchLight} 10px 20px)`, borderRadius: '0 10px 10px 0'}} />
       )}
       {/* ticks */}
       {[0, seconds].map((s, i) => (
@@ -50,12 +50,12 @@ export const CallTimeline: React.FC<{
       {/* user-left pin */}
       {left && (
         <div style={{position: 'absolute', left: X(leaveAt), top: by - 70, transform: `translateY(${(1 - lv) * -16}px)`, opacity: Math.min(1, lv * 1.5)}}>
-          <div style={{position: 'absolute', left: -1, top: 30, width: 3, height: 44, background: C.ink}} />
+          <div style={{position: 'absolute', left: -1, top: 30, width: 3, height: 44, background: C.text}} />
           <div style={{position: 'absolute', left: 6, top: 0}}><Tag label={`${labels.left} · ${leaveAt} s`} tone="ink" size={22} /></div>
         </div>
       )}
       {/* playhead */}
-      <div style={{position: 'absolute', left: X(t) - 2, top: by - 16, width: 4, height: bh + 32, borderRadius: 2, background: C.ink, opacity: rewinding ? 0.6 : 1}} />
+      <div style={{position: 'absolute', left: X(t) - 2, top: by - 16, width: 4, height: bh + 32, borderRadius: 2, background: C.text, opacity: rewinding ? 0.6 : 1}} />
       {!left && <div style={{position: 'absolute', left: X(t), top: by - 52, transform: 'translateX(-50%)', fontFamily: mono, fontWeight: 700, fontSize: 26, color: C.text, whiteSpace: 'nowrap'}}>{t < 10 ? t.toFixed(1) : Math.floor(t)} s</div>}
       {left && <div style={{position: 'absolute', right: 30, top: 66, fontFamily: mono, fontWeight: 700, fontSize: 30, color: C.text, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap'}}>t = {t < 10 ? t.toFixed(1) : Math.floor(t)} s{frozen ? ' · stopped' : ''}</div>}
       {/* counters */}

@@ -15,7 +15,7 @@ export const BillCard: React.FC<{amount: React.ReactNode; blur?: number; line?: 
     <div style={{padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 6}}>
       <span style={{fontFamily: inter, fontWeight: 700, fontSize: 22, color: C.textDim, letterSpacing: '0.08em'}}>{totalLabel}</span>
       {strike && <span style={{fontFamily: inter, fontWeight: 900, fontSize: 44, color: C.textDim, textDecoration: 'line-through'}}>{strike}</span>}
-      <span style={{fontFamily: inter, fontWeight: 900, fontSize: 72, color: strike ? C.accent : C.ink, filter: blur > 0 ? `blur(${blur * 16}px)` : undefined, lineHeight: 1.05, whiteSpace: 'nowrap'}}>{amount}</span>
+      <span style={{fontFamily: inter, fontWeight: 900, fontSize: 72, color: strike ? C.accent : C.text, filter: blur > 0 ? `blur(${blur * 16}px)` : undefined, lineHeight: 1.05, whiteSpace: 'nowrap'}}>{amount}</span>
       {line && <span style={{fontFamily: mono, fontWeight: 700, fontSize: 22, color: C.text}}>{line}</span>}
     </div>
   </div>

@@ -1,7 +1,7 @@
 // Spec: components/specs/CodeCard.md · white code panel with a window-dot header, typed lines and orange line / range highlights.
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
-import {C, R, BORDER, SHADOW, accentA, inter, mono} from '../theme';
+import {C, R, BORDER, SHADOW, inter, mono, accent2A} from '../theme';
 import {ease, sp} from '../anim';
 import {Logo} from '../glyphs';
 
@@ -59,14 +59,14 @@ export const CodeCard: React.FC<{lines: string[]; at: number; width: number; siz
           let content: React.ReactNode;
           if (h && h.from !== undefined) {
             const a = h.from, z = h.to ?? ln.length;
-            content = <><span>{shown.slice(0, a)}</span><span style={{background: accentA(hv), color: hv > 0.5 ? C.white : undefined, borderRadius: 6, padding: '0 4px', margin: '0 -4px'}}>{shown.slice(a, z)}</span><span style={{color: z >= (ci >= 0 ? ci : 1e9) ? C.textDim : undefined}}>{shown.slice(z)}</span></>;
+            content = <><span>{shown.slice(0, a)}</span><span style={{background: accent2A(hv), color: hv > 0.5 ? C.onAccent : undefined, borderRadius: 6, padding: '0 4px', margin: '0 -4px'}}>{shown.slice(a, z)}</span><span style={{color: z >= (ci >= 0 ? ci : 1e9) ? C.textDim : undefined}}>{shown.slice(z)}</span></>;
           } else {
-            content = <><span style={{color: hv > 0.5 ? C.white : add ? C.accent : C.ink}}>{body}</span><span style={{color: hv > 0.5 ? C.white : C.textDim}}>{cmt}</span></>;
+            content = <><span style={{color: hv > 0.5 ? C.onAccent : add ? C.accent : C.text}}>{body}</span><span style={{color: hv > 0.5 ? C.onAccent : C.textDim}}>{cmt}</span></>;
           }
           return (
             <div key={i} style={{position: 'relative', height: lh * open, opacity: Math.min(1, open * 1.4), display: 'flex', alignItems: 'center', fontWeight: add ? 700 : undefined}}>
               {add && <div style={{position: 'absolute', left: -18, top: 4, bottom: 4, width: 6, borderRadius: 3, background: C.accent}} />}
-              {h && h.from === undefined && <div style={{position: 'absolute', left: -8, right: -8, top: 2, bottom: 2, borderRadius: 8, background: C.accent, opacity: hv}} />}
+              {h && h.from === undefined && <div style={{position: 'absolute', left: -8, right: -8, top: 2, bottom: 2, borderRadius: 8, background: C.accent2, opacity: hv}} />}
               <span style={{position: 'relative', fontFamily: mono, fontWeight: add ? 700 : 500, fontSize: size, whiteSpace: 'pre', color: C.text, fontVariantLigatures: 'none'}}>{content}</span>
             </div>
           );
