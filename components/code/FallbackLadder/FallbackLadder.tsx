@@ -25,13 +25,13 @@ export const FallbackLadder: React.FC<{rungs: Rung[]; dropAt: number; landAt: nu
         const active = i === n - 1 ? f >= landAt : false;
         return (
           <div key={i} style={{position: 'absolute', left: x, top: ys[i], ...enter(f, r.at, 1e9, 20)}}>
-            <div style={{position: 'absolute', left: -96, top: rh / 2 - 22, width: 44, height: 44, borderRadius: 99, background: C.white, border: BORDER, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: inter, fontWeight: 900, fontSize: 24, color: C.ink}}>{i + 1}</div>
+            <div style={{position: 'absolute', left: -96, top: rh / 2 - 22, width: 44, height: 44, borderRadius: 99, background: C.surface, border: BORDER, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: inter, fontWeight: 900, fontSize: 24, color: C.text}}>{i + 1}</div>
             <ProviderNode w={w} h={rh} icon={r.icon} logos={r.logos} label={r.label} sub={r.sub} dim={failed ? ease(f, r.failAt!, r.failAt! + 8) : 0} ring={active ? sp(f, landAt) : 0}
               badge={failed ? <div style={popIn(f, r.failAt!)}><XMark size={48} /></div> : active ? <div style={popIn(f, landAt + 4)}><TickMark size={52} /></div> : undefined} />
           </div>
         );
       })}
-      {f >= dropAt && f <= landAt + 6 && <div style={{position: 'absolute', left: x - 87, top: py - 18, width: 36, height: 36, borderRadius: 10, background: C.orange, border: BORDER}} />}
+      {f >= dropAt && f <= landAt + 6 && <div style={{position: 'absolute', left: x - 87, top: py - 18, width: 36, height: 36, borderRadius: 10, background: C.accent, border: BORDER}} />}
     </div>
   );
 };

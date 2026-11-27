@@ -16,10 +16,10 @@ export const ChatBubble: React.FC<{role: 'user' | 'bot'; text: string; at: numbe
   const user = role === 'user';
   return (
     <div style={{opacity: o, transform: `translateY(${(1 - v) * 20}px) scale(${0.96 + 0.04 * v})`, transformOrigin: user ? 'right bottom' : 'left bottom', display: 'flex', justifyContent: user ? 'flex-end' : 'flex-start', ...style}}>
-      <div style={{position: 'relative', width: w, maxWidth: w ? undefined : 760, boxSizing: 'border-box', padding: `${size * 0.5}px ${size * 0.7}px`, borderRadius: R, borderBottomRightRadius: user ? 4 : R, borderBottomLeftRadius: user ? R : 4, background: user ? C.ink : dark ? '#1B1B1B' : C.white, border: user ? BORDER : dark ? '2px solid rgba(255,255,255,.5)' : BORDER, boxShadow: dark ? 'none' : SHADOW, color: user ? C.white : dim ? C.dim : dark ? C.white : C.ink, fontFamily: inter, fontWeight: 600, fontSize: size, lineHeight: 1.22, display: 'flex', alignItems: 'center', gap: 14}}>
+      <div style={{position: 'relative', width: w, maxWidth: w ? undefined : 760, boxSizing: 'border-box', padding: `${size * 0.5}px ${size * 0.7}px`, borderRadius: R, borderBottomRightRadius: user ? 4 : R, borderBottomLeftRadius: user ? R : 4, background: user ? C.ink : dark ? '#1B1B1B' : C.white, border: user ? BORDER : dark ? '2px solid rgba(255,255,255,.5)' : BORDER, boxShadow: dark ? 'none' : SHADOW, color: user ? C.white : dim ? C.textDim : dark ? C.white : C.ink, fontFamily: inter, fontWeight: 600, fontSize: size, lineHeight: 1.22, display: 'flex', alignItems: 'center', gap: 14}}>
         <span style={{whiteSpace: w && text.length < 24 ? 'nowrap' : undefined}}>
           {text.slice(0, n)}
-          <span style={{opacity: caret ? 1 : 0, color: C.orange}}>|</span>
+          <span style={{opacity: caret ? 1 : 0, color: C.accent}}>|</span>
         </span>
         {children}
       </div>

@@ -14,7 +14,7 @@ export const JsonValidator: React.FC<{at: number; bad: string; good: string; rej
   const fall = f >= rejectAt + 6 ? sp(f, rejectAt + 6, {damping: 14, stiffness: 120}) : 0;
   const goodX = interpolate(ease(f, passAt - 10, passAt + 14), [0, 1], [-420, GX + 26]);
   const card = (txt: string, torn: boolean) => (
-    <div style={{position: 'relative', width: 430, boxSizing: 'border-box', background: C.white, border: BORDER, borderRadius: R, boxShadow: SHADOW, padding: '18px 20px', fontFamily: mono, fontWeight: 600, fontSize: 25, color: C.ink, whiteSpace: 'pre', clipPath: torn ? 'polygon(0 0,100% 0,96% 22%,100% 44%,95% 66%,100% 88%,97% 100%,0 100%)' : undefined}}>
+    <div style={{position: 'relative', width: 430, boxSizing: 'border-box', background: C.surface, border: BORDER, borderRadius: R, boxShadow: SHADOW, padding: '18px 20px', fontFamily: mono, fontWeight: 600, fontSize: 25, color: C.text, whiteSpace: 'pre', clipPath: torn ? 'polygon(0 0,100% 0,96% 22%,100% 44%,95% 66%,100% 88%,97% 100%,0 100%)' : undefined}}>
       {txt}
     </div>
   );
@@ -23,7 +23,7 @@ export const JsonValidator: React.FC<{at: number; bad: string; good: string; rej
       {/* gate */}
       <div style={{position: 'absolute', left: GX - 10, top: GY - 170, ...popIn(f, at)}}>
         <div style={{position: 'absolute', left: 0, top: 0, width: 16, height: 340, background: C.border, borderRadius: 8}} />
-        <div style={{position: 'absolute', left: -150, top: -64, width: 316, textAlign: 'center', fontFamily: inter, fontWeight: 800, fontSize: 30, color: C.ink}}>{gateLabel}</div>
+        <div style={{position: 'absolute', left: -150, top: -64, width: 316, textAlign: 'center', fontFamily: inter, fontWeight: 800, fontSize: 30, color: C.text}}>{gateLabel}</div>
         {f >= rejectAt && f < rerunAt && <div style={{position: 'absolute', left: -22, top: 140, ...popIn(f, rejectAt)}}><WarnMark size={60} /></div>}
         {f >= passAt + 12 && <div style={{position: 'absolute', left: -18, top: 140, ...popIn(f, passAt + 12)}}><TickMark size={56} /></div>}
       </div>
@@ -38,7 +38,7 @@ export const JsonValidator: React.FC<{at: number; bad: string; good: string; rej
       )}
       {f >= rerunAt && (
         <div style={{position: 'absolute', left: goodX, top: GY - 60, ...enter(f, rerunAt, 1e9, 16)}}>
-          <div style={{position: 'absolute', left: 0, top: -54}}><span style={{fontFamily: inter, fontWeight: 800, fontSize: 26, color: C.white, background: C.orange, borderRadius: 999, padding: '6px 18px'}}>{rerunLabel}</span></div>
+          <div style={{position: 'absolute', left: 0, top: -54}}><span style={{fontFamily: inter, fontWeight: 800, fontSize: 26, color: C.white, background: C.accent, borderRadius: 999, padding: '6px 18px'}}>{rerunLabel}</span></div>
           {card(good, false)}
         </div>
       )}

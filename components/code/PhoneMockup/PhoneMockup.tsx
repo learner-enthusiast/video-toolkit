@@ -8,7 +8,7 @@ import {Tag} from '../Tag/Tag';
 
 export type Day = {title: string; text: string};
 /* plan variant: an AI planner types day cards word by word and freezes mid-sentence; home variant: the app's start screen */
-const PinIcon: React.FC<{size?: number; color?: string}> = ({size = 40, color = C.orange}) => (
+const PinIcon: React.FC<{size?: number; color?: string}> = ({size = 40, color = C.accent}) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" stroke={color} strokeWidth={3.4} strokeLinecap="round" strokeLinejoin="round"><path d="M24 44s14-13 14-24a14 14 0 0 0-28 0c0 11 14 24 14 24z" fill={C.white} /><circle cx="24" cy="20" r="5" /></svg>
 );
 export const PhoneMockup: React.FC<{
@@ -32,20 +32,20 @@ export const PhoneMockup: React.FC<{
   return (
     <div style={{position: 'relative', width: w, height: h, boxSizing: 'border-box', borderRadius: 54 * s, border: `${5 * s}px solid ${dark ? '#3A3A3A' : C.border}`, background: C.ink, padding: 11 * s, boxShadow: dark ? 'none' : SHADOW, opacity: o}}>
       <div style={{position: 'relative', width: '100%', height: '100%', borderRadius: 42 * s, overflow: 'hidden', background: C.bg}}>
-        <div style={{position: 'relative', zIndex: 2, height: 104 * s, background: C.white, borderBottom: BORDER, display: 'flex', alignItems: 'center', gap: 12 * s, padding: `${26 * s}px ${20 * s}px 0`, boxSizing: 'border-box'}}>
+        <div style={{position: 'relative', zIndex: 2, height: 104 * s, background: C.surface, borderBottom: BORDER, display: 'flex', alignItems: 'center', gap: 12 * s, padding: `${26 * s}px ${20 * s}px 0`, boxSizing: 'border-box'}}>
           <PinIcon size={40 * s} />
           <div>
-            <div style={{fontFamily: inter, fontWeight: 900, fontSize: 26 * s, color: C.ink, lineHeight: 1.05}}>{app}</div>
-            <div style={{fontFamily: inter, fontWeight: 600, fontSize: 17 * s, color: C.dim}}>{variant === 'home' ? tagline : subtitle}</div>
+            <div style={{fontFamily: inter, fontWeight: 900, fontSize: 26 * s, color: C.text, lineHeight: 1.05}}>{app}</div>
+            <div style={{fontFamily: inter, fontWeight: 600, fontSize: 17 * s, color: C.textDim}}>{variant === 'home' ? tagline : subtitle}</div>
           </div>
         </div>
         <div style={{position: 'absolute', left: '50%', top: 8 * s, width: 96 * s, height: 20 * s, borderRadius: 99, background: C.ink, transform: 'translateX(-50%)'}} />
         {variant === 'home' ? (
           <div style={{position: 'absolute', left: 22 * s, right: 22 * s, top: 130 * s, display: 'flex', flexDirection: 'column', gap: 18 * s}}>
-            <div style={{fontFamily: serif, fontStyle: 'italic', fontSize: 52 * s, lineHeight: 1, color: C.ink}}>{heroA}<br /><span style={{color: C.orange}}>{heroB}</span></div>
-            <div style={{border: BORDER, borderRadius: R, background: C.white, padding: `${14 * s}px ${16 * s}px`, fontFamily: inter, fontWeight: 600, fontSize: 21 * s, color: C.dim}}>{placeholder}</div>
-            <div style={{alignSelf: 'flex-start', background: C.orange, color: C.white, border: BORDER, borderRadius: 99, padding: `${10 * s}px ${22 * s}px`, fontFamily: inter, fontWeight: 800, fontSize: 22 * s}}>{cta}</div>
-            {[0, 1, 2].map((i) => <div key={i} style={{height: 64 * s, borderRadius: R, border: `2px solid ${C.grid}`, background: C.white, opacity: 0.8 - i * 0.2}} />)}
+            <div style={{fontFamily: serif, fontStyle: 'italic', fontSize: 52 * s, lineHeight: 1, color: C.text}}>{heroA}<br /><span style={{color: C.accent}}>{heroB}</span></div>
+            <div style={{border: BORDER, borderRadius: R, background: C.surface, padding: `${14 * s}px ${16 * s}px`, fontFamily: inter, fontWeight: 600, fontSize: 21 * s, color: C.textDim}}>{placeholder}</div>
+            <div style={{alignSelf: 'flex-start', background: C.accent, color: C.white, border: BORDER, borderRadius: 99, padding: `${10 * s}px ${22 * s}px`, fontFamily: inter, fontWeight: 800, fontSize: 22 * s}}>{cta}</div>
+            {[0, 1, 2].map((i) => <div key={i} style={{height: 64 * s, borderRadius: R, border: `2px solid ${C.grid}`, background: C.surface, opacity: 0.8 - i * 0.2}} />)}
           </div>
         ) : (
           <div style={{position: 'absolute', left: 18 * s, right: 18 * s, top: 122 * s, transform: `translateY(${-scroll}px)`, display: 'flex', flexDirection: 'column', gap: 14 * s}}>
@@ -55,17 +55,17 @@ export const PhoneMockup: React.FC<{
               const k = Math.max(0, Math.min(ws.length, n - before));
               const isLast = di === lastDay;
               return (
-                <div key={di} style={{border: BORDER, borderRadius: R, background: C.white, padding: `${12 * s}px ${14 * s}px`}}>
-                  <div style={{fontFamily: inter, fontWeight: 800, fontSize: 19 * s, color: C.orange, letterSpacing: '0.06em'}}>{d.title.toUpperCase()}</div>
-                  <div style={{fontFamily: inter, fontWeight: 600, fontSize: 25 * s, lineHeight: 1.3, color: C.ink}}>
+                <div key={di} style={{border: BORDER, borderRadius: R, background: C.surface, padding: `${12 * s}px ${14 * s}px`}}>
+                  <div style={{fontFamily: inter, fontWeight: 800, fontSize: 19 * s, color: C.accent, letterSpacing: '0.06em'}}>{d.title.toUpperCase()}</div>
+                  <div style={{fontFamily: inter, fontWeight: 600, fontSize: 25 * s, lineHeight: 1.3, color: C.text}}>
                     {ws.slice(0, k).map((x) => x.x).join(' ')}
-                    {isLast && <span style={{display: 'inline-block', width: 4 * s, height: 24 * s, marginLeft: 3 * s, verticalAlign: 'middle', background: C.orange, opacity: cursorOn ? 1 : 0}} />}
+                    {isLast && <span style={{display: 'inline-block', width: 4 * s, height: 24 * s, marginLeft: 3 * s, verticalAlign: 'middle', background: C.accent, opacity: cursorOn ? 1 : 0}} />}
                   </div>
                 </div>
               );
             })}
             {f >= typeTo && Array.from({length: emptyDays}).map((_, i) => (
-              <div key={`e${i}`} style={{border: `${3 * s}px dashed ${C.dim}`, borderRadius: R, height: 70 * s, display: 'flex', alignItems: 'center', padding: `0 ${14 * s}px`, fontFamily: inter, fontWeight: 800, fontSize: 17 * s, color: C.dim, letterSpacing: '0.06em', ...enter(f, typeTo + 8 + i * 5)}}>{emptyLabel} {days.length + 1 + i}</div>
+              <div key={`e${i}`} style={{border: `${3 * s}px dashed ${C.textDim}`, borderRadius: R, height: 70 * s, display: 'flex', alignItems: 'center', padding: `0 ${14 * s}px`, fontFamily: inter, fontWeight: 800, fontSize: 17 * s, color: C.textDim, letterSpacing: '0.06em', ...enter(f, typeTo + 8 + i * 5)}}>{emptyLabel} {days.length + 1 + i}</div>
             ))}
           </div>
         )}

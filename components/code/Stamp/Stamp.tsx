@@ -10,7 +10,7 @@ export const Stamp: React.FC<{x: number; y: number; at: number; out?: number; te
   const v = pop(f, at);
   const shake = f - at > 6 && f - at < 10 ? Math.sin((f - at) * 3) * 2 : 0;
   const o = Math.min(Math.min(1, (f - at) / 4), ease(f, out - 8, out, 1, 0));
-  const col = tone === 'orange' ? C.orange : C.dim;
+  const col = tone === 'orange' ? C.accent : C.textDim;
   return (
     <div style={{position: 'absolute', left: x, top: y, opacity: o, transform: `translate(-50%,-50%) translateX(${shake}px) rotate(${rotate}deg) scale(${1.6 - 0.6 * v})`}}>
       <div style={{border: `5px solid ${col}`, color: col, background: whiteA(0.92), borderRadius: R, padding: '12px 26px', fontFamily: inter, fontWeight: 900, fontSize: size, letterSpacing: '0.04em', textTransform: 'uppercase', whiteSpace: 'nowrap'}}>{text}</div>

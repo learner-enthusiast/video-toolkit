@@ -21,7 +21,7 @@ export const TradeScale: React.FC<{x: number; y: number; at: number; angle: numb
           <path d={`M ${x - 90} ${y + 300} H ${x + 90}`} stroke={ink} strokeWidth={6} strokeLinecap="round" />
           <path d={`M ${x} ${y + 300} V ${y}`} stroke={ink} strokeWidth={6} />
           <line x1={lx} y1={ly} x2={rx} y2={ry} stroke={ink} strokeWidth={7} strokeLinecap="round" />
-          <circle cx={x} cy={y} r={11} fill={C.orange} stroke={ink} strokeWidth={3} />
+          <circle cx={x} cy={y} r={11} fill={C.accent} stroke={ink} strokeWidth={3} />
           {[[lx, ly], [rx, ry]].map(([px, py], i) => (
             <g key={i}>
               <path d={`M ${px} ${py} L ${px - 110} ${py + 90} M ${px} ${py} L ${px + 110} ${py + 90}`} stroke={ink} strokeWidth={3} />
@@ -30,7 +30,7 @@ export const TradeScale: React.FC<{x: number; y: number; at: number; angle: numb
           ))}
         </g>
       </svg>
-      {label && <div style={{position: 'absolute', left: x, top: y - 70, transform: 'translateX(-50%)', opacity: draw, fontFamily: serif, fontStyle: 'italic', fontSize: 50, color: C.orange, whiteSpace: 'nowrap'}}>{label}</div>}
+      {label && <div style={{position: 'absolute', left: x, top: y - 70, transform: 'translateX(-50%)', opacity: draw, fontFamily: serif, fontStyle: 'italic', fontSize: 50, color: C.accent, whiteSpace: 'nowrap'}}>{label}</div>}
       <div style={{position: 'absolute', left: lx, top: ly + 92, transform: 'translate(-50%,-100%)'}}><div style={popIn(f, leftAt)}>{f >= leftAt - 1 && left}</div></div>
       <div style={{position: 'absolute', left: rx, top: ry + 92, transform: 'translate(-50%,-100%)'}}><div style={popIn(f, rightAt)}>{f >= rightAt - 1 && right}</div></div>
     </>

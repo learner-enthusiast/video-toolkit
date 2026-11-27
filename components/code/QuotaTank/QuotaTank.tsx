@@ -9,7 +9,7 @@ import {Tag} from '../Tag/Tag';
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 const Pill: React.FC<{label: React.ReactNode; tone?: 'orange' | 'ink' | 'dim' | 'outline'; size?: number; monoFont?: boolean}> = (p) => <Tag {...p} />;
-export const OK: React.FC<{size?: number; color?: string}> = ({size = 40, color = C.orange}) => (
+export const OK: React.FC<{size?: number; color?: string}> = ({size = 40, color = C.accent}) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" stroke={color} strokeWidth={6} strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0}}><path d="M9 25l10 10 20-22" /></svg>
 );
 const NodeLabel: React.FC<{children: React.ReactNode; size?: number; color?: string}> = ({children, size = 26, color = C.ink}) => (
@@ -42,9 +42,9 @@ export const QuotaTank: React.FC<{x: number; y: number; w: number; h: number; at
     <div style={{position: 'absolute', left: x, top: y, width: w, height: h, opacity: Math.min(1, v * 1.4) * ease(f, out - 8, out, 1, 0), transform: `scale(${0.9 + 0.1 * v})`, transformOrigin: 'center bottom'}}>
       <div style={{position: 'absolute', left: -20, right: -20, top: -96, display: 'flex', justifyContent: 'center', ...popIn(f, labelAt)}}>
         {split < 0.5 ? (
-          <div style={{display: 'flex', alignItems: 'center', gap: 10, background: C.white, border: BORDER, borderRadius: R, padding: '8px 14px'}}>
+          <div style={{display: 'flex', alignItems: 'center', gap: 10, background: C.surface, border: BORDER, borderRadius: R, padding: '8px 14px'}}>
             {logo && <Logo file={logo} w={40} h={40} />}
-            <div style={{fontFamily: inter, fontWeight: 800, fontSize: 24, lineHeight: 1.1, color: C.ink, whiteSpace: 'nowrap'}}>{label.split(' · ')[0]}<br /><span style={{color: C.orange}}>{label.split(' · ')[1]}</span></div>
+            <div style={{fontFamily: inter, fontWeight: 800, fontSize: 24, lineHeight: 1.1, color: C.text, whiteSpace: 'nowrap'}}>{label.split(' · ')[0]}<br /><span style={{color: C.accent}}>{label.split(' · ')[1]}</span></div>
           </div>
         ) : null}
       </div>
@@ -60,18 +60,18 @@ export const QuotaTank: React.FC<{x: number; y: number; w: number; h: number; at
         <path d={`M${w * 0.22} ${tankH} v40 h-26`} fill="none" stroke={C.border} strokeWidth={12} strokeLinecap="round" />
         <path d={`M${w * 0.78} ${tankH} v40 h26`} fill="none" stroke={C.border} strokeWidth={6} strokeLinecap="round" />
         {/* thick stream: report job (in the split it pours from the batch side) */}
-        {(drainAt === undefined || f < drainAt + 44 || split > 0.5) && <rect x={w * 0.22 - 26 - 14} y={tankH + 46} width={28} height={70} rx={8} fill={C.orange} opacity={drainAt !== undefined && f >= drainAt ? 0.9 : 0.3} />}
+        {(drainAt === undefined || f < drainAt + 44 || split > 0.5) && <rect x={w * 0.22 - 26 - 14} y={tankH + 46} width={28} height={70} rx={8} fill={C.accent} opacity={drainAt !== undefined && f >= drainAt ? 0.9 : 0.3} />}
         {/* thin stream: live assistant, sputters dry */}
         {Array.from({length: 4}).map((_, i) => {
           const sput = dry > 0 && again < 0.5 ? (Math.sin(f * 1.3 + i) > 0.2 ? 0 : 1) : 1;
-          return <rect key={i} x={w * 0.78 + 26 - 4} y={tankH + 46 + i * 18} width={8} height={12} rx={3} fill={thinOn > 0.5 ? C.orange : C.dim} opacity={thinOn > 0.5 ? 0.9 : sput * (1 - dry) * 0.8} />;
+          return <rect key={i} x={w * 0.78 + 26 - 4} y={tankH + 46 + i * 18} width={8} height={12} rx={3} fill={thinOn > 0.5 ? C.accent : C.textDim} opacity={thinOn > 0.5 ? 0.9 : sput * (1 - dry) * 0.8} />;
         })}
       </svg>
       <div style={{position: 'absolute', left: w * 0.22 - 26 - 60, top: tankH + 124, width: 120, ...popIn(f, at + 6)}}><NodeLabel size={22}>{taps[0]}</NodeLabel></div>
-      <div style={{position: 'absolute', left: w * 0.78 + 26 - 60, top: tankH + 124, width: 120, ...popIn(f, at + 10)}}><NodeLabel size={22} color={dry > 0.5 && again < 0.5 ? C.dim : C.ink}>{taps[1]}</NodeLabel></div>
+      <div style={{position: 'absolute', left: w * 0.78 + 26 - 60, top: tankH + 124, width: 120, ...popIn(f, at + 10)}}><NodeLabel size={22} color={dry > 0.5 && again < 0.5 ? C.textDim : C.ink}>{taps[1]}</NodeLabel></div>
       {dry > 0.4 && again < 0.5 && (
         <div style={{position: 'absolute', left: w * 0.78 + 26 - 80, top: tankH + 190, display: 'flex', alignItems: 'center', gap: 6, ...popIn(f, dryAt! + 6)}}>
-          <WarnMark size={40} /><span style={{fontFamily: mono, fontWeight: 700, fontSize: 30, color: C.white, background: C.dim, borderRadius: 8, padding: '2px 10px', border: BORDER}}>{errorText}</span>
+          <WarnMark size={40} /><span style={{fontFamily: mono, fontWeight: 700, fontSize: 30, color: C.white, background: C.textDim, borderRadius: 8, padding: '2px 10px', border: BORDER}}>{errorText}</span>
         </div>
       )}
       {again > 0.5 && <div style={{position: 'absolute', left: w * 0.78 + 26 - 20, top: tankH + 190, ...popIn(f, flowAgainAt! + 4)}}><OK size={40} /></div>}

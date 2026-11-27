@@ -1,15 +1,15 @@
 // Spec: components/specs/CodeCard.md · white code panel with a window-dot header, typed lines and orange line / range highlights.
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
-import {C, R, BORDER, SHADOW, orangeA, inter, mono} from '../theme';
+import {C, R, BORDER, SHADOW, accentA, inter, mono} from '../theme';
 import {ease, sp} from '../anim';
 import {Logo} from '../glyphs';
 
 export type CodeHl = {line: number; at: number; off?: number; from?: number; to?: number};
 
 const HeaderPill: React.FC<{children: React.ReactNode; dot?: boolean}> = ({children, dot}) => (
-  <div style={{display: 'inline-flex', alignItems: 'center', gap: 8, padding: '5px 14px', borderRadius: 999, border: BORDER, background: C.white, fontFamily: inter, fontWeight: 800, fontSize: 20, color: C.ink, whiteSpace: 'nowrap'}}>
-    {dot && <span style={{width: 10, height: 10, borderRadius: 99, background: C.orange}} />}
+  <div style={{display: 'inline-flex', alignItems: 'center', gap: 8, padding: '5px 14px', borderRadius: 999, border: BORDER, background: C.surface, fontFamily: inter, fontWeight: 800, fontSize: 20, color: C.text, whiteSpace: 'nowrap'}}>
+    {dot && <span style={{width: 10, height: 10, borderRadius: 99, background: C.accent}} />}
     {children}
   </div>
 );
@@ -25,9 +25,9 @@ export const CodeCard: React.FC<{lines: string[]; at: number; width: number; siz
   const lh = Math.round(size * 1.38);
   const allLogos = logo ? [logo, ...logos] : logos;
   return (
-    <div style={{width, boxSizing: 'border-box', background: C.white, border: BORDER, borderRadius: R, boxShadow: SHADOW, overflow: 'hidden'}}>
+    <div style={{width, boxSizing: 'border-box', background: C.surface, border: BORDER, borderRadius: R, boxShadow: SHADOW, overflow: 'hidden'}}>
       <div style={{display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderBottom: `2px solid ${C.grid}`, background: C.paper}}>
-        {[0, 1, 2].map((i) => <div key={i} style={{width: 12, height: 12, borderRadius: 99, background: i === 0 ? C.orange : C.track}} />)}
+        {[0, 1, 2].map((i) => <div key={i} style={{width: 12, height: 12, borderRadius: 99, background: i === 0 ? C.accent : C.track}} />)}
         <div style={{flex: 1}} />
         {allLogos.map((l) => <Logo key={l.file} file={l.file} w={l.w} h={l.h} style={{marginRight: 6}} />)}
         {tags.map((t, i) => <HeaderPill key={t} dot={i === 0}>{t}</HeaderPill>)}
@@ -59,15 +59,15 @@ export const CodeCard: React.FC<{lines: string[]; at: number; width: number; siz
           let content: React.ReactNode;
           if (h && h.from !== undefined) {
             const a = h.from, z = h.to ?? ln.length;
-            content = <><span>{shown.slice(0, a)}</span><span style={{background: orangeA(hv), color: hv > 0.5 ? C.white : undefined, borderRadius: 6, padding: '0 4px', margin: '0 -4px'}}>{shown.slice(a, z)}</span><span style={{color: z >= (ci >= 0 ? ci : 1e9) ? C.dim : undefined}}>{shown.slice(z)}</span></>;
+            content = <><span>{shown.slice(0, a)}</span><span style={{background: accentA(hv), color: hv > 0.5 ? C.white : undefined, borderRadius: 6, padding: '0 4px', margin: '0 -4px'}}>{shown.slice(a, z)}</span><span style={{color: z >= (ci >= 0 ? ci : 1e9) ? C.textDim : undefined}}>{shown.slice(z)}</span></>;
           } else {
-            content = <><span style={{color: hv > 0.5 ? C.white : add ? C.orange : C.ink}}>{body}</span><span style={{color: hv > 0.5 ? C.white : C.dim}}>{cmt}</span></>;
+            content = <><span style={{color: hv > 0.5 ? C.white : add ? C.accent : C.ink}}>{body}</span><span style={{color: hv > 0.5 ? C.white : C.textDim}}>{cmt}</span></>;
           }
           return (
             <div key={i} style={{position: 'relative', height: lh * open, opacity: Math.min(1, open * 1.4), display: 'flex', alignItems: 'center', fontWeight: add ? 700 : undefined}}>
-              {add && <div style={{position: 'absolute', left: -18, top: 4, bottom: 4, width: 6, borderRadius: 3, background: C.orange}} />}
-              {h && h.from === undefined && <div style={{position: 'absolute', left: -8, right: -8, top: 2, bottom: 2, borderRadius: 8, background: C.orange, opacity: hv}} />}
-              <span style={{position: 'relative', fontFamily: mono, fontWeight: add ? 700 : 500, fontSize: size, whiteSpace: 'pre', color: C.ink, fontVariantLigatures: 'none'}}>{content}</span>
+              {add && <div style={{position: 'absolute', left: -18, top: 4, bottom: 4, width: 6, borderRadius: 3, background: C.accent}} />}
+              {h && h.from === undefined && <div style={{position: 'absolute', left: -8, right: -8, top: 2, bottom: 2, borderRadius: 8, background: C.accent, opacity: hv}} />}
+              <span style={{position: 'relative', fontFamily: mono, fontWeight: add ? 700 : 500, fontSize: size, whiteSpace: 'pre', color: C.text, fontVariantLigatures: 'none'}}>{content}</span>
             </div>
           );
         })}

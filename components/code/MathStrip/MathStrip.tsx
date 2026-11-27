@@ -11,8 +11,8 @@ export const MathStrip: React.FC<{terms: Term[]; size?: number; style?: React.CS
     <div style={{display: 'flex', alignItems: 'center', flexWrap: 'nowrap', gap: 12, ...style}}>
       {terms.map((t, i) => f >= t.at - 1 && (
         <React.Fragment key={i}>
-          {t.op && <span style={{fontFamily: inter, fontWeight: 800, fontSize: size, color: C.dim, ...popIn(f, t.at)}}>{t.op}</span>}
-          <span style={{...popIn(f, t.at), fontFamily: mono, fontWeight: 700, fontSize: size, color: C.ink, background: C.white, border: BORDER, borderRadius: 10, padding: '6px 14px', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums'}}>{t.text}</span>
+          {t.op && <span style={{fontFamily: inter, fontWeight: 800, fontSize: size, color: C.textDim, ...popIn(f, t.at)}}>{t.op}</span>}
+          <span style={{...popIn(f, t.at), fontFamily: mono, fontWeight: 700, fontSize: size, color: C.text, background: C.surface, border: BORDER, borderRadius: 10, padding: '6px 14px', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums'}}>{t.text}</span>
         </React.Fragment>
       ))}
     </div>

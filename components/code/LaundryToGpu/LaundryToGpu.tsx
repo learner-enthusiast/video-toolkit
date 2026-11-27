@@ -9,7 +9,7 @@ import {Tag} from '../Tag/Tag';
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 const Pill: React.FC<{label: React.ReactNode; tone?: 'orange' | 'ink' | 'dim' | 'outline'; size?: number; monoFont?: boolean}> = (p) => <Tag {...p} />;
-export const OK: React.FC<{size?: number; color?: string}> = ({size = 40, color = C.orange}) => (
+export const OK: React.FC<{size?: number; color?: string}> = ({size = 40, color = C.accent}) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" stroke={color} strokeWidth={6} strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0}}><path d="M9 25l10 10 20-22" /></svg>
 );
 const NodeLabel: React.FC<{children: React.ReactNode; size?: number; color?: string}> = ({children, size = 26, color = C.ink}) => (
@@ -19,8 +19,8 @@ type Load = 'one' | 'full' | 'none';
 export const Machine: React.FC<{size?: number; load: Load; spinAt?: number; tone?: 'dim' | 'orange' | 'ink'; doorFill?: number}> = ({size = 220, load, spinAt = 1e9, tone = 'ink'}) => {
   const f = useCurrentFrame();
   const spin = f >= spinAt ? interpolate(f - spinAt, [0, 20, 200], [0, 60, 1200], {extrapolateRight: 'extend', easing: Easing.inOut(Easing.quad)}) : 0;
-  const stroke = tone === 'dim' ? C.dim : C.border;
-  const acc = tone === 'orange' ? C.orange : C.dim;
+  const stroke = tone === 'dim' ? C.textDim : C.border;
+  const acc = tone === 'orange' ? C.accent : C.textDim;
   return (
     <svg width={size} height={size * 1.15} viewBox="0 0 100 115" fill="none" strokeLinejoin="round">
       <rect x="4" y="4" width="92" height="107" rx="9" fill={C.white} stroke={stroke} strokeWidth={2.6} />
@@ -31,7 +31,7 @@ export const Machine: React.FC<{size?: number; load: Load; spinAt?: number; tone
       <g clipPath={`url(#drum-${load}-${tone})`} transform={`rotate(${spin} 50 67)`}>
         {load === 'one' && <path d="M42 64l8-6 8 6-3 4v12H45V68z" fill={acc} stroke={stroke} strokeWidth={1.6} />}
         {load === 'full' && [[-12, -10], [6, -12], [-16, 8], [2, 6], [16, 4], [-4, 18], [12, 20], [-6, -2]].map(([dx, dy], i) => (
-          <rect key={i} x={50 + dx - 8} y={67 + dy - 6} width={17} height={13} rx={3} fill={i % 2 ? C.orange : '#F2A588'} stroke={stroke} strokeWidth={1.3} transform={`rotate(${i * 37} ${50 + dx} ${67 + dy})`} />
+          <rect key={i} x={50 + dx - 8} y={67 + dy - 6} width={17} height={13} rx={3} fill={i % 2 ? C.accent : '#F2A588'} stroke={stroke} strokeWidth={1.3} transform={`rotate(${i * 37} ${50 + dx} ${67 + dy})`} />
         ))}
       </g>
     </svg>
@@ -56,8 +56,8 @@ export const GpuRow: React.FC<{x: number; y: number; at: number; out?: number; n
         const spare = !isBusy && f >= spareAt && fill < 0.5;
         return (
           <div key={i} style={{position: 'relative', opacity: Math.min(1, v * 1.4), transform: `scale(${0.7 + 0.3 * v})`}}>
-            <div style={{opacity: spare ? 0.55 : 1}}><ChipGlyph size={size} color={spare ? C.dim : C.ink} big={isBusy || fill > 0.5} /></div>
-            {fill > 0.02 && <div style={{position: 'absolute', left: size * 0.27, top: size * 0.27, width: size * 0.46, height: size * 0.46 * fill, borderRadius: 6, background: C.orange, opacity: 0.9}} />}
+            <div style={{opacity: spare ? 0.55 : 1}}><ChipGlyph size={size} color={spare ? C.textDim : C.ink} big={isBusy || fill > 0.5} /></div>
+            {fill > 0.02 && <div style={{position: 'absolute', left: size * 0.27, top: size * 0.27, width: size * 0.46, height: size * 0.46 * fill, borderRadius: 6, background: C.accent, opacity: 0.9}} />}
           </div>
         );
       })}

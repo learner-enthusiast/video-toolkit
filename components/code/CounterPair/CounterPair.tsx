@@ -17,9 +17,9 @@ export const CounterPair: React.FC<{left: {label: string; to: number; from?: num
         if (f < a - 1) return null;
         return (
           <div key={i} style={{position: 'absolute', left: 40 + i * (colW + 20), top: y, width: colW, ...enter(f, a)}}>
-            <div style={{borderRadius: R, border: `2px solid ${i === 1 ? C.orange : whiteA(0.35)}`, padding: '34px 20px', textAlign: 'center', background: C.darkPanel}}>
+            <div style={{borderRadius: R, border: `2px solid ${i === 1 ? C.accent : whiteA(0.35)}`, padding: '34px 20px', textAlign: 'center', background: C.darkPanel}}>
               <div style={{fontFamily: inter, fontWeight: 800, fontSize: 32, color: whiteA(0.7), letterSpacing: '0.06em', textTransform: 'uppercase'}}>{i === 0 ? left.label : right.label}</div>
-              <div style={{fontFamily: inter, fontWeight: 900, fontSize: 150, lineHeight: 1.05, color: i === 1 ? C.orange : C.white, transform: i === 1 && landed ? `scale(${0.8 + 0.2 * pop(f, right.at)})` : undefined, opacity: landed ? 1 : 0.35}}>
+              <div style={{fontFamily: inter, fontWeight: 900, fontSize: 150, lineHeight: 1.05, color: i === 1 ? C.accent : C.white, transform: i === 1 && landed ? `scale(${0.8 + 0.2 * pop(f, right.at)})` : undefined, opacity: landed ? 1 : 0.35}}>
                 {i === 0 ? Math.round(lv).toLocaleString('en-US') : landed ? right.value : right.pending ?? '?'}
               </div>
             </div>

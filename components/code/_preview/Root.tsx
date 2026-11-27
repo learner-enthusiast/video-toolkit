@@ -110,14 +110,14 @@ const previews: Record<string, React.FC> = {
       </div>
     </Stage>
   ),
-  CounterPair: () => <div style={{width: 1080, height: 1080, background: C.dark, position: 'relative'}}><div style={{position: 'absolute', left: 54, top: 250, width: 972, height: 600}}><CounterPair left={{label: 'Attempts', to: 1200, at: 2, dur: 30}} right={{label: 'Successes', value: 0, at: 36}} y={0} /></div></div>,
+  CounterPair: () => <div style={{width: 1080, height: 1080, background: C.punchBg, position: 'relative'}}><div style={{position: 'absolute', left: 54, top: 250, width: 972, height: 600}}><CounterPair left={{label: 'Attempts', to: 1200, at: 2, dur: 30}} right={{label: 'Successes', value: 0, at: 36}} y={0} /></div></div>,
   ProviderNode: () => <Stage><At x={60} y={200}><ProviderNode label="Primary API" sub="down" dim={0.6} badge={<XMark size={48} />} /></At><At x={560} y={200}><ProviderNode label="Backup" sub="healthy" ring={1} badge={<TickMark size={52} />} /></At></Stage>,
   RetryStorm: () => <Stage><RetryStorm at={-60} out={1e9} nodeLogo={{file: 'openai.svg', w: 76, h: 76}} nodeLabel="Provider" waveEvery={20} /></Stage>,
   CircuitBreakerMCB: () => <Stage><At x={400} y={260}><CircuitBreakerMCB at={-60} tripAt={20} failAts={[-40, -30, -20]} w={170} /></At></Stage>,
   FallbackLadder: () => <Stage><FallbackLadder x={170} y={20} dropAt={0} landAt={50} rungs={[{label: 'Primary', sub: 'down', at: -60, failAt: 4}, {label: 'Same model, other region', sub: 'second', at: -55, failAt: 22}, {label: 'Other provider', sub: 'third', at: -50, failAt: 38}, {label: 'Human', sub: 'last stop', at: -45}]} /></Stage>,
   ErrorTriage: () => <Stage><ErrorTriage at={-60} items={[{code: '429', lane: 0, at: -50}, {code: '503', lane: 0, at: -40}, {code: '400', lane: 1, at: -30}]} lanes={[{label: 'Retry', tone: 'orange', at: -55}, {label: 'Never retry', tone: 'dim', at: -55}]} /></Stage>,
   JsonValidator: () => <Stage><JsonValidator at={-60} bad={'{ "status": "o'} good={'{ "status": "ok" }'} rejectAt={-40} rerunAt={-20} passAt={-4} /></Stage>,
-  CustomerBurn: () => <div style={{width: 1080, height: 1080, background: C.dark, position: 'relative'}}><div style={{position: 'absolute', left: 54, top: 55, width: 972, height: 970}}><CustomerBurn tagAt={-90} gridAt={-70} leaveAt={-50} countAt={-40} countTo={1000000} unit="₹1,000" unitNote="per customer" gridLabel="× 2,000 customers" leaveTo="Rival" leaveNote="half leave" counterNote="lost" /></div></div>,
+  CustomerBurn: () => <div style={{width: 1080, height: 1080, background: C.punchBg, position: 'relative'}}><div style={{position: 'absolute', left: 54, top: 55, width: 972, height: 970}}><CustomerBurn tagAt={-90} gridAt={-70} leaveAt={-50} countAt={-40} countTo={1000000} unit="₹1,000" unitNote="per customer" gridLabel="× 2,000 customers" leaveTo="Rival" leaveNote="half leave" counterNote="lost" /></div></div>,
   PhoneLine: () => (
     <Stage>
       <AppTile at={-60} />

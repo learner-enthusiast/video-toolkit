@@ -11,21 +11,21 @@ export const TicketCard: React.FC<{id: string; title: string; meta?: string; kic
   const v = sp(f, at);
   return (
     <div style={{position: 'relative', width: w, opacity: Math.min(1, v * 1.4), transform: `translateY(${(1 - v) * 30}px) rotate(${(1 - v) * -2}deg)`}}>
-      <div style={{display: 'flex', borderRadius: R, border: BORDER, background: C.white, boxShadow: SHADOW, overflow: 'hidden'}}>
-        <div style={{width: 22, background: C.orange, borderRight: BORDER}} />
+      <div style={{display: 'flex', borderRadius: R, border: BORDER, background: C.surface, boxShadow: SHADOW, overflow: 'hidden'}}>
+        <div style={{width: 22, background: C.accent, borderRight: BORDER}} />
         <div style={{flex: 1, padding: '24px 30px', display: 'flex', flexDirection: 'column', gap: 12}}>
           <div style={{display: 'flex', alignItems: 'center', gap: 14}}>
             <Tag label={id} tone="ink" size={28} monoFont />
-            {kicker && <span style={{fontFamily: inter, fontWeight: 700, fontSize: 26, color: C.dim, letterSpacing: '0.08em', textTransform: 'uppercase'}}>{kicker}</span>}
+            {kicker && <span style={{fontFamily: inter, fontWeight: 700, fontSize: 26, color: C.textDim, letterSpacing: '0.08em', textTransform: 'uppercase'}}>{kicker}</span>}
           </div>
-          <div style={{fontFamily: inter, fontWeight: 900, fontSize: size, color: C.ink, lineHeight: 1.05}}>{title}</div>
-          {meta && <div style={{fontFamily: inter, fontWeight: 600, fontSize: 26, color: C.dim}}>{meta}</div>}
+          <div style={{fontFamily: inter, fontWeight: 900, fontSize: size, color: C.text, lineHeight: 1.05}}>{title}</div>
+          {meta && <div style={{fontFamily: inter, fontWeight: 600, fontSize: 26, color: C.textDim}}>{meta}</div>}
         </div>
       </div>
       {done !== undefined && f >= done - 1 && (
         <div style={{position: 'absolute', right: 26, top: '50%', marginTop: -44}}>
           <div style={{...popIn(f, done), transformOrigin: 'center'}}>
-            <div style={{transform: 'rotate(-8deg)', padding: '8px 26px', border: `5px solid ${C.orange}`, borderRadius: R, color: C.orange, fontFamily: inter, fontWeight: 900, fontSize: 52, letterSpacing: '0.06em', background: whiteA(0.9)}}>{doneText}</div>
+            <div style={{transform: 'rotate(-8deg)', padding: '8px 26px', border: `5px solid ${C.accent}`, borderRadius: R, color: C.accent, fontFamily: inter, fontWeight: 900, fontSize: 52, letterSpacing: '0.06em', background: whiteA(0.9)}}>{doneText}</div>
           </div>
         </div>
       )}

@@ -4,7 +4,7 @@
 // the same drawing; only state props change. Compose: <AppTile/> <SrvTile/> <Wire/> <Booths/> (+ <Tap/> for screen taps).
 import React from 'react';
 import {useCurrentFrame, interpolate, Easing} from 'remotion';
-import {C, R, BORDER, SHADOW, inter, mono, orangeA} from '../theme';
+import {C, R, BORDER, SHADOW, inter, mono, accentA} from '../theme';
 import {sp, pop, ease} from '../anim';
 import {Logo} from '../glyphs';
 
@@ -19,7 +19,7 @@ export const Scissors: React.FC<{size?: number; color?: string; close?: number}>
   </Ico>
 );
 export const ServerIco: React.FC<{size?: number; color?: string}> = ({size = 72, color = C.ink}) => (
-  <Ico size={size} color={color} sw={2.6}><rect x="8" y="6" width="32" height="14" rx="3" /><rect x="8" y="26" width="32" height="14" rx="3" /><circle cx="15" cy="13" r="1.8" fill={C.orange} stroke="none" /><circle cx="15" cy="33" r="1.8" fill={C.orange} stroke="none" /><path d="M22 13h12M22 33h12" /></Ico>
+  <Ico size={size} color={color} sw={2.6}><rect x="8" y="6" width="32" height="14" rx="3" /><rect x="8" y="26" width="32" height="14" rx="3" /><circle cx="15" cy="13" r="1.8" fill={C.accent} stroke="none" /><circle cx="15" cy="33" r="1.8" fill={C.accent} stroke="none" /><path d="M22 13h12M22 33h12" /></Ico>
 );
 export const LockIco: React.FC<{size?: number; color?: string}> = ({size = 40, color = C.ink}) => (
   <Ico size={size} color={color} sw={3.4}><rect x="10" y="21" width="28" height="21" rx="4" fill={C.white} /><path d="M16 21v-6a8 8 0 0 1 16 0v6" /><path d="M24 29v6" /></Ico>
@@ -69,20 +69,20 @@ const BoothTile: React.FC<{b: Booth}> = ({b}) => {
       {/* limit / timer pill above */}
       {(b.timer && f >= b.timer.t0 - 1) || (b.limit && f >= (b.limitAt ?? 1e9)) ? (
         <div style={{position: 'absolute', left: 58, top: -62, transform: `translateX(-50%) scale(${b.timer ? 1 + (hot ? 0.12 * Math.sin(Math.PI * clamp01((f - b.timer.hotAt!) / 10)) : 0) : 0.8 + 0.2 * Math.min(1, pop(f, b.limitAt!))})`, opacity: b.timer ? Math.min(1, pop(f, b.timer.t0) * 1.5) : Math.min(1, pop(f, b.limitAt!) * 1.5)}}>
-          <div style={{padding: '6px 14px', borderRadius: 99, border: BORDER, background: hot || (!b.timer && lock) ? C.orange : C.white, color: hot || (!b.timer && lock) ? C.white : C.ink, fontFamily: mono, fontWeight: 700, fontSize: 26, whiteSpace: 'nowrap'}}>{b.timer ? `${tv} s` : b.limit}</div>
+          <div style={{padding: '6px 14px', borderRadius: 99, border: BORDER, background: hot || (!b.timer && lock) ? C.accent : C.white, color: hot || (!b.timer && lock) ? C.white : C.ink, fontFamily: mono, fontWeight: 700, fontSize: 26, whiteSpace: 'nowrap'}}>{b.timer ? `${tv} s` : b.limit}</div>
         </div>
       ) : null}
-      <div style={{width: 116, height: 84, boxSizing: 'border-box', background: C.white, border: lock ? `4px solid ${C.orange}` : BORDER, borderRadius: R, boxShadow: SHADOW, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+      <div style={{width: 116, height: 84, boxSizing: 'border-box', background: C.surface, border: lock ? `4px solid ${C.accent}` : BORDER, borderRadius: R, boxShadow: SHADOW, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
         <Logo file={b.logo} w={b.lw} h={b.lh} />
       </div>
-      <div style={{position: 'absolute', left: 58, top: 92, transform: 'translateX(-50%)', fontFamily: inter, fontWeight: 700, fontSize: 22, color: C.ink, whiteSpace: 'nowrap', background: C.bg, padding: '0 6px', borderRadius: 6}}>{b.label}</div>
+      <div style={{position: 'absolute', left: 58, top: 92, transform: 'translateX(-50%)', fontFamily: inter, fontWeight: 700, fontSize: 22, color: C.text, whiteSpace: 'nowrap', background: C.bg, padding: '0 6px', borderRadius: 6}}>{b.label}</div>
       {sc && (
-        <div style={{position: 'absolute', left: 88, top: -22, transform: `scale(${Math.min(1, pop(f, b.scissorsAt!) * 1.2)})`, background: C.white, border: `2px solid ${scDim ? C.dim : C.border}`, borderRadius: 99, padding: 4, opacity: scDim ? 0.55 : 1}}>
-          <Scissors size={34} color={scDim ? C.dim : C.ink} />
+        <div style={{position: 'absolute', left: 88, top: -22, transform: `scale(${Math.min(1, pop(f, b.scissorsAt!) * 1.2)})`, background: C.surface, border: `2px solid ${scDim ? C.textDim : C.border}`, borderRadius: 99, padding: 4, opacity: scDim ? 0.55 : 1}}>
+          <Scissors size={34} color={scDim ? C.textDim : C.ink} />
         </div>
       )}
       {lock && (
-        <div style={{position: 'absolute', left: -14, top: -22, transform: `scale(${Math.min(1, pop(f, b.lockAt!) * 1.2)})`}}><LockIco size={44} color={C.orange} /></div>
+        <div style={{position: 'absolute', left: -14, top: -22, transform: `scale(${Math.min(1, pop(f, b.lockAt!) * 1.2)})`}}><LockIco size={44} color={C.accent} /></div>
       )}
       {b.badge && f >= b.badge.at - 1 && (
         <div style={{position: 'absolute', left: 58, top: 128, transform: 'translateX(-50%)'}}><div style={{opacity: Math.min(1, pop(f, b.badge.at) * 1.5), transform: `scale(${0.8 + 0.2 * pop(f, b.badge.at)})`}}>
@@ -101,14 +101,14 @@ export const AppTile: React.FC<{at: number; label?: string; screen?: React.React
   const {x, y, w, h} = GEO.app;
   return (
     <div style={{position: 'absolute', left: x, top: y, width: w, height: h, opacity: Math.min(1, v * 1.5), transform: `scale(${0.85 + 0.15 * v})`}}>
-      <div style={{position: 'absolute', inset: 0, borderRadius: 30, border: `${ring ? 5 : 4}px solid ${ring ? C.orange : C.border}`, background: C.ink, boxSizing: 'border-box', padding: 6, boxShadow: SHADOW}}>
+      <div style={{position: 'absolute', inset: 0, borderRadius: 30, border: `${ring ? 5 : 4}px solid ${ring ? C.accent : C.border}`, background: C.ink, boxSizing: 'border-box', padding: 6, boxShadow: SHADOW}}>
         <div style={{position: 'relative', width: '100%', height: '100%', borderRadius: 22, overflow: 'hidden', background: C.bg}}>
           {screen}
           <div style={{position: 'absolute', inset: 0, background: C.ink, opacity: dark}} />
           <div style={{position: 'absolute', left: '50%', top: 6, width: 46, height: 10, borderRadius: 99, background: C.ink, transform: 'translateX(-50%)'}} />
         </div>
       </div>
-      <div style={{position: 'absolute', left: 0, right: 0, top: h + 10, textAlign: 'center', fontFamily: inter, fontWeight: 800, fontSize: 28, color: C.ink}}>{label}</div>
+      <div style={{position: 'absolute', left: 0, right: 0, top: h + 10, textAlign: 'center', fontFamily: inter, fontWeight: 800, fontSize: 28, color: C.text}}>{label}</div>
     </div>
   );
 };
@@ -121,9 +121,9 @@ export const SrvTile: React.FC<{at: number; label?: string; glow?: number; dim?:
   const pulse = glow > 0 ? 0.5 + 0.5 * Math.sin(f / 5) : 0;
   return (
     <div style={{position: 'absolute', left: x, top: y, width: w, height: h, opacity: Math.min(1, v * 1.5) * (1 - 0.5 * dim), transform: `scale(${0.85 + 0.15 * v})`}}>
-      <div style={{position: 'absolute', inset: 0, borderRadius: R, border: glow > 0 ? `5px solid ${C.orange}` : BORDER, background: C.white, boxSizing: 'border-box', boxShadow: glow > 0 ? `0 0 ${18 + 22 * pulse * glow}px ${orangeA(0.35 * glow)}` : SHADOW, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6}}>
+      <div style={{position: 'absolute', inset: 0, borderRadius: R, border: glow > 0 ? `5px solid ${C.accent}` : BORDER, background: C.surface, boxSizing: 'border-box', boxShadow: glow > 0 ? `0 0 ${18 + 22 * pulse * glow}px ${accentA(0.35 * glow)}` : SHADOW, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6}}>
         {logos ?? <ServerIco size={92} />}
-        <div style={{fontFamily: inter, fontWeight: 800, fontSize: 30, color: C.ink}}>{label}</div>
+        <div style={{fontFamily: inter, fontWeight: 800, fontSize: 30, color: C.text}}>{label}</div>
       </div>
       {children}
     </div>
@@ -143,7 +143,7 @@ export const Wire: React.FC<{calls: Call[]; travels?: Travel[]}> = ({calls, trav
     const snipped = c.snipAt !== undefined && f >= c.snipAt;
     const grey = snipped || (c.greyAt !== undefined && f >= c.greyAt);
     const silent = c.silentAt !== undefined && f >= c.silentAt;
-    const col = grey ? C.dim : C.orange;
+    const col = grey ? C.textDim : C.accent;
     const op = grey ? 0.9 : silent ? 0.45 : 1;
     if (c.closeAt !== undefined && f >= c.closeAt) {
       const q = ease(f, c.closeAt, c.closeAt + 12);
@@ -154,22 +154,22 @@ export const Wire: React.FC<{calls: Call[]; travels?: Travel[]}> = ({calls, trav
       els.push(<path key="l" d={seg(0, tc - 0.012, A, th)} stroke={col} strokeWidth={7} fill="none" strokeLinecap="round" />);
       els.push(<path key="r" d={seg(tc + 0.012, 1, B, -th * 0.9)} stroke={col} strokeWidth={7} fill="none" strokeLinecap="round" />);
       const e1 = rot(wirePt(tc - 0.012), A, th), e2 = rot(wirePt(tc + 0.012), B, -th * 0.9);
-      els.push(<circle key="e1" cx={e1.x} cy={e1.y} r={6} fill={C.dim} />, <circle key="e2" cx={e2.x} cy={e2.y} r={6} fill={C.dim} />);
+      els.push(<circle key="e1" cx={e1.x} cy={e1.y} r={6} fill={C.textDim} />, <circle key="e2" cx={e2.x} cy={e2.y} r={6} fill={C.textDim} />);
       // snap flash
       const fl = 1 - ease(f, c.snipAt!, c.snipAt! + 10);
-      if (fl > 0) els.push(<circle key="fl" cx={wirePt(tc).x} cy={wirePt(tc).y} r={18 + 30 * (1 - fl)} fill="none" stroke={C.orange} strokeWidth={5} opacity={fl} />);
+      if (fl > 0) els.push(<circle key="fl" cx={wirePt(tc).x} cy={wirePt(tc).y} r={18 + 30 * (1 - fl)} fill="none" stroke={C.accent} strokeWidth={5} opacity={fl} />);
     } else {
       els.push(<path key="w" d={seg(0, p)} stroke={col} strokeWidth={7} fill="none" strokeLinecap="round" opacity={op} />);
       const pulseEnd = Math.min(c.pulseTo ?? 1e9, c.silentAt ?? 1e9, c.closeAt ?? 1e9, c.snipAt ?? 1e9, c.greyAt ?? 1e9);
       if (f >= c.drawAt + 8 && f < pulseEnd) for (let k = 0; k < 4; k++) {
         const t = (((f - c.drawAt) * 0.03 + k / 4) % 1) * p;
         const pt = wirePt(t);
-        els.push(<circle key={`d${k}`} cx={pt.x} cy={pt.y} r={8} fill={C.orange} stroke={C.border} strokeWidth={2} />);
+        els.push(<circle key={`d${k}`} cx={pt.x} cy={pt.y} r={8} fill={C.accent} stroke={C.border} strokeWidth={2} />);
       }
     }
     for (const m of c.marks ?? []) if (f >= m.at) {
       const pt = wirePt(tOfX(m.x));
-      els.push(<g key={`m${m.at}`} opacity={Math.min(1, pop(f, m.at) * 1.4)}><circle cx={pt.x} cy={pt.y} r={16} fill={C.bg} /><path d={`M${pt.x - 12} ${pt.y - 12} L${pt.x + 12} ${pt.y + 12} M${pt.x + 12} ${pt.y - 12} L${pt.x - 12} ${pt.y + 12}`} stroke={C.orange} strokeWidth={6} strokeLinecap="round" /></g>);
+      els.push(<g key={`m${m.at}`} opacity={Math.min(1, pop(f, m.at) * 1.4)}><circle cx={pt.x} cy={pt.y} r={16} fill={C.bg} /><path d={`M${pt.x - 12} ${pt.y - 12} L${pt.x + 12} ${pt.y + 12} M${pt.x + 12} ${pt.y - 12} L${pt.x - 12} ${pt.y + 12}`} stroke={C.accent} strokeWidth={6} strokeLinecap="round" /></g>);
     }
   }
   return (
@@ -183,7 +183,7 @@ export const Wire: React.FC<{calls: Call[]; travels?: Travel[]}> = ({calls, trav
 const TravelEl: React.FC<{tr: Travel; tc: number}> = ({tr, tc}) => {
   const f = useCurrentFrame();
   if (f < tr.t0 || f > tr.t1 + 40) return null;
-  const node = tr.node ?? <div style={{width: 30, height: 30, borderRadius: 99, background: C.orange, border: BORDER}} />;
+  const node = tr.node ?? <div style={{width: 30, height: 30, borderRadius: 99, background: C.accent, border: BORDER}} />;
   let pt: {x: number; y: number}, o = 1, grey = 0, r = 0;
   if (tr.dir === 'down' && tr.drop && tc > 0) {
     const tEnd = tr.t0 + (tr.t1 - tr.t0) * (1 - tc);
@@ -216,8 +216,8 @@ export const Tap: React.FC<{x: number; y: number; at: number}> = ({x, y, at}) =>
   const p = ease(f, at, at + 16);
   return (
     <div style={{position: 'absolute', left: x, top: y, transform: 'translate(-50%,-50%)'}}>
-      <div style={{width: 30 + 70 * p, height: 30 + 70 * p, borderRadius: 99, border: `5px solid ${C.orange}`, opacity: 1 - p, transform: 'translate(-50%,-50%)', position: 'absolute', left: 0, top: 0}} />
-      <div style={{width: 26, height: 26, borderRadius: 99, background: C.orange, opacity: 1 - p, transform: 'translate(-50%,-50%)', position: 'absolute', left: 0, top: 0}} />
+      <div style={{width: 30 + 70 * p, height: 30 + 70 * p, borderRadius: 99, border: `5px solid ${C.accent}`, opacity: 1 - p, transform: 'translate(-50%,-50%)', position: 'absolute', left: 0, top: 0}} />
+      <div style={{width: 26, height: 26, borderRadius: 99, background: C.accent, opacity: 1 - p, transform: 'translate(-50%,-50%)', position: 'absolute', left: 0, top: 0}} />
     </div>
   );
 };

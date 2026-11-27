@@ -8,7 +8,7 @@ import {sp, pop, ease} from '../anim';
 /* ---------------- TicketSlip ---------------- */
 export const TicketArt: React.FC<{w?: number; id: string; label?: string; sub?: string; dim?: boolean; shadow?: boolean}> = ({w = 300, id, label = 'TICKET', sub, dim, shadow = true}) => {
   const h = w * 0.5;
-  const bg = dim ? C.dim : C.orange;
+  const bg = dim ? C.textDim : C.accent;
   return (
     <div style={{position: 'relative', width: w, height: h, borderRadius: R, background: bg, border: BORDER, boxSizing: 'border-box', boxShadow: shadow ? SHADOW : 'none', overflow: 'hidden'}}>
       <div style={{position: 'absolute', left: -h * 0.12, top: h / 2 - h * 0.12, width: h * 0.24, height: h * 0.24, borderRadius: 99, background: C.bg, border: BORDER}} />
@@ -38,7 +38,7 @@ export const TicketSlip: React.FC<{x: number; y: number; w?: number; id: string;
   return (
     <div style={{position: 'absolute', left: cx, top: cy, transform: `translate(-50%,-50%) scale(${sc}) rotate(${rot}deg)`, opacity: o * Math.min(1, (morphFrom ? 1 : v) * 1.5)}}>
       {morphFrom && m < 0.98 && (
-        <div style={{position: 'absolute', left: '50%', top: '50%', transform: `translate(-50%,-50%) scale(${1 - 0.3 * m})`, opacity: 1 - m, background: C.white, border: BORDER, borderRadius: R, padding: '14px 22px', fontFamily: mono, fontWeight: 700, fontSize: 30, color: C.ink, whiteSpace: 'nowrap'}}>{morphFrom.text}</div>
+        <div style={{position: 'absolute', left: '50%', top: '50%', transform: `translate(-50%,-50%) scale(${1 - 0.3 * m})`, opacity: 1 - m, background: C.surface, border: BORDER, borderRadius: R, padding: '14px 22px', fontFamily: mono, fontWeight: 700, fontSize: 30, color: C.text, whiteSpace: 'nowrap'}}>{morphFrom.text}</div>
       )}
       <div style={{opacity: m, transform: `scale(${0.6 + 0.4 * m})`}}><TicketArt w={w} id={id} sub={sub} dim={dim >= 0 && f >= dim} /></div>
     </div>
