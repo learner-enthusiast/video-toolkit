@@ -80,7 +80,7 @@ const previews: Record<string, React.FC> = {
   MathStrip: () => <Stage><At x={70} y={420}><MathStrip size={50} terms={[{text: '1,200', at: 4}, {text: '30', at: 12, op: '×'}, {text: '36,000', at: 20, op: '='}]} /></At></Stage>,
   SourceChip: () => <Stage><At x={200} y={440}><SourceChip at={4} size={40}>pricing page, 2026</SourceChip></At></Stage>,
   CodeCard: () => <Stage><At x={60} y={150}><CodeCard at={0} width={850} size={34} cps={50} tags={['server', 'pseudo-code']} lines={['const key = hash(req)', 'if (cache.has(key)) {', '  return cache.get(key) // hit', '}', 'return model(req)']} hl={[{line: 2, at: 6}]} /></At></Stage>,
-  ThresholdRing: () => <Stage><div style={{position: 'absolute', left: 486, top: 485, width: 26, height: 26, borderRadius: 99, background: C.ink, transform: 'translate(-50%,-50%)'}} /><ThresholdRing x={486} y={485} r={150} at={0} steps={[{at: 10, r: 260}]} label="threshold" labelAt={12} /></Stage>,
+  ThresholdRing: () => <Stage><div style={{position: 'absolute', left: 486, top: 485, width: 26, height: 26, borderRadius: 99, background: C.text, transform: 'translate(-50%,-50%)'}} /><ThresholdRing x={486} y={485} r={150} at={0} steps={[{at: 10, r: 260}]} label="threshold" labelAt={12} /></Stage>,
   DualMeter: () => <Stage><DualMeter req={0.5} tok={0.72} reqText="3" tokText="7,200" /><BudgetBar x={40} y={885} w={880} h={64} segs={[{frac: 0.45, kind: 'spent', label: 'spent'}, {frac: 0.25, kind: 'held', label: 'held', lock: 1}, {frac: 0.3, kind: 'free'}]} /></Stage>,
   TradeScale: () => <Stage><TradeScale x={486} y={330} at={0} angle={-7} label="trade-off" leftAt={6} rightAt={12} left={<Tag label="Fast" tone="orange" size={40} />} right={<Tag label="Cheap" tone="ink" size={40} />} /></Stage>,
   PullRequestCard: () => (
