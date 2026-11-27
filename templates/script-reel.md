@@ -2,6 +2,8 @@
 
 **Message:** <one sentence the viewer could repeat>
 
+**Brand:** 1 <1 | 2 | 3, `brand.md`>
+
 **Platform:** Instagram / LinkedIn / Shorts · **Target:** final length, word cap, opener and close per `CLAUDE.md` → House numbers · **Aspect:** 9:16
 
 ## Glossary (exact spellings for captions)

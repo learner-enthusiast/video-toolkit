@@ -18,7 +18,8 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from tools.twin import common  # noqa: E402
 
-LINKED = ("src", "scripts", "package.json", "package-lock.json", "remotion.config.ts", "tsconfig.json", "node_modules")
+# .env holds REMOTION_BRAND: linked, so the twin renders in the English video's brand
+LINKED = ("src", "scripts", ".env", "package.json", "package-lock.json", "remotion.config.ts", "tsconfig.json", "node_modules")
 # Made for the Hindi footage; never taken from English.
 OWN_MEDIA = {"main.mp4", "voice.wav", "backdrop.jpg"}
 OWN_DATA = {"timeline.json", "cue_frames.json", "face.json", "trailer_ranges.json"}

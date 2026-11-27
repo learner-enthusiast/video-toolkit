@@ -13,7 +13,8 @@ const DARK_LOGOS = new Set(['anthropic.svg', 'anthropic-symbol.svg', 'anthropic-
 /** Official logo from the shared icon library (icons/icons.md). `file` is a name under icons/logos/. Never recolour or stretch. */
 export const Logo: React.FC<{file: string; w: number; h: number; style?: React.CSSProperties}> = ({file, w, h, style}) => {
   // the tile is painted around the image (a shadow spread), so it never changes the layout
-  const tile = DARK_LOGOS.has(file) ? {background: C.logoTile, boxShadow: `0 0 0 6px ${C.logoTile}`} : undefined;
+  // (no tile styles at all when the token is transparent: even a corner radius would clip a logo)
+  const tile = DARK_LOGOS.has(file) && C.logoTile !== 'transparent' ? {background: C.logoTile, boxShadow: `0 0 0 6px ${C.logoTile}`, borderRadius: 8} : undefined;
   return <Img src={staticFile(`icons/logos/${file}`)} style={{width: w, height: h, objectFit: 'contain', ...tile, ...style}} />;
 };
 

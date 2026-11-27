@@ -19,7 +19,7 @@ export const TimerRing: React.FC<{from: number; at: number; size?: number; out?:
           <linearGradient id="timer-ring" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor={C.accent} /><stop offset="1" stopColor={C.gradientEnd} /></linearGradient>
         </defs>
         <circle cx={size / 2} cy={size / 2} r={r} fill={C.surface} stroke={C.track} strokeWidth={stroke} />
-        {gone < from && <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="url(#timer-ring)" strokeWidth={stroke} strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={circ * (gone / from)} transform={`rotate(-90 ${size / 2} ${size / 2})`} />}
+        {gone < from && <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="url(#timer-ring)" strokeWidth={stroke} strokeLinecap="butt" strokeDasharray={circ} strokeDashoffset={circ * (gone / from)} transform={`rotate(-90 ${size / 2} ${size / 2})`} />}
       </svg>
       <div style={{position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}>
         <span style={{fontFamily: mono, fontWeight: 700, fontSize: size * 0.36, lineHeight: 1, color: C.text, fontVariantNumeric: 'tabular-nums', transform: `scale(${done > 0 ? bump(f, tickAt) : 1})`, display: 'inline-block'}}>{from - done}</span>

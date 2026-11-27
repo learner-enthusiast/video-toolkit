@@ -54,6 +54,7 @@ class World:
         write(os.path.join(r, "scripts", "export_cues.ts"), "// exporter\n")
         for name in ("package.json", "tsconfig.json", "remotion.config.ts"):
             write(os.path.join(r, name), "{}")
+        write(os.path.join(r, ".env"), "REMOTION_BRAND=2\n")
         os.makedirs(os.path.join(r, "node_modules"))
         for name in ("main.mp4", "voice.wav", "backdrop.jpg", "cutout.png"):
             write(os.path.join(r, "public", name), "english " + name)
@@ -243,7 +244,7 @@ class SetupRemotionTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             w = World(td)
             root = setup_remotion.setup(w.twin)
-            for name in ("src", "scripts", "package.json", "node_modules"):
+            for name in ("src", "scripts", ".env", "package.json", "node_modules"):
                 self.assertTrue(os.path.islink(os.path.join(root, name)), name)
                 self.assertFalse(os.path.isabs(os.readlink(os.path.join(root, name))))
             public = os.path.join(root, "public")
