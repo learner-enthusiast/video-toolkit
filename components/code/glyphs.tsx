@@ -7,10 +7,15 @@ import {pop, ease} from './anim';
 /** true on a dark punch-moment scene: components that care read it instead of taking a prop on every call */
 export const DarkCtx = React.createContext(false);
 
+/** official logos that are mostly near-black or dark: they get the theme's `logoTile` (transparent on light brands) */
+const DARK_LOGOS = new Set(['anthropic.svg', 'anthropic-symbol.svg', 'anthropic-wordmark.svg', 'apple.svg', 'cloudflare.svg', 'express.svg', 'github.svg', 'heroku.svg', 'kafka.svg', 'kafka-simple.svg', 'openai.svg', 'threads.svg', 'vercel.svg']);
+
 /** Official logo from the shared icon library (icons/icons.md). `file` is a name under icons/logos/. Never recolour or stretch. */
-export const Logo: React.FC<{file: string; w: number; h: number; style?: React.CSSProperties}> = ({file, w, h, style}) => (
-  <Img src={staticFile(`icons/logos/${file}`)} style={{width: w, height: h, objectFit: 'contain', ...style}} />
-);
+export const Logo: React.FC<{file: string; w: number; h: number; style?: React.CSSProperties}> = ({file, w, h, style}) => {
+  // the tile is painted around the image (a shadow spread), so it never changes the layout
+  const tile = DARK_LOGOS.has(file) ? {background: C.logoTile, boxShadow: `0 0 0 6px ${C.logoTile}`} : undefined;
+  return <Img src={staticFile(`icons/logos/${file}`)} style={{width: w, height: h, objectFit: 'contain', ...tile, ...style}} />;
+};
 
 /** orange warning mark: triangle with "!" ("bad" is dim grey plus this, never red) */
 export const WarnMark: React.FC<{size?: number; at?: number; style?: React.CSSProperties}> = ({size = 56, at = -100, style}) => {
