@@ -50,3 +50,10 @@
 - A boom-arm mic fills one side of my head: put that side's elements above it, and wrap the rest round the free side.
 - The boom cable can rise into the headline band: the headline draws above the cutout; check no letter is lost against it.
 - Brand colours are for the furniture. Official logos keep their own colours (`brand.md`, Icons).
+
+## Code
+
+Template: `templates/remotion/Thumbnail.tsx`, which `tools/scaffold_remotion.py` copies to each new project's `src/lib/`, next to `cues.ts`. It exports `Thumbnail`, `Badge`, `Headline`, `Cutout`, `Background` and the `focal` style, and imports only from `../shared/theme` and shared components.
+
+- `cutout` is `{src, w, h, hairTop, faceX}`, measured on the PNG; `place` (`headY`, `scale`, `bleed`) overrides where it lands. `bleed: 'right'` keeps a boom arm running off the canvas edge.
+- Not in the library yet: per the library rule (`components/code/README.md`), it moves into its own `Thumbnail` folder in `components/code/` only after it has rendered correctly in a finished video.

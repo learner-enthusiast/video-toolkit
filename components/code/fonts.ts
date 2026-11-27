@@ -5,6 +5,8 @@ import {loadFont as loadMono} from '@remotion/google-fonts/JetBrainsMono';
 
 /** Body, labels (400-700), bold UI (800), captions (900) */
 export const inter = loadInter('normal', {weights: ['400', '500', '600', '700', '800', '900'], subsets: ['latin']}).fontFamily;
+/** the thumbnail's key phrase: the real Inter 900 italic (without it the browser fakes the slant) */
+loadInter('italic', {weights: ['900'], subsets: ['latin']});
 /** Headlines: Instrument Serif Italic, orange, large */
 export const serif = loadSerif('italic', {weights: ['400'], subsets: ['latin']}).fontFamily;
 /** Code only: JetBrains Mono 400-700 */

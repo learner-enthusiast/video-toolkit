@@ -159,6 +159,9 @@ def scaffold(project: str, aspect: str, force: bool = False, brand: int = 1) -> 
     # Named cues: the library, an empty cue list and its (empty) resolved frames.
     with open(os.path.join(TOOLKIT, "templates", "remotion", "cues.ts"), encoding="utf-8") as f:
         write(os.path.join(src, "lib", "cues.ts"), f.read())
+    # The concept-first cover still (components/specs/Thumbnail.md): each video draws its own scene into it.
+    with open(os.path.join(TOOLKIT, "templates", "remotion", "Thumbnail.tsx"), encoding="utf-8") as f:
+        write(os.path.join(src, "lib", "Thumbnail.tsx"), f.read())
     for name in ("cues.json", "cue_frames.json"):
         write(os.path.join(pub, "data", name), "{}\n")
     write(os.path.join(pub, "data", "trailer_ranges.json"), '{"ranges": []}\n')

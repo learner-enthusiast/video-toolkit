@@ -20,6 +20,18 @@ class ScaffoldTest(unittest.TestCase):
                 pkg = json.load(pf)
             self.assertEqual(pkg["dependencies"]["remotion"], remotion_version())
 
+    def test_thumbnail_template_is_copied_next_to_cues(self):
+        with tempfile.TemporaryDirectory() as td:
+            lib = os.path.join(scaffold(td, "9:16"), "src", "lib")
+            self.assertTrue(os.path.isfile(os.path.join(lib, "cues.ts")))
+            with open(os.path.join(lib, "Thumbnail.tsx"), encoding="utf-8") as copy:
+                code = copy.read()
+            with open(os.path.join("templates", "remotion", "Thumbnail.tsx"), encoding="utf-8") as template:
+                self.assertEqual(code, template.read())
+            # the copy sits in src/lib/, so its theme import must resolve through the src/shared symlink
+            self.assertIn("from '../shared/theme'", code)
+            self.assertTrue(os.path.isfile(os.path.join(lib, "..", "shared", "theme.ts")))
+
     def test_refuse_non_empty(self):
         with tempfile.TemporaryDirectory() as td:
             proj = os.path.join(td, "p")

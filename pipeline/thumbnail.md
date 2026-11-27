@@ -27,7 +27,7 @@ Show me the plan and wait for my OK before building.
 - Use the same library components the video used, frozen at their payoff frame (`<Freeze frame={n}>`).
 - Take official logos from `icons/` (`icons/icons.md`).
 - Capture real pages with Playwright (`pipeline/web-capture.md`).
-- Compose the still from `src/lib/Thumbnail.tsx`: 1080x1920 only for a reel; 1280x720 and 1080x1920 for long-form.
+- Compose the still from `src/lib/Thumbnail.tsx` (`templates/remotion/Thumbnail.tsx`): 1080x1920 only for a reel; 1280x720 and 1080x1920 for long-form.
 
 **The cutout**
 - No `thumbnail_raw`: pick 5–8 candidate frames from the final edit (eyes open, mouth closed or mid-smile, sharp, face fully lit). Look at each and keep the best 2–3.
