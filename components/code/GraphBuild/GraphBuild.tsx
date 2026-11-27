@@ -90,7 +90,7 @@ export const GraphBuild: React.FC<{
         if (k < 0 || k >= packet.path.length - 1) return null;
         const i = Math.floor(k), t = ease(k - i, 0.1, 0.9);
         const A = N[packet.path[i]], B = N[packet.path[i + 1]];
-        return <div style={{position: 'absolute', left: A.x + (B.x - A.x) * t - 13, top: A.y + (B.y - A.y) * t - 13, width: 26, height: 26, borderRadius: 13, background: C.accent, border: `3px solid ${C.white}`, boxShadow: `0 0 0 3px ${accentA(0.35)}`}} />;
+        return <div style={{position: 'absolute', left: A.x + (B.x - A.x) * t - 13, top: A.y + (B.y - A.y) * t - 13, width: 26, height: 26, borderRadius: 13, background: C.accent, border: `3px solid ${C.onAccent}`, boxShadow: `0 0 0 3px ${accentA(0.35)}`}} />;
       })()}
       {/* nodes */}
       {nodes.map((n) => {
@@ -103,10 +103,10 @@ export const GraphBuild: React.FC<{
         const pu = pulse && pulse.id === n.id && f >= pulse.at ? 0.5 + 0.5 * Math.sin((f - pulse.at) / 4.5) : 0;
         const puOn = pulse && pulse.id === n.id ? ease(f, pulse.at, pulse.at + 8) : 0;
         return (
-          <div key={n.id} style={{position: 'absolute', left: b.x, top: b.y, width: b.w, height: b.h, boxSizing: 'border-box', borderRadius: R, background: on > 0.5 || puOn > 0.5 ? C.accent : dark ? C.darkPanel : C.white,
+          <div key={n.id} style={{position: 'absolute', left: b.x, top: b.y, width: b.w, height: b.h, boxSizing: 'border-box', borderRadius: R, background: on > 0.5 || puOn > 0.5 ? C.accent : dark ? C.darkPanel : C.surface,
             border: `${on > 0.5 || puOn > 0.5 ? 3 : 2}px solid ${on > 0.5 || puOn > 0.5 ? C.border : ink}`, boxShadow: puOn > 0 ? `0 0 0 ${8 + pu * 16}px ${accentA(0.35 - pu * 0.2)}` : dark ? 'none' : SHADOW,
             opacity: Math.min(1, v * 1.4) * (1 - 0.65 * dm), transform: `scale(${(0.82 + 0.18 * v) * (1 + 0.04 * on)})`, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: mono, fontWeight: 700, fontSize: size, color: on > 0.5 || puOn > 0.5 ? C.white : dark ? C.white : C.ink, whiteSpace: 'nowrap'}}>
+            fontFamily: mono, fontWeight: 700, fontSize: size, color: on > 0.5 || puOn > 0.5 ? C.onAccent : dark ? C.onPunch : C.text, whiteSpace: 'nowrap'}}>
             {n.label}
           </div>
         );
@@ -119,7 +119,7 @@ export const GraphBuild: React.FC<{
         const mx = (A.x + B.x) / 2 + (t.dx ?? 0), my = (A.y + B.y) / 2 + (t.dy ?? 0);
         return (
           <div key={i} style={{position: 'absolute', left: mx, top: my, transform: `translate(-50%,-50%) scale(${0.8 + 0.2 * v})`, opacity: Math.min(1, v * 1.4) * (1 - 0.6 * dimOn)}}>
-            <div style={{padding: '6px 16px', borderRadius: 999, border: `2px solid ${C.border}`, background: t.tone === 'orange' ? C.accent : C.white, color: t.tone === 'orange' ? C.white : C.ink, fontFamily: inter, fontWeight: 800, fontSize: 24, whiteSpace: 'nowrap', boxShadow: SHADOW}}>{t.text}</div>
+            <div style={{padding: '6px 16px', borderRadius: 999, border: `2px solid ${C.border}`, background: t.tone === 'orange' ? C.accent : C.surface, color: t.tone === 'orange' ? C.onAccent : C.text, fontFamily: inter, fontWeight: 800, fontSize: 24, whiteSpace: 'nowrap', boxShadow: SHADOW}}>{t.text}</div>
           </div>
         );
       })}

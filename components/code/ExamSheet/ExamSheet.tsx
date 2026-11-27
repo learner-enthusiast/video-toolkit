@@ -1,17 +1,17 @@
 // Spec: components/specs/ExamSheet.md · first built for system-design-of-ai/11-max-tokens-and-truncation. Every text, number and timing is a prop.
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
-import {C, R, BORDER, SHADOW, inter, mono, serif} from '../theme';
+import {C, R, BORDER, SHADOW, inter, mono} from '../theme';
 import {sp, ease, easeOut, enter, popIn} from '../anim';
 import {WarnMark} from '../glyphs';
 import {Tag} from '../Tag/Tag';
 
 /* ---------------- ExamSheet ---------------- */
-const BellIcon: React.FC<{size?: number; color?: string}> = ({size = 90, color = C.ink}) => (
-  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" stroke={color} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><path d="M24 6v4" /><path d="M12 34c2-3 3-6 3-12a9 9 0 0 1 18 0c0 6 1 9 3 12z" fill={C.white} /><path d="M9 34h30" /><path d="M21 39a3 3 0 0 0 6 0" /></svg>
+const BellIcon: React.FC<{size?: number; color?: string}> = ({size = 90, color = C.text}) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" stroke={color} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><path d="M24 6v4" /><path d="M12 34c2-3 3-6 3-12a9 9 0 0 1 18 0c0 6 1 9 3 12z" fill={C.surface} /><path d="M9 34h30" /><path d="M21 39a3 3 0 0 0 6 0" /></svg>
 );
 const PenIcon: React.FC<{size?: number}> = ({size = 70}) => (
-  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" stroke={C.ink} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><path d="M34 6l8 8-24 24-11 3 3-11z" fill={C.white} /><path d="M30 10l8 8" stroke={C.accent} /></svg>
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" stroke={C.text} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><path d="M34 6l8 8-24 24-11 3 3-11z" fill={C.surface} /><path d="M30 10l8 8" stroke={C.accent} /></svg>
 );
 /** a handwriting-like squiggle across width w */
 const scribble = (w: number, seed: number, amp = 7) => {
@@ -38,11 +38,11 @@ export const ExamSheet: React.FC<{w?: number; h?: number; lines?: number; fillFr
         {Array.from({length: Math.ceil(prog)}).map((_, i) => {
           const frac = Math.min(1, prog - i);
           const len = lw * (i === lines - 1 ? 0.6 : 1);
-          return <path key={`s${i}`} d={scribble(len, i)} transform={`translate(${x0}, ${top + gap * i + gap * 0.62})`} fill="none" stroke={C.ink} strokeWidth={3.4} strokeLinecap="round" strokeDasharray={len * 1.4} strokeDashoffset={len * 1.4 * (1 - frac)} />;
+          return <path key={`s${i}`} d={scribble(len, i)} transform={`translate(${x0}, ${top + gap * i + gap * 0.62})`} fill="none" stroke={C.text} strokeWidth={3.4} strokeLinecap="round" strokeDasharray={len * 1.4} strokeDashoffset={len * 1.4 * (1 - frac)} />;
         })}
       </svg>
       {/* bell */}
-      <div style={{position: 'absolute', right: 22, top: 10, transform: `rotate(${ring}deg)`, transformOrigin: '50% 10%'}}><BellIcon size={84} color={f >= bellAt ? C.accent : C.ink} /></div>
+      <div style={{position: 'absolute', right: 22, top: 10, transform: `rotate(${ring}deg)`, transformOrigin: '50% 10%'}}><BellIcon size={84} color={f >= bellAt ? C.accent : C.text} /></div>
       {f >= bellAt && f < bellAt + 40 && [0, 1, 2].map((i) => (
         <div key={i} style={{position: 'absolute', right: 6 - i * 16, top: 0 - i * 14, width: 120 + i * 32, height: 120 + i * 32, borderRadius: '50%', border: `4px solid ${C.accent}`, borderLeftColor: 'transparent', borderBottomColor: 'transparent', opacity: ease(f, bellAt + i * 3, bellAt + 30 + i * 3, 1, 0), transform: 'rotate(-10deg)'}} />
       ))}

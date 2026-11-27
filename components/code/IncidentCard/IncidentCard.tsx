@@ -1,7 +1,7 @@
 // Spec: components/specs/IncidentCard.md · first built for system-design-of-ai/06-cancellation. Every text, number and timing is a prop.
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
-import {C, R, BORDER, SHADOW, inter, serif} from '../theme';
+import {C, R, BORDER, SHADOW, inter, headline} from '../theme';
 import {ease, popIn, enter, bump} from '../anim';
 import {Tag} from '../Tag/Tag';
 import {Logo} from '../glyphs';
@@ -25,7 +25,7 @@ export const IncidentCard: React.FC<{w?: number; tag: string; rows: {text: strin
       {f >= stat.at - 1 && (
         <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 0, marginTop: 18, ...popIn(f, stat.at)}}>
           <span style={{fontFamily: inter, fontWeight: 900, fontSize: 150, lineHeight: 1, color: C.accent, fontVariantNumeric: 'tabular-nums', transform: `scale(${bump(f, stat.at + 14)})`, transformOrigin: 'left bottom', display: 'inline-block'}}>{shown}</span>
-          <span style={{fontFamily: serif, fontStyle: 'italic', fontSize: 64, color: C.text, whiteSpace: 'nowrap'}}>{stat.unit}</span>
+          <span style={{...headline, fontSize: 64, color: C.text, whiteSpace: 'nowrap'}}>{stat.unit}</span>
         </div>
       )}
       {children}

@@ -1,7 +1,7 @@
 // Spec: components/specs/FlowDiagram.md · first built for system-design-of-ai/11-max-tokens-and-truncation. Every text, number and timing is a prop.
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
-import {C, R, BORDER, SHADOW, inter, mono, serif} from '../theme';
+import {C, R, BORDER, SHADOW, inter, mono} from '../theme';
 import {sp, ease, easeOut, enter, popIn} from '../anim';
 import {WarnMark} from '../glyphs';
 import {Tag} from '../Tag/Tag';
@@ -13,7 +13,7 @@ export const FlowLanes: React.FC<{aAt: number; failAt: number; bAt: number; retr
   const f = useCurrentFrame();
   if (f < at - 1 || f > out + 1) return null;
   const cell = (label: string, state: 'ok' | 'bad' | 'grey' | 'idle', key: string, style?: React.CSSProperties) => (
-    <div key={key} style={{width: 150, height: 96, borderRadius: R, boxSizing: 'border-box', border: state === 'ok' ? `3px solid ${C.accent}` : state === 'bad' ? `3px dashed ${C.textDim}` : BORDER, background: state === 'grey' || state === 'bad' ? C.mute : C.white, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, fontFamily: inter, fontWeight: 800, fontSize: 26, color: state === 'grey' || state === 'bad' ? C.textDim : C.ink, ...style}}>
+    <div key={key} style={{width: 150, height: 96, borderRadius: R, boxSizing: 'border-box', border: state === 'ok' ? `3px solid ${C.accent}` : state === 'bad' ? `3px dashed ${C.textDim}` : BORDER, background: state === 'grey' || state === 'bad' ? C.mute : C.surface, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, fontFamily: inter, fontWeight: 800, fontSize: 26, color: state === 'grey' || state === 'bad' ? C.textDim : C.text, ...style}}>
       {label}
       {state === 'ok' && <svg width={30} height={30} viewBox="0 0 48 48" fill="none" stroke={C.accent} strokeWidth={6} strokeLinecap="round" strokeLinejoin="round"><path d="M10 25l9 9 19-20" /></svg>}
       {state === 'bad' && <WarnMark size={30} />}
