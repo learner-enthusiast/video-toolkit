@@ -1,7 +1,7 @@
 // Spec: components/specs/JsonlFile.md · first built in system-design-of-ai/10-batch-inference. Sample text lives in props, never here.
 import React from 'react';
 import {useCurrentFrame, interpolate, Easing} from 'remotion';
-import {C, R, BORDER, SHADOW, inter, mono, serif} from '../theme';
+import {C, R, BORDER, SHADOW, inter, mono} from '../theme';
 import {sp, ease, popIn, enter} from '../anim';
 import {Logo, WarnMark, ServerGlyph, ChipGlyph} from '../glyphs';
 import {Tag} from '../Tag/Tag';
@@ -12,7 +12,7 @@ const Pill: React.FC<{label: React.ReactNode; tone?: 'orange' | 'ink' | 'dim' | 
 export const OK: React.FC<{size?: number; color?: string}> = ({size = 40, color = C.accent}) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" stroke={color} strokeWidth={6} strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0}}><path d="M9 25l10 10 20-22" /></svg>
 );
-const NodeLabel: React.FC<{children: React.ReactNode; size?: number; color?: string}> = ({children, size = 26, color = C.ink}) => (
+const NodeLabel: React.FC<{children: React.ReactNode; size?: number; color?: string}> = ({children, size = 26, color = C.text}) => (
   <div style={{fontFamily: inter, fontWeight: 800, fontSize: size, color, textAlign: 'center', lineHeight: 1.1, whiteSpace: 'nowrap'}}>{children}</div>
 );
 export const JsonlFile: React.FC<{at: number; out: number; stackAt: number; counterAt: number; dropAt: number; chipAt: number; fileName?: string; idPrefix?: string; counter?: [string, string]; logo?: string; lane?: string; chip?: [string, string]}> = ({at, out, stackAt, counterAt, dropAt, chipAt, fileName = 'requests.jsonl', idPrefix = 'user_', counter = ['50,000 lines per file', '20 files'], logo, lane = 'Batch lane', chip = ['completion_window: ', '"24h"']}) => {
@@ -42,7 +42,7 @@ export const JsonlFile: React.FC<{at: number; out: number; stackAt: number; coun
         <div style={{position: 'absolute', left: 40, top: 560, display: 'flex', alignItems: 'center', gap: 16, ...popIn(f, counterAt)}}>
           <span style={{fontFamily: inter, fontWeight: 900, fontSize: 44, color: C.text, whiteSpace: 'nowrap'}}>{counter[0]}</span>
           <span style={{fontFamily: inter, fontWeight: 900, fontSize: 44, color: C.accent}}>→</span>
-          <span style={{fontFamily: inter, fontWeight: 900, fontSize: 44, color: C.white, background: C.accent, borderRadius: 10, padding: '0 14px', whiteSpace: 'nowrap'}}>{counter[1]}</span>
+          <span style={{fontFamily: inter, fontWeight: 900, fontSize: 44, color: C.onAccent, background: C.accent, borderRadius: 10, padding: '0 14px', whiteSpace: 'nowrap'}}>{counter[1]}</span>
         </div>
       )}
       {/* fan of files falling into OpenAI (batch lane) */}
@@ -68,7 +68,7 @@ export const JsonlFile: React.FC<{at: number; out: number; stackAt: number; coun
 };
 export const FileIcon: React.FC<{w?: number; label?: string}> = ({w = 76, label = '.jsonl'}) => (
   <div style={{position: 'relative', width: w, height: w * 1.25}}>
-    <svg width={w} height={w * 1.25} viewBox="0 0 48 60" style={{position: 'absolute', inset: 0}}><path d="M3 3h28l14 14v40H3z" fill={C.white} stroke={C.border} strokeWidth={3} strokeLinejoin="round" /><path d="M31 3v14h14" fill="none" stroke={C.border} strokeWidth={3} strokeLinejoin="round" />{[28, 36, 44].map((y) => <line key={y} x1={10} x2={38} y1={y} y2={y} stroke={C.accent} strokeWidth={3} strokeLinecap="round" />)}</svg>
+    <svg width={w} height={w * 1.25} viewBox="0 0 48 60" style={{position: 'absolute', inset: 0}}><path d="M3 3h28l14 14v40H3z" fill={C.surface} stroke={C.border} strokeWidth={3} strokeLinejoin="round" /><path d="M31 3v14h14" fill="none" stroke={C.border} strokeWidth={3} strokeLinejoin="round" />{[28, 36, 44].map((y) => <line key={y} x1={10} x2={38} y1={y} y2={y} stroke={C.accent} strokeWidth={3} strokeLinecap="round" />)}</svg>
     <div style={{position: 'absolute', left: 0, right: 0, bottom: -26, textAlign: 'center', fontFamily: mono, fontWeight: 700, fontSize: w * 0.24, color: C.text}}>{label}</div>
   </div>
 );

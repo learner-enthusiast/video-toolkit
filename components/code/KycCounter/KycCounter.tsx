@@ -1,15 +1,15 @@
 // Spec: components/specs/KycCounter.md · first built for system-design-of-ai/09-prompt-caching. Every text, number and timing is a prop.
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
-import {C, R, BORDER, SHADOW, inter, mono, accentA, whiteA} from '../theme';
+import {C, R, BORDER, SHADOW, inter, mono, accentA, onAccentA} from '../theme';
 import {ease, popIn} from '../anim';
 import {UserGlyph} from '../glyphs';
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const DocTile: React.FC<{label: string; tone?: 'plain' | 'orange' | 'cheque'}> = ({label, tone = 'plain'}) => (
-  <div style={{width: tone === 'cheque' ? 200 : 150, height: tone === 'cheque' ? 90 : 120, borderRadius: 8, border: tone === 'cheque' ? `3px solid ${C.accent}` : BORDER, background: tone === 'orange' ? C.accent : C.white, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: tone === 'cheque' ? 'center' : 'flex-end', paddingBottom: tone === 'cheque' ? 0 : 6, boxSizing: 'border-box', gap: 4, boxShadow: SHADOW}}>
-    {tone !== 'cheque' && [0, 1].map((i) => <div key={i} style={{width: 64 - i * 16, height: 7, borderRadius: 4, background: tone === 'orange' ? whiteA(0.7) : C.track}} />)}
-    <span style={{fontFamily: inter, fontWeight: 800, fontSize: 28, color: tone === 'orange' ? C.white : tone === 'cheque' ? C.accent : C.ink}}>{label}</span>
+  <div style={{width: tone === 'cheque' ? 200 : 150, height: tone === 'cheque' ? 90 : 120, borderRadius: 8, border: tone === 'cheque' ? `3px solid ${C.accent}` : BORDER, background: tone === 'orange' ? C.accent : C.surface, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: tone === 'cheque' ? 'center' : 'flex-end', paddingBottom: tone === 'cheque' ? 0 : 6, boxSizing: 'border-box', gap: 4, boxShadow: SHADOW}}>
+    {tone !== 'cheque' && [0, 1].map((i) => <div key={i} style={{width: 64 - i * 16, height: 7, borderRadius: 4, background: tone === 'orange' ? onAccentA(0.7) : C.track}} />)}
+    <span style={{fontFamily: inter, fontWeight: 800, fontSize: 28, color: tone === 'orange' ? C.onAccent : tone === 'cheque' ? C.accent : C.text}}>{label}</span>
   </div>
 );
 /** every: each visit slides the full pile + one cheque. shared: A's pile goes into one shared folder; B hands over only a cheque. */
@@ -23,7 +23,7 @@ export const KycCounter: React.FC<{mode: 'every' | 'shared'; visits: number[]; w
   return (
     <div style={{position: 'relative', width: 900, height: 760}}>
       {/* bank counter */}
-      <div style={{position: 'absolute', left: 0, right: 0, top: 470, height: 26, background: C.ink, borderRadius: 8}} />
+      <div style={{position: 'absolute', left: 0, right: 0, top: 470, height: 26, background: C.text, borderRadius: 8}} />
       <div style={{position: 'absolute', left: 620, top: 40, width: 260, height: 430, border: BORDER, borderRadius: R, background: C.surface, boxShadow: SHADOW, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 20, gap: 8}}>
         <span style={{fontFamily: inter, fontWeight: 900, fontSize: 30, color: C.text}}>{desk}</span>
         <span style={{fontFamily: inter, fontWeight: 700, fontSize: 22, color: C.textDim}}>{deskSub}</span>

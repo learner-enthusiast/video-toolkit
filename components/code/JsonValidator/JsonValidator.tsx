@@ -1,7 +1,7 @@
 // Spec: components/specs/JsonValidator.md
 import React from 'react';
 import {useCurrentFrame, random, interpolate, Easing} from 'remotion';
-import {C, R, BORDER, SHADOW, inter, mono, serif} from '../theme';
+import {C, R, BORDER, SHADOW, inter, mono} from '../theme';
 import {sp, pop, ease, enter, popIn, tween, shake} from '../anim';
 import {XMark, TickMark, WarnMark} from '../glyphs';
 import {ProviderNode, Packet, LogoRef} from '../ProviderNode/ProviderNode';
@@ -29,7 +29,7 @@ export const JsonValidator: React.FC<{at: number; bad: string; good: string; rej
       </div>
       {/* bin */}
       <svg style={{position: 'absolute', left: 120, top: 760, ...popIn(f, at + 6)}} width={190} height={180} viewBox="0 0 190 180" fill="none" stroke={C.border} strokeWidth={5} strokeLinejoin="round">
-        <path d="M20 40h150l-16 132H36z" fill={C.white} /><path d="M10 40h170M70 40V18h50v22" strokeLinecap="round" /><path d="M70 70v80M95 70v80M120 70v80" stroke={C.grid} />
+        <path d="M20 40h150l-16 132H36z" fill={C.surface} /><path d="M10 40h170M70 40V18h50v22" strokeLinecap="round" /><path d="M70 70v80M95 70v80M120 70v80" stroke={C.grid} />
       </svg>
       {f < rerunAt + 4 && (
         <div style={{position: 'absolute', left: badX, top: GY - 60 + fall * 330, transform: `rotate(${fall * -14}deg) scale(${1 - fall * 0.45})`, transformOrigin: 'center', opacity: 1 - ease(f, rerunAt - 6, rerunAt + 4)}}>
@@ -38,7 +38,7 @@ export const JsonValidator: React.FC<{at: number; bad: string; good: string; rej
       )}
       {f >= rerunAt && (
         <div style={{position: 'absolute', left: goodX, top: GY - 60, ...enter(f, rerunAt, 1e9, 16)}}>
-          <div style={{position: 'absolute', left: 0, top: -54}}><span style={{fontFamily: inter, fontWeight: 800, fontSize: 26, color: C.white, background: C.accent, borderRadius: 999, padding: '6px 18px'}}>{rerunLabel}</span></div>
+          <div style={{position: 'absolute', left: 0, top: -54}}><span style={{fontFamily: inter, fontWeight: 800, fontSize: 26, color: C.onAccent, background: C.accent, borderRadius: 999, padding: '6px 18px'}}>{rerunLabel}</span></div>
           {card(good, false)}
         </div>
       )}
