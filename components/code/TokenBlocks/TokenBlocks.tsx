@@ -17,7 +17,7 @@ export const Block: React.FC<{p: Piece; size: number; font?: Script; tone?: 'whi
   const bg = tone === 'orange' ? C.accent : tone === 'dim' ? C.mute : C.surface;
   const fg = tone === 'orange' ? C.onAccent : tone === 'dim' ? C.textDim : C.text;
   return (
-    <div style={{position: 'relative', height: size * 1.5, boxSizing: 'border-box', padding: `0 ${size * 0.34}px 0 ${size * (lead ? 0.5 : 0.34)}px`, borderRadius: R * 0.7, background: bg, border: BORDER, display: 'flex', alignItems: 'center', fontFamily: FONT[font], fontWeight: font === 'latin' ? 600 : 500, fontSize: size, lineHeight: 1, color: fg, whiteSpace: 'pre'}}>
+    <div style={{position: 'relative', height: size * 1.5, boxSizing: 'border-box', padding: `0 ${size * 0.34}px 0 ${size * (lead ? 0.5 : 0.34)}px`, borderRadius: R * 0.7, background: bg, border: `2px solid ${C.line}`, display: 'flex', alignItems: 'center', fontFamily: FONT[font], fontWeight: font === 'latin' ? 600 : 500, fontSize: size, lineHeight: 1, color: fg, whiteSpace: 'pre'}}>
       {lead && <span style={{position: 'absolute', left: size * 0.17, top: '50%', width: size * 0.13, height: size * 0.13, marginTop: -size * 0.065, borderRadius: 99, background: tone === 'orange' ? onAccentA(0.7) : C.track}} />}
       {t}
     </div>

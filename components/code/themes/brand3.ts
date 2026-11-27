@@ -35,6 +35,8 @@ export const brand3: Theme = {
   bubblePunch: '#121722',
   logoTile: '#FFFFFF',
   gradientEnd: '#60A5FA',
+  line: '#8A93A6',
+  plain: '#F1F4F9',
   shadow: '0 10px 28px rgba(0,0,0,.4)',
   gridStyle: 'dots',
   headlineFont: 'inter',

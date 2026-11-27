@@ -32,7 +32,7 @@ export const Packet: React.FC<{x1: number; y1: number; x2: number; y2: number; t
 };
 
 /** line that draws itself from `at` over `dur` frames (scene coords, w x h canvas); optional dash and arrowhead */
-export const DrawLine: React.FC<{x1: number; y1: number; x2: number; y2: number; at: number; dur?: number; color?: string; width?: number; dash?: boolean; arrow?: boolean; canvas?: {w: number; h: number}}> = ({x1, y1, x2, y2, at, dur = 12, color = C.border, width = 5, dash, arrow, canvas = {w: 972, h: 970}}) => {
+export const DrawLine: React.FC<{x1: number; y1: number; x2: number; y2: number; at: number; dur?: number; color?: string; width?: number; dash?: boolean; arrow?: boolean; canvas?: {w: number; h: number}}> = ({x1, y1, x2, y2, at, dur = 12, color = C.line, width = 5, dash, arrow, canvas = {w: 972, h: 970}}) => {
   const f = useCurrentFrame();
   if (f < at) return null;
   const p = ease(f, at, at + dur);

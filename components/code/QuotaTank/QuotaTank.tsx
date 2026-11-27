@@ -30,12 +30,12 @@ export const QuotaTank: React.FC<{x: number; y: number; w: number; h: number; at
   const half = (tankW - gap) / 2;
   const tankBody = (bx: number, bw: number, lv: number, key: string, lbl?: string) => (
     <g key={key}>
-      <rect x={bx} y={0} width={bw} height={tankH} rx={14} fill={C.surface} stroke={C.border} strokeWidth={3} />
+      <rect x={bx} y={0} width={bw} height={tankH} rx={14} fill={C.surface} stroke={C.line} strokeWidth={3} />
       <clipPath id={`tk-${key}`}><rect x={bx + 2} y={2} width={bw - 4} height={tankH - 4} rx={12} /></clipPath>
       <g clipPath={`url(#tk-${key})`}>
         <path d={`M${bx} ${tankH * (1 - lv) + wave} Q${bx + bw / 4} ${tankH * (1 - lv) - 8 + wave} ${bx + bw / 2} ${tankH * (1 - lv) + wave} T${bx + bw} ${tankH * (1 - lv) + wave} V${tankH} H${bx} Z`} fill={accentA(0.82)} />
       </g>
-      {[0.25, 0.5, 0.75].map((t) => <line key={t} x1={bx + bw - 22} x2={bx + bw - 6} y1={tankH * t} y2={tankH * t} stroke={C.border} strokeWidth={2} />)}
+      {[0.25, 0.5, 0.75].map((t) => <line key={t} x1={bx + bw - 22} x2={bx + bw - 6} y1={tankH * t} y2={tankH * t} stroke={C.line} strokeWidth={2} />)}
     </g>
   );
   return (
@@ -57,8 +57,8 @@ export const QuotaTank: React.FC<{x: number; y: number; w: number; h: number; at
       <svg width={w} height={h} style={{position: 'absolute', left: 0, top: 0, overflow: 'visible'}}>
         {split < 0.02 ? tankBody(0, tankW, level, 'one') : <>{tankBody(0, half, Math.max(level, 0.7 * split), 'a')}{tankBody(half + gap, half, 0.85, 'b')}</>}
         {/* taps */}
-        <path d={`M${w * 0.22} ${tankH} v40 h-26`} fill="none" stroke={C.border} strokeWidth={12} strokeLinecap="round" />
-        <path d={`M${w * 0.78} ${tankH} v40 h26`} fill="none" stroke={C.border} strokeWidth={6} strokeLinecap="round" />
+        <path d={`M${w * 0.22} ${tankH} v40 h-26`} fill="none" stroke={C.line} strokeWidth={12} strokeLinecap="round" />
+        <path d={`M${w * 0.78} ${tankH} v40 h26`} fill="none" stroke={C.line} strokeWidth={6} strokeLinecap="round" />
         {/* thick stream: report job (in the split it pours from the batch side) */}
         {(drainAt === undefined || f < drainAt + 44 || split > 0.5) && <rect x={w * 0.22 - 26 - 14} y={tankH + 46} width={28} height={70} rx={8} fill={C.accent} opacity={drainAt !== undefined && f >= drainAt ? 0.9 : 0.3} />}
         {/* thin stream: live assistant, sputters dry */}

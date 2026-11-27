@@ -66,6 +66,10 @@ export type Theme = {
   logoTile: string;
   /** second stop of the big-number gradient (the first is accent) */
   gradientEnd: string;
+  /** diagram edges, axes, rails and outlines that must stay visible */
+  line: string;
+  /** text that was left at the browser default */
+  plain: string;
   /** the one shadow */
   shadow: string;
   /** page pattern drawn by gridBg() */

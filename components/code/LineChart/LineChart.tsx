@@ -24,8 +24,8 @@ export const LineChart: React.FC<{w?: number; h?: number; drawAt: number; spikeA
   return (
     <div style={{position: 'relative', width: w, height: h, background: C.surface, border: BORDER, borderRadius: R, boxShadow: SHADOW, ...enter(f, at, out)}}>
       <svg width={w} height={h} style={{position: 'absolute', inset: 0, overflow: 'visible'}}>
-        <line x1={x0} y1={y0} x2={x1} y2={y0} stroke={C.border} strokeWidth={2} />
-        <line x1={x0} y1={y1} x2={x0} y2={y0} stroke={C.border} strokeWidth={2} />
+        <line x1={x0} y1={y0} x2={x1} y2={y0} stroke={C.line} strokeWidth={2} />
+        <line x1={x0} y1={y1} x2={x0} y2={y0} stroke={C.line} strokeWidth={2} />
         <line x1={X(v7 - 0.5)} y1={y1 - 20} x2={X(v7 - 0.5)} y2={y0} stroke={C.textDim} strokeWidth={3} strokeDasharray="8 8" opacity={p2} />
         <path d={path(spend)} fill="none" stroke={C.text} strokeWidth={6} strokeLinecap="round" strokeLinejoin="round" strokeDasharray={2000} strokeDashoffset={2000 * (1 - p1)} />
         <path d={path(len.slice(0, v7))} fill="none" stroke={C.textDim} strokeWidth={6} strokeLinecap="round" strokeDasharray={1200} strokeDashoffset={1200 * (1 - p1)} />

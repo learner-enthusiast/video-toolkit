@@ -101,7 +101,7 @@ export const AppTile: React.FC<{at: number; label?: string; screen?: React.React
   const {x, y, w, h} = GEO.app;
   return (
     <div style={{position: 'absolute', left: x, top: y, width: w, height: h, opacity: Math.min(1, v * 1.5), transform: `scale(${0.85 + 0.15 * v})`}}>
-      <div style={{position: 'absolute', inset: 0, borderRadius: 30, border: `${ring ? 5 : 4}px solid ${ring ? C.accent : C.border}`, background: C.inkFill, boxSizing: 'border-box', padding: 6, boxShadow: SHADOW}}>
+      <div style={{position: 'absolute', inset: 0, borderRadius: 30, border: `${ring ? 5 : 4}px solid ${ring ? C.accent : C.line}`, background: C.inkFill, boxSizing: 'border-box', padding: 6, boxShadow: SHADOW}}>
         <div style={{position: 'relative', width: '100%', height: '100%', borderRadius: 22, overflow: 'hidden', background: C.bg}}>
           {screen}
           <div style={{position: 'absolute', inset: 0, background: C.inkFill, opacity: dark}} />

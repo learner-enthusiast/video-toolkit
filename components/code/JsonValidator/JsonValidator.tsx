@@ -22,13 +22,13 @@ export const JsonValidator: React.FC<{at: number; bad: string; good: string; rej
     <div style={{position: 'absolute', inset: 0}}>
       {/* gate */}
       <div style={{position: 'absolute', left: GX - 10, top: GY - 170, ...popIn(f, at)}}>
-        <div style={{position: 'absolute', left: 0, top: 0, width: 16, height: 340, background: C.border, borderRadius: 8}} />
+        <div style={{position: 'absolute', left: 0, top: 0, width: 16, height: 340, background: C.line, borderRadius: 8}} />
         <div style={{position: 'absolute', left: -150, top: -64, width: 316, textAlign: 'center', fontFamily: inter, fontWeight: 800, fontSize: 30, color: C.text}}>{gateLabel}</div>
         {f >= rejectAt && f < rerunAt && <div style={{position: 'absolute', left: -22, top: 140, ...popIn(f, rejectAt)}}><WarnMark size={60} /></div>}
         {f >= passAt + 12 && <div style={{position: 'absolute', left: -18, top: 140, ...popIn(f, passAt + 12)}}><TickMark size={56} /></div>}
       </div>
       {/* bin */}
-      <svg style={{position: 'absolute', left: 120, top: 760, ...popIn(f, at + 6)}} width={190} height={180} viewBox="0 0 190 180" fill="none" stroke={C.border} strokeWidth={5} strokeLinejoin="round">
+      <svg style={{position: 'absolute', left: 120, top: 760, ...popIn(f, at + 6)}} width={190} height={180} viewBox="0 0 190 180" fill="none" stroke={C.line} strokeWidth={5} strokeLinejoin="round">
         <path d="M20 40h150l-16 132H36z" fill={C.surface} /><path d="M10 40h170M70 40V18h50v22" strokeLinecap="round" /><path d="M70 70v80M95 70v80M120 70v80" stroke={C.grid} />
       </svg>
       {f < rerunAt + 4 && (

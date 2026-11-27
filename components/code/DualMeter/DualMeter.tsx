@@ -17,10 +17,10 @@ const Bar: React.FC<{g: Geometry; x: number; frac: number; color: string; title:
   const fh = frac <= 0 ? 0 : Math.max(min, frac * (h - 4));
   return (
     <div style={{position: 'absolute', left: x, top: y, width: w, opacity: o}}>
-      <div style={{position: 'relative', width: w, height: h, boxSizing: 'border-box', border: dark ? `2px solid ${whiteA(0.6)}` : BORDER, borderRadius: R, background: dark ? C.darkPanel : C.surface}}>
+      <div style={{position: 'relative', width: w, height: h, boxSizing: 'border-box', border: dark ? `2px solid ${whiteA(0.6)}` : `2px solid ${C.line}`, borderRadius: R, background: dark ? C.darkPanel : C.surface}}>
         <div style={{position: 'absolute', left: 0, right: 0, bottom: 0, height: fh, background: color, borderRadius: `0 0 ${R - 2}px ${R - 2}px`}} />
         {Array.from({length: Math.max(0, notches - 1)}).map((_, i) => (
-          <div key={i} style={{position: 'absolute', left: 0, width: 26, bottom: ((i + 1) * (h - 4)) / notches, height: 2, background: dark ? whiteA(0.5) : C.border, opacity: 0.55}} />
+          <div key={i} style={{position: 'absolute', left: 0, width: 26, bottom: ((i + 1) * (h - 4)) / notches, height: 2, background: dark ? whiteA(0.5) : C.line, opacity: 0.55}} />
         ))}
       </div>
       <div style={{marginTop: 14, textAlign: 'center', fontFamily: inter, fontWeight: 800, fontSize: 28, letterSpacing: '0.1em', textTransform: 'uppercase', color: dark ? whiteA(0.65) : C.textDim, whiteSpace: 'nowrap'}}>{title}</div>
@@ -42,7 +42,7 @@ export type Seg = {frac: number; kind: 'free' | 'held' | 'spent' | 'back'; label
 export const BudgetBar: React.FC<{x: number; y: number; w: number; h: number; segs: Seg[]; dark?: boolean; radius?: number}> = ({x, y, w, h, segs, dark, radius = R}) => {
   let acc = 0;
   return (
-    <div style={{position: 'absolute', left: x, top: y, width: w, height: h, boxSizing: 'border-box', border: dark ? `2px solid ${whiteA(0.6)}` : BORDER, borderRadius: radius, background: dark ? C.darkPanel : C.surface, overflow: 'hidden'}}>
+    <div style={{position: 'absolute', left: x, top: y, width: w, height: h, boxSizing: 'border-box', border: dark ? `2px solid ${whiteA(0.6)}` : `2px solid ${C.line}`, borderRadius: radius, background: dark ? C.darkPanel : C.surface, overflow: 'hidden'}}>
       {segs.map((s, i) => {
         const left = acc * (w - 4);
         acc += s.frac;
@@ -50,7 +50,7 @@ export const BudgetBar: React.FC<{x: number; y: number; w: number; h: number; se
         if (sw < 0.5) return null;
         const bg = s.kind === 'free' || s.kind === 'back' ? C.accent : s.kind === 'held' ? HATCH : dark ? C.darkPanel : C.fill;
         return (
-          <div key={i} style={{position: 'absolute', left, top: 0, width: sw, height: '100%', background: bg, borderRight: i < segs.length - 1 ? `2px solid ${C.border}` : undefined, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, overflow: 'hidden'}}>
+          <div key={i} style={{position: 'absolute', left, top: 0, width: sw, height: '100%', background: bg, borderRight: i < segs.length - 1 ? `2px solid ${C.line}` : undefined, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, overflow: 'hidden'}}>
             {s.lock !== undefined && sw > 46 && <div style={{background: C.surface, border: BORDER, borderRadius: 99, width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', transform: `scale(${s.lock})`, flexShrink: 0}}><IconLock size={28} /></div>}
             {s.label && sw > 150 && <span style={{fontFamily: mono, fontWeight: 700, fontSize: 28, color: s.kind === 'spent' ? C.textDim : C.text, background: s.kind === 'held' ? surfaceA(0.88) : 'transparent', borderRadius: 6, padding: '0 8px', whiteSpace: 'nowrap'}}>{s.label}</span>}
           </div>

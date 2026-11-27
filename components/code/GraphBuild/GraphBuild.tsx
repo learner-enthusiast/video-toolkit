@@ -42,7 +42,7 @@ export const GraphBuild: React.FC<{
   const litOn = lit ? Math.min(ease(f, lit.at, lit.at + 8), lit.out ? ease(f, lit.out - 8, lit.out, 1, 0) : 1) : 0;
   const dimOn = dimOthers ? Math.min(ease(f, dimOthers.at, dimOthers.at + 10), dimOthers.out ? ease(f, dimOthers.out - 8, dimOthers.out, 1, 0) : 1) : 0;
   const isLit = (id: string) => !!lit && lit.ids.includes(id);
-  const ink = dark ? whiteA(0.75) : C.border;
+  const ink = dark ? whiteA(0.75) : C.line;
   return (
     <div style={{position: 'absolute', left: 0, top: 0, width: w, height: h}}>
       {/* clusters (behind) */}

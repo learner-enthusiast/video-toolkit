@@ -29,7 +29,7 @@ export const CalendarFlip: React.FC<{days: {label: string; at: number}[]; files:
             </div>
             <div style={{display: 'flex', flexDirection: 'column', gap: 18, marginTop: 30}}>
               {files.map((fl, j) => (
-                <div key={fl} style={{...enter(f, d.at + 6 + j * 4, 1e9, 30), padding: '16px 12px', borderRadius: 10, border: `2px solid ${grey > 0.5 ? C.textDim : C.border}`, background: C.surface, fontFamily: mono, fontWeight: 700, fontSize: 22, color: grey > 0.5 ? C.textDim : C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{fl}</div>
+                <div key={fl} style={{...enter(f, d.at + 6 + j * 4, 1e9, 30), padding: '16px 12px', borderRadius: 10, border: `2px solid ${grey > 0.5 ? C.textDim : C.line}`, background: C.surface, fontFamily: mono, fontWeight: 700, fontSize: 22, color: grey > 0.5 ? C.textDim : C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{fl}</div>
               ))}
             </div>
             {i > 0 && f >= d.at + 6 + files.length * 4 && (

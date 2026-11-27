@@ -33,7 +33,7 @@ export const OutputShuffle: React.FC<{at: number; out: number; shuffleAt: number
     <div style={{position: 'absolute', inset: 0, opacity: ease(f, out - 8, out, 1, 0)}}>
       {/* input */}
       <div style={{position: 'absolute', left: 20, top: 60, width: 300, height: 450, background: C.surface, border: BORDER, borderRadius: R, boxShadow: SHADOW, ...enter(f, at)}}>
-        <div style={{fontFamily: mono, fontWeight: 700, fontSize: 26, padding: '16px 18px'}}>{files[0]}</div>
+        <div style={{fontFamily: mono, fontWeight: 700, fontSize: 26, padding: '16px 18px', color: C.plain}}>{files[0]}</div>
       </div>
       {NAMES.map((n, i) => (
         <div key={n} style={{position: 'absolute', left: 36, top: rowY(i), width: 268, height: 70, display: 'flex', alignItems: 'center', gap: 12, ...enter(f, at + 4 + i * 4)}}>
@@ -44,7 +44,7 @@ export const OutputShuffle: React.FC<{at: number; out: number; shuffleAt: number
       ))}
       {/* output */}
       <div style={{position: 'absolute', left: 350, top: 60, width: 300, height: 450, background: C.surface, border: BORDER, borderRadius: R, boxShadow: SHADOW, ...enter(f, at + 6)}}>
-        <div style={{fontFamily: mono, fontWeight: 700, fontSize: 26, padding: '16px 18px'}}>{files[1]}</div>
+        <div style={{fontFamily: mono, fontWeight: 700, fontSize: 26, padding: '16px 18px', color: C.plain}}>{files[1]}</div>
       </div>
       {NAMES.map((n, name) => {
         const k = outRowOf(name);
@@ -66,7 +66,7 @@ export const OutputShuffle: React.FC<{at: number; out: number; shuffleAt: number
         const shakeX = bad && f >= mapAt + 12 && f < mapAt + 26 ? Math.sin((f - mapAt) * 2.2) * 6 : 0;
         return (
           <div key={n} style={{position: 'absolute', left: 720, top: phoneY(i), width: 220, height: 200, opacity: Math.min(1, v * 1.4), transform: `translateX(${shakeX}px) scale(${0.85 + 0.15 * v})`}}>
-            <div style={{width: 130, height: 200, boxSizing: 'border-box', border: `4px solid ${C.border}`, borderRadius: 22, background: C.surface, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 14, gap: 8}}>
+            <div style={{width: 130, height: 200, boxSizing: 'border-box', border: `4px solid ${C.line}`, borderRadius: 22, background: C.surface, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 14, gap: 8}}>
               <div style={{width: 46, height: 46, borderRadius: 99, background: C.inkFill, color: C.onInk, fontFamily: inter, fontWeight: 800, fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>{n[0]}</div>
               {landed && <div key={`${landed}-${wrong}`} style={{fontFamily: inter, fontWeight: 800, fontSize: 18, color: bad ? C.textDim : C.text, textAlign: 'center', lineHeight: 1.1, ...popIn(f, wrong ? mapAt + 10 : snapAt + 8 + i * 4)}}>{landed}'s<br />{item}</div>}
             </div>
