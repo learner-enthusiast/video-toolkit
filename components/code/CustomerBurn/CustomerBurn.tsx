@@ -1,7 +1,7 @@
 // Spec: components/specs/CustomerBurn.md
 import React from 'react';
 import {useCurrentFrame, random, interpolate, Easing} from 'remotion';
-import {C, R, BORDER, SHADOW, inter, mono, whiteA} from '../theme';
+import {C, R, BORDER, SHADOW, inter, mono, whiteA, headline} from '../theme';
 import {sp, pop, ease, enter, popIn, tween, shake} from '../anim';
 import {XMark, TickMark, WarnMark} from '../glyphs';
 import {ProviderNode, Packet, LogoRef} from '../ProviderNode/ProviderNode';
