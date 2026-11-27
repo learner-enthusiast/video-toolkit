@@ -33,7 +33,7 @@ export const SyntaxTree: React.FC<{file: string; code: string[]; codeAt: number;
         const hot = HOT.includes(n.kind);
         return (
           <div key={n.id} style={{position: 'absolute', left: n.x, top: n.y, transform: `translate(-50%,-50%) scale(${0.8 + 0.2 * v})`, opacity: Math.min(1, v * 1.4)}}>
-            <div style={{padding: '8px 16px', borderRadius: 12, border: BORDER, background: hot ? C.accent : C.white, color: hot ? C.white : C.ink, boxShadow: SHADOW, textAlign: 'center', whiteSpace: 'nowrap'}}>
+            <div style={{padding: '8px 16px', borderRadius: 12, border: BORDER, background: hot ? C.accent : C.surface, color: hot ? C.onAccent : C.text, boxShadow: SHADOW, textAlign: 'center', whiteSpace: 'nowrap'}}>
               <div style={{fontFamily: inter, fontWeight: 700, fontSize: 18, opacity: 0.75, textTransform: 'uppercase', letterSpacing: '0.06em'}}>{n.kind}</div>
               <div style={{fontFamily: mono, fontWeight: 700, fontSize: 24}}>{n.label}</div>
             </div>

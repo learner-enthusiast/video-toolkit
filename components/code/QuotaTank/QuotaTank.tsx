@@ -1,7 +1,7 @@
 // Spec: components/specs/QuotaTank.md · first built in system-design-of-ai/10-batch-inference. Sample text lives in props, never here.
 import React from 'react';
 import {useCurrentFrame, interpolate, Easing} from 'remotion';
-import {C, R, BORDER, SHADOW, inter, mono, serif} from '../theme';
+import {C, R, BORDER, SHADOW, inter, mono, accentA} from '../theme';
 import {sp, ease, popIn, enter} from '../anim';
 import {Logo, WarnMark, ServerGlyph, ChipGlyph} from '../glyphs';
 import {Tag} from '../Tag/Tag';
@@ -12,7 +12,7 @@ const Pill: React.FC<{label: React.ReactNode; tone?: 'orange' | 'ink' | 'dim' | 
 export const OK: React.FC<{size?: number; color?: string}> = ({size = 40, color = C.accent}) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" stroke={color} strokeWidth={6} strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0}}><path d="M9 25l10 10 20-22" /></svg>
 );
-const NodeLabel: React.FC<{children: React.ReactNode; size?: number; color?: string}> = ({children, size = 26, color = C.ink}) => (
+const NodeLabel: React.FC<{children: React.ReactNode; size?: number; color?: string}> = ({children, size = 26, color = C.text}) => (
   <div style={{fontFamily: inter, fontWeight: 800, fontSize: size, color, textAlign: 'center', lineHeight: 1.1, whiteSpace: 'nowrap'}}>{children}</div>
 );
 export const QuotaTank: React.FC<{x: number; y: number; w: number; h: number; at: number; out?: number; labelAt: number; drainAt?: number; dryAt?: number; splitAt?: number; flowAgainAt?: number; label?: string; dark?: boolean; logo?: string; taps?: [React.ReactNode, React.ReactNode]; splitLabels?: [string, string]; errorText?: string}> = ({x, y, w, h, at, out = 1e9, labelAt, drainAt, dryAt, splitAt, flowAgainAt, label = 'Shared limit · per account', logo, taps = ['Thick tap', 'Thin tap'], splitLabels = ['Batch queue', 'Live limit'], errorText = '429'}) => {
@@ -30,10 +30,10 @@ export const QuotaTank: React.FC<{x: number; y: number; w: number; h: number; at
   const half = (tankW - gap) / 2;
   const tankBody = (bx: number, bw: number, lv: number, key: string, lbl?: string) => (
     <g key={key}>
-      <rect x={bx} y={0} width={bw} height={tankH} rx={14} fill={C.white} stroke={C.border} strokeWidth={3} />
+      <rect x={bx} y={0} width={bw} height={tankH} rx={14} fill={C.surface} stroke={C.border} strokeWidth={3} />
       <clipPath id={`tk-${key}`}><rect x={bx + 2} y={2} width={bw - 4} height={tankH - 4} rx={12} /></clipPath>
       <g clipPath={`url(#tk-${key})`}>
-        <path d={`M${bx} ${tankH * (1 - lv) + wave} Q${bx + bw / 4} ${tankH * (1 - lv) - 8 + wave} ${bx + bw / 2} ${tankH * (1 - lv) + wave} T${bx + bw} ${tankH * (1 - lv) + wave} V${tankH} H${bx} Z`} fill="rgba(228,87,46,.82)" />
+        <path d={`M${bx} ${tankH * (1 - lv) + wave} Q${bx + bw / 4} ${tankH * (1 - lv) - 8 + wave} ${bx + bw / 2} ${tankH * (1 - lv) + wave} T${bx + bw} ${tankH * (1 - lv) + wave} V${tankH} H${bx} Z`} fill={accentA(0.82)} />
       </g>
       {[0.25, 0.5, 0.75].map((t) => <line key={t} x1={bx + bw - 22} x2={bx + bw - 6} y1={tankH * t} y2={tankH * t} stroke={C.border} strokeWidth={2} />)}
     </g>
@@ -68,10 +68,10 @@ export const QuotaTank: React.FC<{x: number; y: number; w: number; h: number; at
         })}
       </svg>
       <div style={{position: 'absolute', left: w * 0.22 - 26 - 60, top: tankH + 124, width: 120, ...popIn(f, at + 6)}}><NodeLabel size={22}>{taps[0]}</NodeLabel></div>
-      <div style={{position: 'absolute', left: w * 0.78 + 26 - 60, top: tankH + 124, width: 120, ...popIn(f, at + 10)}}><NodeLabel size={22} color={dry > 0.5 && again < 0.5 ? C.textDim : C.ink}>{taps[1]}</NodeLabel></div>
+      <div style={{position: 'absolute', left: w * 0.78 + 26 - 60, top: tankH + 124, width: 120, ...popIn(f, at + 10)}}><NodeLabel size={22} color={dry > 0.5 && again < 0.5 ? C.textDim : C.text}>{taps[1]}</NodeLabel></div>
       {dry > 0.4 && again < 0.5 && (
         <div style={{position: 'absolute', left: w * 0.78 + 26 - 80, top: tankH + 190, display: 'flex', alignItems: 'center', gap: 6, ...popIn(f, dryAt! + 6)}}>
-          <WarnMark size={40} /><span style={{fontFamily: mono, fontWeight: 700, fontSize: 30, color: C.white, background: C.textDim, borderRadius: 8, padding: '2px 10px', border: BORDER}}>{errorText}</span>
+          <WarnMark size={40} /><span style={{fontFamily: mono, fontWeight: 700, fontSize: 30, color: C.onAccent, background: C.textDim, borderRadius: 8, padding: '2px 10px', border: BORDER}}>{errorText}</span>
         </div>
       )}
       {again > 0.5 && <div style={{position: 'absolute', left: w * 0.78 + 26 - 20, top: tankH + 190, ...popIn(f, flowAgainAt! + 4)}}><OK size={40} /></div>}

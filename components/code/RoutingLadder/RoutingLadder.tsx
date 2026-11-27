@@ -44,9 +44,9 @@ export const RoutingLadder: React.FC<{
           <div key={i} style={{position: 'absolute', left: L.x, top: rungY(i), width: L.w, height: L.rh}}>
             <div style={{position: 'absolute', inset: 0, borderRadius: R, border: `3px dashed ${C.grid}`, opacity: fr * (1 - v)}} />
             {built && (
-              <div style={{position: 'absolute', inset: 0, boxSizing: 'border-box', borderRadius: R, background: C.surface, border: on ? `5px solid ${C.accent}` : BORDER, boxShadow: SHADOW, display: 'flex', alignItems: 'center', gap: 20, padding: '0 22px', opacity: Math.min(1, v * 1.4), transform: `scale(${0.9 + 0.1 * v})`}}>
-                <div style={{width: 50, height: 50, borderRadius: 99, flexShrink: 0, background: on ? C.accent : C.ink, color: C.white, fontFamily: inter, fontWeight: 900, fontSize: 30, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>{i + 1}</div>
-                <span style={{fontFamily: inter, fontWeight: 900, fontSize: 46, color: on ? C.accent : C.ink, whiteSpace: 'nowrap'}}>{r.label}</span>
+              <div style={{position: 'absolute', inset: 0, boxSizing: 'border-box', borderRadius: R, background: C.surface, border: on ? `5px solid ${C.accent2}` : BORDER, boxShadow: SHADOW, display: 'flex', alignItems: 'center', gap: 20, padding: '0 22px', opacity: Math.min(1, v * 1.4), transform: `scale(${0.9 + 0.1 * v})`}}>
+                <div style={{width: 50, height: 50, borderRadius: 99, flexShrink: 0, background: on ? C.accent2 : C.inkFill, color: on ? C.onAccent : C.onInk, fontFamily: inter, fontWeight: 900, fontSize: 30, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>{i + 1}</div>
+                <span style={{fontFamily: inter, fontWeight: 900, fontSize: 46, color: on ? C.accent2 : C.text, whiteSpace: 'nowrap'}}>{r.label}</span>
                 <span style={{flex: 1}} />
                 <span style={{fontFamily: mono, fontWeight: 600, fontSize: 30, color: C.textDim, whiteSpace: 'nowrap'}}>{r.sub}</span>
               </div>
@@ -59,12 +59,12 @@ export const RoutingLadder: React.FC<{
         const hits = drops.filter((d) => d.lane === lane && f >= d.land + 6).length;
         const price = prices?.[lane];
         return (
-          <div key={lane} style={{position: 'absolute', left: laneX(lane), top: L.laneY, width: laneW, height: L.laneH, boxSizing: 'border-box', borderRadius: R, border: `${big ? 5 : 3}px solid ${big ? C.accent : C.border}`, background: big ? accentA(0.07) : C.white, display: 'flex', alignItems: 'center', gap: 12, padding: '0 18px', opacity: fr}}>
+          <div key={lane} style={{position: 'absolute', left: laneX(lane), top: L.laneY, width: laneW, height: L.laneH, boxSizing: 'border-box', borderRadius: R, border: `${big ? 5 : 3}px solid ${big ? C.accent : C.border}`, background: big ? accentA(0.07) : C.surface, display: 'flex', alignItems: 'center', gap: 12, padding: '0 18px', opacity: fr}}>
             <ChipGlyph size={46} big={big} />
-            <span style={{fontFamily: inter, fontWeight: 900, fontSize: 36, color: big ? C.accent : C.ink, whiteSpace: 'nowrap'}}>{lanes[lane]}</span>
+            <span style={{fontFamily: inter, fontWeight: 900, fontSize: 36, color: big ? C.accent : C.text, whiteSpace: 'nowrap'}}>{lanes[lane]}</span>
             <span style={{flex: 1}} />
             {laneNote && f >= laneNote.at - 1 ? (
-              <span style={{...popIn(f, laneNote.at + (big ? 6 : 0)), fontFamily: inter, fontWeight: 900, fontSize: 38, color: big ? C.accent : C.ink, whiteSpace: 'nowrap', flexShrink: 0}}>{laneNote[lane]}</span>
+              <span style={{...popIn(f, laneNote.at + (big ? 6 : 0)), fontFamily: inter, fontWeight: 900, fontSize: 38, color: big ? C.accent : C.text, whiteSpace: 'nowrap', flexShrink: 0}}>{laneNote[lane]}</span>
             ) : (
               (price || hits > 0) && <span style={{fontFamily: mono, fontWeight: 700, fontSize: 30, color: C.textDim, whiteSpace: 'nowrap', flexShrink: 0}}>{price ?? ''}{hits ? `${price ? ' · ' : ''}${hits}` : ''}</span>
             )}

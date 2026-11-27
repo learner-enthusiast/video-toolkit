@@ -2,7 +2,7 @@
 // Word pieces must come from a real tokenizer. Reusable for any "vocabulary / lookup table" explanation.
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
-import {C, R, BORDER, SHADOW, inter, mono, serif, deva, bengali} from '../theme';
+import {C, R, BORDER, SHADOW, inter, mono, deva, bengali, headline} from '../theme';
 import {sp, ease, enter, popIn} from '../anim';
 import {WarnMark} from '../glyphs';
 import {Tag} from '../Tag/Tag';
@@ -27,7 +27,7 @@ export const TokenDictionary: React.FC<{entries: string[]; words: DictWord[]; at
       {/* book */}
       {[0, 1].map((side) => (
         <div key={side} style={{position: 'absolute', left: side === 0 ? bx : bx + pageW, top: by, width: pageW, height: pageH, boxSizing: 'border-box', background: C.surface, border: BORDER, borderRadius: side === 0 ? `${R}px 0 0 ${R}px` : `0 ${R}px ${R}px 0`, boxShadow: SHADOW, transform: `scaleX(${0.1 + 0.9 * open})`, transformOrigin: side === 0 ? 'right center' : 'left center', padding: '26px 30px', overflow: 'hidden',
-          backgroundImage: `repeating-linear-gradient(${C.white} 0 63px, ${C.grid} 63px 65px)`, backgroundPosition: '0 36px'}}>
+          backgroundImage: `repeating-linear-gradient(${C.surface} 0 63px, ${C.grid} 63px 65px)`, backgroundPosition: '0 36px'}}>
           <div style={{fontFamily: inter, fontWeight: 800, fontSize: 20, letterSpacing: '0.14em', color: C.textDim, textTransform: 'uppercase', marginBottom: 6}}>{side === 0 ? vocabLabel : entriesNote}</div>
           {entries.slice(side * half, side * half + half).map((e, k) => {
             const idx = side * half + k;
@@ -35,7 +35,7 @@ export const TokenDictionary: React.FC<{entries: string[]; words: DictWord[]; at
             const ring = idx === hitEntry ? ease(f, lookAt[active], lookAt[active] + 6) * ease(f, lookAt[active] + 12, lookAt[active] + 16, 1, 0) : 0;
             return (
               <div key={e} style={{display: 'flex', alignItems: 'baseline', gap: 14, height: 63, opacity: f < ea ? 0 : Math.min(1, (f - ea) / 6)}}>
-                <span style={{fontFamily: serif, fontStyle: 'italic', fontSize: 44, color: C.text, padding: '0 10px', margin: '0 -10px', borderRadius: 8, boxShadow: ring > 0 ? `0 0 0 ${3 * ring}px ${C.accent}` : 'none'}}>{e}</span>
+                <span style={{...headline, fontSize: 44, color: C.text, padding: '0 10px', margin: '0 -10px', borderRadius: 8, boxShadow: ring > 0 ? `0 0 0 ${3 * ring}px ${C.accent}` : 'none'}}>{e}</span>
                 <span style={{fontFamily: mono, fontSize: 20, color: C.textDim}}>{ids[idx] !== undefined ? `#${ids[idx]}` : ''}</span>
               </div>
             );
@@ -61,7 +61,7 @@ export const TokenDictionary: React.FC<{entries: string[]; words: DictWord[]; at
               ? <div style={popIn(f, res)}><Block p={{text: wd.pieces[0].text}} size={36} tone="orange" /></div>
               : f >= res + 8 && <TokenBlocks pieces={wd.pieces} at={res + 8} stagger={3} size={36} font={wd.font} w={560} counter={false} gap={6} />)}
             {f >= res + (wd.found ? 4 : 8 + wd.pieces.length * 3 + 4) && (
-              <div style={{marginLeft: 'auto', fontFamily: inter, fontWeight: 900, fontSize: 34, color: wd.found ? C.accent : C.ink, ...popIn(f, res + (wd.found ? 4 : 8 + wd.pieces.length * 3 + 4))}}>{wd.pieces.length}</div>
+              <div style={{marginLeft: 'auto', fontFamily: inter, fontWeight: 900, fontSize: 34, color: wd.found ? C.accent : C.text, ...popIn(f, res + (wd.found ? 4 : 8 + wd.pieces.length * 3 + 4))}}>{wd.pieces.length}</div>
             )}
           </div>
         );

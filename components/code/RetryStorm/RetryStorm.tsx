@@ -1,7 +1,7 @@
 // Spec: components/specs/RetryStorm.md
 import React from 'react';
 import {useCurrentFrame, random, interpolate, Easing} from 'remotion';
-import {C, R, BORDER, SHADOW, inter, mono, serif} from '../theme';
+import {C, R, BORDER, SHADOW, inter, mono} from '../theme';
 import {sp, pop, ease, enter, popIn, tween, shake} from '../anim';
 import {XMark, TickMark, WarnMark} from '../glyphs';
 import {ProviderNode, Packet, LogoRef} from '../ProviderNode/ProviderNode';
@@ -38,7 +38,7 @@ export const RetryStorm: React.FC<{at: number; out: number; scatterAt?: number; 
     <div style={{position: 'absolute', inset: 0}}>
       {clients.map((c) => (
         <div key={c.i} style={{position: 'absolute', left: c.x, top: c.y, ...enter(f, at + (c.i % 6) * 2, 1e9, 16)}}>
-          <svg width={64} height={64} viewBox="0 0 48 48" fill="none" stroke={C.ink} strokeWidth={3}><rect x="14" y="4" width="20" height="40" rx="5" fill={C.white} /><path d="M21 38h6" strokeLinecap="round" /></svg>
+          <svg width={64} height={64} viewBox="0 0 48 48" fill="none" stroke={C.text} strokeWidth={3}><rect x="14" y="4" width="20" height="40" rx="5" fill={C.surface} /><path d="M21 38h6" strokeLinecap="round" /></svg>
         </div>
       ))}
       {pk}

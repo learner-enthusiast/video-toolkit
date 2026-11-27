@@ -2,7 +2,7 @@
 // `pieces` must come from a real tokenizer (decode token by token); never hand-split.
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
-import {C, R, BORDER, inter, deva, bengali} from '../theme';
+import {C, R, BORDER, inter, deva, bengali, onAccentA} from '../theme';
 import {sp, ease, enter} from '../anim';
 
 export type Piece = {text: string; byte?: boolean};
@@ -14,11 +14,11 @@ export const Block: React.FC<{p: Piece; size: number; font?: Script; tone?: 'whi
   if (p.byte) return <div style={{width: size * 0.62, height: size * 1.5, borderRadius: R * 0.7, background: C.tint, border: `2px solid ${C.textDim}`, boxSizing: 'border-box'}} />;
   const lead = p.text.startsWith(' ');
   const t = lead ? p.text.slice(1) : p.text;
-  const bg = tone === 'orange' ? C.accent : tone === 'dim' ? C.mute : C.white;
-  const fg = tone === 'orange' ? C.white : tone === 'dim' ? C.textDim : C.ink;
+  const bg = tone === 'orange' ? C.accent : tone === 'dim' ? C.mute : C.surface;
+  const fg = tone === 'orange' ? C.onAccent : tone === 'dim' ? C.textDim : C.text;
   return (
     <div style={{position: 'relative', height: size * 1.5, boxSizing: 'border-box', padding: `0 ${size * 0.34}px 0 ${size * (lead ? 0.5 : 0.34)}px`, borderRadius: R * 0.7, background: bg, border: BORDER, display: 'flex', alignItems: 'center', fontFamily: FONT[font], fontWeight: font === 'latin' ? 600 : 500, fontSize: size, lineHeight: 1, color: fg, whiteSpace: 'pre'}}>
-      {lead && <span style={{position: 'absolute', left: size * 0.17, top: '50%', width: size * 0.13, height: size * 0.13, marginTop: -size * 0.065, borderRadius: 99, background: tone === 'orange' ? 'rgba(255,255,255,.7)' : C.track}} />}
+      {lead && <span style={{position: 'absolute', left: size * 0.17, top: '50%', width: size * 0.13, height: size * 0.13, marginTop: -size * 0.065, borderRadius: 99, background: tone === 'orange' ? onAccentA(0.7) : C.track}} />}
       {t}
     </div>
   );
@@ -40,7 +40,7 @@ export const TokenBlocks: React.FC<{pieces: Piece[]; at: number; stagger?: numbe
         <div style={{display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12, ...enter(f, at - 2, 1e9, 10)}}>
           <div style={{fontFamily: inter, fontWeight: 800, fontSize: 32, color: C.text, display: 'flex', alignItems: 'center', gap: 12}}>{label}</div>
           {counter && (
-            <div style={{fontFamily: inter, fontWeight: 900, fontSize: 52, color: counter === 'orange' ? C.accent : C.ink, fontVariantNumeric: 'tabular-nums', transform: `scale(${bumpV})`, transformOrigin: 'right center'}}>
+            <div style={{fontFamily: inter, fontWeight: 900, fontSize: 52, color: counter === 'orange' ? C.accent : C.text, fontVariantNumeric: 'tabular-nums', transform: `scale(${bumpV})`, transformOrigin: 'right center'}}>
               {landed}<span style={{fontSize: 30, fontWeight: 800, color: C.textDim, marginLeft: 10}}>{countLabel}</span>
             </div>
           )}

@@ -1,7 +1,7 @@
 // Spec: components/specs/TokenStream.md · first built for system-design-of-ai/11-max-tokens-and-truncation. Every text, number and timing is a prop.
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
-import {C, R, BORDER, SHADOW, inter, mono, serif} from '../theme';
+import {C, R, BORDER, SHADOW, inter, mono} from '../theme';
 import {sp, ease, easeOut, enter, popIn} from '../anim';
 import {WarnMark} from '../glyphs';
 import {Tag} from '../Tag/Tag';
@@ -22,7 +22,7 @@ export const TokenStream: React.FC<{w?: number; chips: string[]; cutTail: string
   const shk = hit && f < capAt + 12 ? Math.sin((f - capAt) * 2.6) * 7 * (1 - (f - capAt) / 12) : 0;
   const box = (label: string, value: string, tone: 'ink' | 'orange', show: boolean) => (
     <div style={{flex: 1, borderRadius: R, border: `2px solid ${tone === 'orange' ? C.accent : C.border}`, background: C.surface, padding: '12px 14px', display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: show ? 1 : 0.25}}>
-      <span style={{fontFamily: inter, fontWeight: 900, fontSize: 76, lineHeight: 1.05, color: tone === 'orange' ? C.accent : C.ink, fontVariantNumeric: 'tabular-nums', transform: `scale(${hit ? 1 + 0.06 * Math.sin(Math.PI * Math.min(1, (f - capAt) / 10)) : 1})`}}>{value}</span>
+      <span style={{fontFamily: inter, fontWeight: 900, fontSize: 76, lineHeight: 1.05, color: tone === 'orange' ? C.accent : C.text, fontVariantNumeric: 'tabular-nums', transform: `scale(${hit ? 1 + 0.06 * Math.sin(Math.PI * Math.min(1, (f - capAt) / 10)) : 1})`}}>{value}</span>
       <span style={{fontFamily: inter, fontWeight: 700, fontSize: 26, color: C.textDim}}>{label}</span>
     </div>
   );
@@ -39,11 +39,11 @@ export const TokenStream: React.FC<{w?: number; chips: string[]; cutTail: string
           const a = to + i * per;
           const v = sp(f, a, {damping: 12, stiffness: 220});
           const newest = i === shown - 1 && !hit;
-          return <span key={i} style={{fontFamily: mono, fontWeight: 700, fontSize: 38, padding: '8px 10px', borderRadius: 10, border: BORDER, background: newest ? C.accent : C.white, color: newest ? C.white : C.ink, whiteSpace: 'pre', transform: `translateY(${(1 - v) * -60}px)`, opacity: Math.min(1, v * 1.6)}}>{c}</span>;
+          return <span key={i} style={{fontFamily: mono, fontWeight: 700, fontSize: 38, padding: '8px 10px', borderRadius: 10, border: BORDER, background: newest ? C.accent : C.surface, color: newest ? C.onAccent : C.text, whiteSpace: 'pre', transform: `translateY(${(1 - v) * -60}px)`, opacity: Math.min(1, v * 1.6)}}>{c}</span>;
         })}
-        <span style={{width: 12, height: 150, borderRadius: 6, background: C.ink, flexShrink: 0, opacity: Math.min(1, wallV * 2), transform: `translateY(${(1 - wallV) * -200}px)`}} />
+        <span style={{width: 12, height: 150, borderRadius: 6, background: C.text, flexShrink: 0, opacity: Math.min(1, wallV * 2), transform: `translateY(${(1 - wallV) * -200}px)`}} />
         {hit && (
-          <span style={{fontFamily: mono, fontWeight: 700, fontSize: 38, padding: '8px 10px', borderRadius: 10, border: `2px dashed ${C.textDim}`, color: C.textDim, background: `repeating-linear-gradient(135deg, #E7E3DC 0 8px, ${C.white} 8px 16px)`, whiteSpace: 'pre', opacity: ease(f, capAt + 6, capAt + 14)}}>{cutTail}</span>
+          <span style={{fontFamily: mono, fontWeight: 700, fontSize: 38, padding: '8px 10px', borderRadius: 10, border: `2px dashed ${C.textDim}`, color: C.textDim, background: `repeating-linear-gradient(135deg, ${C.stripe} 0 8px, ${C.surface} 8px 16px)`, whiteSpace: 'pre', opacity: ease(f, capAt + 6, capAt + 14)}}>{cutTail}</span>
         )}
       </div>
       {hit && <div style={{position: 'absolute', left: 30, top: 104, ...popIn(f, capAt + 2)}}><Tag label={labels.wall} tone="ink" size={26} monoFont /></div>}
@@ -56,7 +56,7 @@ export const TokenStream: React.FC<{w?: number; chips: string[]; cutTail: string
       <div style={{position: 'absolute', left: 30, right: 30, top: 590, height: 26, borderRadius: 13, background: C.fill, border: `2px solid ${C.grid}`, overflow: 'hidden'}}>
         <div style={{width: `${(tok / cap) * 100}%`, height: '100%', background: C.accent}} />
       </div>
-      <div style={{position: 'absolute', left: 30, right: 30, top: 630, display: 'flex', justifyContent: 'space-between', fontFamily: mono, fontWeight: 700, fontSize: 24, color: C.textDim}}><span>0</span><span style={{color: hit ? C.ink : C.textDim}}>{labels.cap} · {cap.toLocaleString('en-IN')}</span></div>
+      <div style={{position: 'absolute', left: 30, right: 30, top: 630, display: 'flex', justifyContent: 'space-between', fontFamily: mono, fontWeight: 700, fontSize: 24, color: C.textDim}}><span>0</span><span style={{color: hit ? C.text : C.textDim}}>{labels.cap} · {cap.toLocaleString('en-IN')}</span></div>
     </div>
   );
 };

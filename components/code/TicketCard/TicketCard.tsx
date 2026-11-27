@@ -1,7 +1,7 @@
 // Spec: components/specs/TicketCard.md · a Jira/Linear-style ticket with an orange stub; optional DONE stamp for the payoff.
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
-import {C, R, BORDER, SHADOW, inter, whiteA} from '../theme';
+import {C, R, BORDER, SHADOW, inter, surfaceA} from '../theme';
 import {sp, popIn} from '../anim';
 import {Tag} from '../Tag/Tag';
 
@@ -25,7 +25,7 @@ export const TicketCard: React.FC<{id: string; title: string; meta?: string; kic
       {done !== undefined && f >= done - 1 && (
         <div style={{position: 'absolute', right: 26, top: '50%', marginTop: -44}}>
           <div style={{...popIn(f, done), transformOrigin: 'center'}}>
-            <div style={{transform: 'rotate(-8deg)', padding: '8px 26px', border: `5px solid ${C.accent}`, borderRadius: R, color: C.accent, fontFamily: inter, fontWeight: 900, fontSize: 52, letterSpacing: '0.06em', background: whiteA(0.9)}}>{doneText}</div>
+            <div style={{transform: 'rotate(-8deg)', padding: '8px 26px', border: `5px solid ${C.accent}`, borderRadius: R, color: C.accent, fontFamily: inter, fontWeight: 900, fontSize: 52, letterSpacing: '0.06em', background: surfaceA(0.9)}}>{doneText}</div>
           </div>
         </div>
       )}
