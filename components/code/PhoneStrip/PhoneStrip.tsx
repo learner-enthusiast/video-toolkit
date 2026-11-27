@@ -25,7 +25,7 @@ export const PhoneStrip: React.FC<{w?: number; compact?: boolean; nodes?: PSNode
   const cx = [w * 0.13, w * 0.5, w * 0.87];
   const cy = s / 2;
   const o = ease(f, out - 8, out, 1, 0);
-  const ink = dark ? C.white : C.ink;
+  const ink = dark ? C.onPunch : C.text;
   const callState = (c: PSCall) => {
     const cp = ease(f, c.at, c.at + 12);
     const dp = c.deadAt !== undefined ? ease(f, c.deadAt, c.deadAt + 8) : 0;
@@ -49,7 +49,7 @@ export const PhoneStrip: React.FC<{w?: number; compact?: boolean; nodes?: PSNode
           const {x1, x2} = cord(i as 0 | 1);
           const st = callState(c);
           if (f < c.at - 1) return null;
-          const col = mix(C.orange, C.dim, st.dp);
+          const col = mix(C.accent, C.textDim, st.dp);
           const L = len(x1, x2);
           return (
             <path key={i} d={wave(x1, x2, compact ? 5 : 7)} fill="none" stroke={col} strokeWidth={compact ? 5 : 6} strokeLinecap="round"
@@ -69,7 +69,7 @@ export const PhoneStrip: React.FC<{w?: number; compact?: boolean; nodes?: PSNode
             const e = Easing.inOut(Easing.cubic)(u);
             const x = fl.dir === 1 ? x1 + (x2 - x1) * e : x2 - (x2 - x1) * e;
             const y = cy + (compact ? 5 : 7) * Math.sin(((x - x1) / (x2 - x1)) * Math.PI * 6);
-            dots.push(<circle key={`${k}-${t0}`} cx={x} cy={y} r={compact ? 8 : 10} fill={C.orange} stroke={C.border} strokeWidth={2} />);
+            dots.push(<circle key={`${k}-${t0}`} cx={x} cy={y} r={compact ? 8 : 10} fill={C.accent} stroke={C.border} strokeWidth={2} />);
           }
           return dots;
         })}
@@ -81,7 +81,7 @@ export const PhoneStrip: React.FC<{w?: number; compact?: boolean; nodes?: PSNode
         const st = callState(c);
         const mx = (x1 + x2) / 2;
         const hs = compact ? 40 : 54;
-        const col = mix(C.orange, '#C9C4BA', st.dp);
+        const col = mix(C.accent, C.fade, st.dp);
         return (
           <React.Fragment key={i}>
             <div style={{position: 'absolute', left: mx - hs / 2, top: cy - hs / 2 - 2, transform: `translate(${st.hp * 8}px, ${-st.hp * 26 + Math.max(0, st.hp - 0.6) * 40}px) rotate(${-38 * st.hp}deg) scale(${pop(f, c.at + 6)})`}}>
@@ -101,7 +101,7 @@ export const PhoneStrip: React.FC<{w?: number; compact?: boolean; nodes?: PSNode
         const ic = Math.round(s * 0.5);
         return (
           <div key={i} style={{position: 'absolute', left: cx[i] - s / 2, top: 0, width: s, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, opacity: Math.min(1, v * 1.5), transform: `scale(${0.8 + 0.2 * v})`}}>
-            <div style={{width: s, height: s, boxSizing: 'border-box', borderRadius: R, border: BORDER, background: C.white, boxShadow: dark ? 'none' : SHADOW, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+            <div style={{width: s, height: s, boxSizing: 'border-box', borderRadius: R, border: BORDER, background: C.surface, boxShadow: dark ? 'none' : SHADOW, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
               {n.icon === 'user' ? <UserGlyph size={ic} /> : n.icon === 'server' ? <ServerGlyph size={ic} /> : <ChipGlyph size={ic} big />}
             </div>
             <div style={{fontFamily: inter, fontWeight: 800, fontSize: compact ? 24 : 30, color: ink, whiteSpace: 'nowrap'}}>{n.label}</div>
@@ -115,7 +115,7 @@ export const PhoneStrip: React.FC<{w?: number; compact?: boolean; nodes?: PSNode
         const so = ease(f, (slot.out ?? 1e9) - 8, slot.out ?? 1e9, 1, 0);
         return (
           <div style={{position: 'absolute', left: cx[1], top: s + (compact ? 44 : 54), transform: 'translateX(-50%)', opacity: so}}>
-            <div style={popIn(f, slot.at)}><div style={{transform: `scale(${filled ? 0.9 + 0.1 * fv : 1})`, padding: compact ? '6px 16px' : '8px 20px', borderRadius: 999, border: `3px ${filled ? 'solid' : 'dashed'} ${C.orange}`, background: filled ? C.orange : 'transparent', color: filled ? C.white : C.orange, fontFamily: mono, fontWeight: 700, fontSize: compact ? 22 : 28, whiteSpace: 'nowrap'}}>
+            <div style={popIn(f, slot.at)}><div style={{transform: `scale(${filled ? 0.9 + 0.1 * fv : 1})`, padding: compact ? '6px 16px' : '8px 20px', borderRadius: 999, border: `3px ${filled ? 'solid' : 'dashed'} ${C.accent}`, background: filled ? C.accent : 'transparent', color: filled ? C.onAccent : C.accent, fontFamily: mono, fontWeight: 700, fontSize: compact ? 22 : 28, whiteSpace: 'nowrap'}}>
               {filled ? slot.fillLabel ?? slot.label : slot.label}
             </div></div>
           </div>

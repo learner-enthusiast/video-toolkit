@@ -9,10 +9,10 @@ export type TagTone = 'orange' | 'ink' | 'dim' | 'outline';
 
 /** Static pill. tone: orange (filled), ink (filled dark), dim (grey = "bad"), outline (white) */
 export const Tag: React.FC<{label: React.ReactNode; tone?: TagTone; size?: number; monoFont?: boolean; style?: React.CSSProperties}> = ({label, tone = 'outline', size = 34, monoFont, style}) => {
-  const bg = tone === 'orange' ? C.orange : tone === 'ink' ? C.ink : tone === 'dim' ? C.tint : C.white;
-  const fg = tone === 'orange' || tone === 'ink' ? C.white : tone === 'dim' ? C.dim : C.ink;
+  const bg = tone === 'orange' ? C.accent : tone === 'ink' ? C.inkFill : tone === 'dim' ? C.tint : C.surface;
+  const fg = tone === 'orange' ? C.onAccent : tone === 'ink' ? C.onInk : tone === 'dim' ? C.textDim : C.text;
   return (
-    <div style={{display: 'inline-flex', alignItems: 'center', gap: 10, padding: `${size * 0.32}px ${size * 0.62}px`, borderRadius: 999, border: tone === 'dim' ? `2px solid ${C.dim}` : BORDER, background: bg, color: fg, fontFamily: monoFont ? mono : inter, fontWeight: monoFont ? 600 : 800, fontSize: size, lineHeight: 1, whiteSpace: 'nowrap', ...style}}>
+    <div style={{display: 'inline-flex', alignItems: 'center', gap: 10, padding: `${size * 0.32}px ${size * 0.62}px`, borderRadius: 999, border: tone === 'dim' ? `2px solid ${C.textDim}` : BORDER, background: bg, color: fg, fontFamily: monoFont ? mono : inter, fontWeight: monoFont ? 600 : 800, fontSize: size, lineHeight: 1, whiteSpace: 'nowrap', ...style}}>
       {label}
     </div>
   );

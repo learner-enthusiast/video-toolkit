@@ -54,6 +54,12 @@ import {BarCompare} from '../BarCompare/BarCompare';
 import {FlowLanes} from '../FlowDiagram/FlowDiagram';
 import {LineChart} from '../LineChart/LineChart';
 import {ChatBubble} from '../ChatBubble/ChatBubble';
+import {CamFrame} from '../brand2/CamFrame/CamFrame';
+import {HighlighterText} from '../brand2/HighlighterText/HighlighterText';
+import {ReceiptCard} from '../brand2/ReceiptCard/ReceiptCard';
+import {AlertFlash} from '../brand2/AlertFlash/AlertFlash';
+import {NumberList} from '../brand3/NumberList/NumberList';
+import {TimerRing} from '../brand3/TimerRing/TimerRing';
 
 /** the 972x970 grid card every scene is drawn in */
 const Stage: React.FC<{children: React.ReactNode}> = ({children}) => (
@@ -80,7 +86,7 @@ const previews: Record<string, React.FC> = {
   MathStrip: () => <Stage><At x={70} y={420}><MathStrip size={50} terms={[{text: '1,200', at: 4}, {text: '30', at: 12, op: '×'}, {text: '36,000', at: 20, op: '='}]} /></At></Stage>,
   SourceChip: () => <Stage><At x={200} y={440}><SourceChip at={4} size={40}>pricing page, 2026</SourceChip></At></Stage>,
   CodeCard: () => <Stage><At x={60} y={150}><CodeCard at={0} width={850} size={34} cps={50} tags={['server', 'pseudo-code']} lines={['const key = hash(req)', 'if (cache.has(key)) {', '  return cache.get(key) // hit', '}', 'return model(req)']} hl={[{line: 2, at: 6}]} /></At></Stage>,
-  ThresholdRing: () => <Stage><div style={{position: 'absolute', left: 486, top: 485, width: 26, height: 26, borderRadius: 99, background: C.ink, transform: 'translate(-50%,-50%)'}} /><ThresholdRing x={486} y={485} r={150} at={0} steps={[{at: 10, r: 260}]} label="threshold" labelAt={12} /></Stage>,
+  ThresholdRing: () => <Stage><div style={{position: 'absolute', left: 486, top: 485, width: 26, height: 26, borderRadius: 99, background: C.text, transform: 'translate(-50%,-50%)'}} /><ThresholdRing x={486} y={485} r={150} at={0} steps={[{at: 10, r: 260}]} label="threshold" labelAt={12} /></Stage>,
   DualMeter: () => <Stage><DualMeter req={0.5} tok={0.72} reqText="3" tokText="7,200" /><BudgetBar x={40} y={885} w={880} h={64} segs={[{frac: 0.45, kind: 'spent', label: 'spent'}, {frac: 0.25, kind: 'held', label: 'held', lock: 1}, {frac: 0.3, kind: 'free'}]} /></Stage>,
   TradeScale: () => <Stage><TradeScale x={486} y={330} at={0} angle={-7} label="trade-off" leftAt={6} rightAt={12} left={<Tag label="Fast" tone="orange" size={40} />} right={<Tag label="Cheap" tone="ink" size={40} />} /></Stage>,
   PullRequestCard: () => (
@@ -110,14 +116,14 @@ const previews: Record<string, React.FC> = {
       </div>
     </Stage>
   ),
-  CounterPair: () => <div style={{width: 1080, height: 1080, background: C.dark, position: 'relative'}}><div style={{position: 'absolute', left: 54, top: 250, width: 972, height: 600}}><CounterPair left={{label: 'Attempts', to: 1200, at: 2, dur: 30}} right={{label: 'Successes', value: 0, at: 36}} y={0} /></div></div>,
+  CounterPair: () => <div style={{width: 1080, height: 1080, background: C.punchBg, position: 'relative'}}><div style={{position: 'absolute', left: 54, top: 250, width: 972, height: 600}}><CounterPair left={{label: 'Attempts', to: 1200, at: 2, dur: 30}} right={{label: 'Successes', value: 0, at: 36}} y={0} /></div></div>,
   ProviderNode: () => <Stage><At x={60} y={200}><ProviderNode label="Primary API" sub="down" dim={0.6} badge={<XMark size={48} />} /></At><At x={560} y={200}><ProviderNode label="Backup" sub="healthy" ring={1} badge={<TickMark size={52} />} /></At></Stage>,
   RetryStorm: () => <Stage><RetryStorm at={-60} out={1e9} nodeLogo={{file: 'openai.svg', w: 76, h: 76}} nodeLabel="Provider" waveEvery={20} /></Stage>,
   CircuitBreakerMCB: () => <Stage><At x={400} y={260}><CircuitBreakerMCB at={-60} tripAt={20} failAts={[-40, -30, -20]} w={170} /></At></Stage>,
   FallbackLadder: () => <Stage><FallbackLadder x={170} y={20} dropAt={0} landAt={50} rungs={[{label: 'Primary', sub: 'down', at: -60, failAt: 4}, {label: 'Same model, other region', sub: 'second', at: -55, failAt: 22}, {label: 'Other provider', sub: 'third', at: -50, failAt: 38}, {label: 'Human', sub: 'last stop', at: -45}]} /></Stage>,
   ErrorTriage: () => <Stage><ErrorTriage at={-60} items={[{code: '429', lane: 0, at: -50}, {code: '503', lane: 0, at: -40}, {code: '400', lane: 1, at: -30}]} lanes={[{label: 'Retry', tone: 'orange', at: -55}, {label: 'Never retry', tone: 'dim', at: -55}]} /></Stage>,
   JsonValidator: () => <Stage><JsonValidator at={-60} bad={'{ "status": "o'} good={'{ "status": "ok" }'} rejectAt={-40} rerunAt={-20} passAt={-4} /></Stage>,
-  CustomerBurn: () => <div style={{width: 1080, height: 1080, background: C.dark, position: 'relative'}}><div style={{position: 'absolute', left: 54, top: 55, width: 972, height: 970}}><CustomerBurn tagAt={-90} gridAt={-70} leaveAt={-50} countAt={-40} countTo={1000000} unit="₹1,000" unitNote="per customer" gridLabel="× 2,000 customers" leaveTo="Rival" leaveNote="half leave" counterNote="lost" /></div></div>,
+  CustomerBurn: () => <div style={{width: 1080, height: 1080, background: C.punchBg, position: 'relative'}}><div style={{position: 'absolute', left: 54, top: 55, width: 972, height: 970}}><CustomerBurn tagAt={-90} gridAt={-70} leaveAt={-50} countAt={-40} countTo={1000000} unit="₹1,000" unitNote="per customer" gridLabel="× 2,000 customers" leaveTo="Rival" leaveNote="half leave" counterNote="lost" /></div></div>,
   PhoneLine: () => (
     <Stage>
       <AppTile at={-60} />
@@ -151,6 +157,13 @@ const previews: Record<string, React.FC> = {
   PrefixMatch: () => <Stage><At x={160} y={380}><PrefixMatch at={0} step={3} size={28} rows={[['You', 'are', 'the', 'claims', 'assistant', '…'], ['You', 'are', 'the', 'claims', 'bot', '…']]} /></At></Stage>,
   KycCounter: () => <Stage><At x={50} y={160}><KycCounter mode="every" visits={[0, 30]} /></At></Stage>,
   BillCard: () => <Stage><At x={150} y={330}><BillCard w={740} logo="openai.svg" tag="example" strike="₹35.6 lakh" amount="₹3.6 lakh" line="same 5,000 tokens · cached" /></At></Stage>,
+  // brand signature pieces: render each preview.png in its own brand
+  CamFrame: () => <Stage><CamFrame cam={3} startTime="14-03-2026 02:13:07" kicker="server room" at={0} /></Stage>,
+  HighlighterText: () => <Stage><At x={70} y={330}><HighlighterText size={62} lines={['A retry is only safe', 'if the write is', 'idempotent.']} marks={[{word: 'retry', at: 14}, {word: 'idempotent', at: 30}]} /></At></Stage>,
+  ReceiptCard: () => <Stage><At x={166} y={220}><ReceiptCard title="usage" rows={[{label: 'input tokens', value: '1,200'}, {label: 'output tokens', value: '2,000'}, {label: 'retries', value: '0'}]} alertRow={{row: 2, value: '14', at: 36}} at={0} /></At></Stage>,
+  AlertFlash: () => <Stage><AlertFlash word="Power failure" sub="write not flushed" at={20} size={104} /></Stage>,
+  NumberList: () => <Stage><At x={36} y={260}><NumberList items={['Token', 'Context', 'Embedding', 'RAG', 'Agent', 'Eval']} litAt={[10, 20, 30]} /></At></Stage>,
+  TimerRing: () => <Stage><At x={276} y={275}><TimerRing from={60} at={0} size={420} /></At></Stage>,
 };
 
 export const Root: React.FC = () => (

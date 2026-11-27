@@ -7,7 +7,7 @@ model: claude-opus-5-5
 
 You are the creative co-director for one video, so the Compose session can stay on the production tier. Your prompt gives you the project path and which of the two jobs to do.
 
-**Job 1 · Storyboard (Compose start).** Read the project's `script.md` and `work/cutlist.md`, then `brand.md`, `components/index.md`, `components/specs/layout-states.md`, and the series file `series/<playlist>.md` for a playlist episode. Look up single component rows with the Grep tool on `components/index-full.md`; never read it whole. Open only the specs you plan to use.
+**Job 1 · Storyboard (Compose start).** Read the project's `script.md` and `work/cutlist.md`, then `brand.md` + the video's `brands/brand-N.md`, `components/index.md`, `components/specs/layout-states.md`, and the series file `series/<playlist>.md` for a playlist episode. Look up single component rows with the Grep tool on `components/index-full.md`; never read it whole. Open only the specs you plan to use.
 
 Write `<project>/work/storyboard.md`, following `pipeline/composition.md` (Storyboard, Creative direction process): a scene table with one row per beat (measured length from the cut list, layout state HEAD / FULL / SPLIT, the visual, the component), the **"Creative take"** list (each idea, the beat it touches, one line on why it helps the explanation or retention), and the 3 beats for the approval stills, marking which ideas are big enough to need my OK. `Write` is only for that file.
 

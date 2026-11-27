@@ -1,7 +1,7 @@
 // Spec: components/specs/PromptStack.md (request-stack variant) · first built for system-design-of-ai/09-prompt-caching. Every text, number and timing is a prop.
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
-import {C, R, BORDER, SHADOW, inter, mono} from '../theme';
+import {C, R, BORDER, SHADOW, inter, mono, accentA} from '../theme';
 import {sp, ease, popIn, enter} from '../anim';
 import {WarnMark, IconLock} from '../glyphs';
 import {Tag} from '../Tag/Tag';
@@ -55,42 +55,42 @@ export const PromptStack: React.FC<StackProps> = (p) => {
     const below = k !== 'clause' && t < 0.5 ? brk : 0;
     return {position: 'absolute', left: PAD, width: p.w - PAD * 2, top: y, height: H[k], opacity: Math.min(1, s * 1.3) * (1 - 0.6 * below), transform: `translateY(${(1 - s) * -18}px)`, borderRadius: 10, boxSizing: 'border-box', overflow: 'hidden'};
   };
-  const statBorder = (on: number) => (on > 0.02 ? `3px solid ${C.orange}` : BORDER);
+  const statBorder = (on: number) => (on > 0.02 ? `3px solid ${C.accent}` : BORDER);
   const head = (label: string, count?: React.ReactNode, countAt?: number) => (
     <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 14px', background: C.paper, borderBottom: `2px solid ${C.grid}`}}>
-      <span style={{fontFamily: inter, fontWeight: 800, fontSize: d ? 26 : 22, letterSpacing: '0.06em', textTransform: 'uppercase', color: C.ink}}>{label}</span>
-      {count && (countAt === undefined || f >= countAt) && <span style={{fontFamily: mono, fontWeight: 700, fontSize: d ? 26 : 22, color: C.white, background: statOn > 0.5 || pulse > 0.2 ? C.orange : C.ink, borderRadius: 8, padding: '2px 10px', ...(countAt !== undefined ? popIn(f, countAt) : {})}}>{count}</span>}
+      <span style={{fontFamily: inter, fontWeight: 800, fontSize: d ? 26 : 22, letterSpacing: '0.06em', textTransform: 'uppercase', color: C.text}}>{label}</span>
+      {count && (countAt === undefined || f >= countAt) && <span style={{fontFamily: mono, fontWeight: 700, fontSize: d ? 26 : 22, color: statOn > 0.5 || pulse > 0.2 ? C.onAccent : C.onInk, background: statOn > 0.5 || pulse > 0.2 ? C.accent : C.inkFill, borderRadius: 8, padding: '2px 10px', ...(countAt !== undefined ? popIn(f, countAt) : {})}}>{count}</span>}
     </div>
   );
   const lines = (ls: StackLine[] | undefined, n: number) => (
     <div style={{padding: '10px 16px', display: 'flex', flexDirection: 'column', gap: 8}}>
-      {ls ? ls.map((l, i) => f >= l.at - 1 && <div key={i} style={{fontFamily: inter, fontWeight: 600, fontSize: 27, color: C.ink, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 10, ...enter(f, l.at, 1e9, 10)}}>{l.text}</div>)
+      {ls ? ls.map((l, i) => f >= l.at - 1 && <div key={i} style={{fontFamily: inter, fontWeight: 600, fontSize: 27, color: C.text, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 10, ...enter(f, l.at, 1e9, 10)}}>{l.text}</div>)
         : Array.from({length: n}).map((_, i) => <div key={i} style={{height: 10, width: `${[86, 70, 78][i % 3]}%`, background: C.track, borderRadius: 5}} />)}
     </div>
   );
   const cur = p.cursor ?? -1;
   return (
-    <div style={{position: 'relative', width: p.w, height: total, background: C.white, border: BORDER, borderRadius: R, boxShadow: SHADOW, opacity: 1 - (p.dim ?? 0) * 0.6}}>
+    <div style={{position: 'relative', width: p.w, height: total, background: C.surface, border: BORDER, borderRadius: R, boxShadow: SHADOW, opacity: 1 - (p.dim ?? 0) * 0.6}}>
       {/* clause strip: the plant */}
-      <div style={{...blk('clause'), background: glow > 0.02 ? C.orange : C.mute, border: brk > 0.02 && t < 0.5 ? `3px solid ${C.dim}` : `2px solid ${C.grid}`, display: 'flex', alignItems: 'center', gap: 10, padding: '0 14px'}}>
+      <div style={{...blk('clause'), background: glow > 0.02 ? C.accent : C.mute, border: brk > 0.02 && t < 0.5 ? `3px solid ${C.textDim}` : `2px solid ${C.grid}`, display: 'flex', alignItems: 'center', gap: 10, padding: '0 14px'}}>
         {brk > 0.02 && t < 0.5 && <WarnMark size={34} />}
-        <span style={{fontFamily: mono, fontWeight: 700, fontSize: 22, color: glow > 0.5 ? C.white : C.dim, whiteSpace: 'nowrap'}}>{p.clause ?? 'retrieved chunks'}</span>
+        <span style={{fontFamily: mono, fontWeight: 700, fontSize: 22, color: glow > 0.5 ? C.onAccent : C.textDim, whiteSpace: 'nowrap'}}>{p.clause ?? 'retrieved chunks'}</span>
         {p.changesAt !== undefined && f >= p.changesAt && <span style={{marginLeft: 'auto', ...popIn(f, p.changesAt)}}><Tag label={p.changesLabel ?? 'changes'} tone="dim" size={20} /></span>}
       </div>
-      <div style={{...blk('sys'), border: statBorder(statOn), background: C.white}}>
+      <div style={{...blk('sys'), border: statBorder(statOn), background: C.surface}}>
         {head(p.sysLabel ?? 'system prompt', p.sysCount, p.k3At)}
         {d ? lines(p.sysLines, 4) : lines(undefined, 3)}
       </div>
-      <div style={{...blk('tools'), border: statBorder(statOn), background: C.white}}>
+      <div style={{...blk('tools'), border: statBorder(statOn), background: C.surface}}>
         {head(p.toolsLabel ?? 'tools', p.toolsCount, p.k2At)}
-        {d && p.toolLines ? lines(p.toolLines, 0) : <div style={{display: 'flex', gap: 8, padding: '8px 14px'}}>{(p.tools ?? []).map((x) => <span key={x} style={{fontFamily: mono, fontSize: 18, fontWeight: 700, color: C.ink, background: C.fill, borderRadius: 6, padding: '2px 8px'}}>{x}</span>)}</div>}
+        {d && p.toolLines ? lines(p.toolLines, 0) : <div style={{display: 'flex', gap: 8, padding: '8px 14px'}}>{(p.tools ?? []).map((x) => <span key={x} style={{fontFamily: mono, fontSize: 18, fontWeight: 700, color: C.text, background: C.fill, borderRadius: 6, padding: '2px 8px'}}>{x}</span>)}</div>}
       </div>
       <div style={{...blk('details'), background: C.mute, border: `2px solid ${C.grid}`, display: 'flex', alignItems: 'center', padding: '0 14px', gap: 10}}>
-        <span style={{fontFamily: mono, fontWeight: 700, fontSize: 22, color: C.dim}}>{p.detailsLabel ?? 'user details'}</span>
+        <span style={{fontFamily: mono, fontWeight: 700, fontSize: 22, color: C.textDim}}>{p.detailsLabel ?? 'user details'}</span>
         {p.changesAt !== undefined && f >= p.changesAt && <span style={{marginLeft: 'auto', ...popIn(f, p.changesAt + 3)}}><Tag label={p.changesLabel ?? 'changes'} tone="dim" size={20} /></span>}
       </div>
-      <div style={{...blk('q'), background: C.ink, display: 'flex', alignItems: 'center', padding: '0 16px', gap: 10}}>
-        <span style={{fontFamily: inter, fontWeight: 800, fontSize: 26, color: C.white, whiteSpace: 'nowrap'}}>Q: {p.q ?? 'the question'}</span>
+      <div style={{...blk('q'), background: C.inkFill, display: 'flex', alignItems: 'center', padding: '0 16px', gap: 10}}>
+        <span style={{fontFamily: inter, fontWeight: 800, fontSize: 26, color: C.onInk, whiteSpace: 'nowrap'}}>Q: {p.q ?? 'the question'}</span>
         {p.changesAt !== undefined && f >= p.changesAt && <span style={{marginLeft: 'auto', ...popIn(f, p.changesAt + 6)}}><Tag label={p.changesLabel ?? 'changes'} tone="dim" size={20} /></span>}
       </div>
       {/* the 5,000-token bracket + lock on the static blocks */}
@@ -98,16 +98,16 @@ export const PromptStack: React.FC<StackProps> = (p) => {
         const y0 = lerp(A.y.sys, B.y.sys, t), y1 = lerp(A.y.tools, B.y.tools, t) + H.tools;
         return (
           <div style={{position: 'absolute', left: p.w - 6, top: y0, height: y1 - y0, width: 70, display: 'flex', alignItems: 'center', opacity: Math.max(lock, pulse)}}>
-            <div style={{position: 'absolute', left: 4, top: 4, bottom: 4, width: 16, borderTop: `4px solid ${C.orange}`, borderBottom: `4px solid ${C.orange}`, borderRight: `4px solid ${C.orange}`, borderRadius: '0 8px 8px 0'}} />
-            {lock > 0.01 && <div style={{position: 'absolute', left: 30, transform: `scale(${0.6 + 0.4 * lock})`, background: C.orange, borderRadius: 12, padding: 6, border: BORDER}}><IconLock size={44} color={C.white} /></div>}
+            <div style={{position: 'absolute', left: 4, top: 4, bottom: 4, width: 16, borderTop: `4px solid ${C.accent}`, borderBottom: `4px solid ${C.accent}`, borderRight: `4px solid ${C.accent}`, borderRadius: '0 8px 8px 0'}} />
+            {lock > 0.01 && <div style={{position: 'absolute', left: 30, transform: `scale(${0.6 + 0.4 * lock})`, background: C.accent, borderRadius: 12, padding: 6, border: BORDER}}><IconLock size={44} color={C.onAccent} /></div>}
           </div>
         );
       })()}
       {p.lockLabel && lock > 0.01 && <div style={{position: 'absolute', left: PAD, right: PAD, top: -58, display: 'flex', justifyContent: 'flex-end', ...popIn(f, (p.lockAt ?? 0) + 6)}}>{p.lockLabel}</div>}
       {/* reading cursor */}
       {cur >= 0 && (
-        <div style={{position: 'absolute', left: 44, right: 8, top: PAD + cur * (total - PAD * 2) - 3, height: 6, background: C.orange, borderRadius: 3, boxShadow: `0 0 0 4px rgba(228,87,46,.2)`}}>
-          <div style={{position: 'absolute', left: -34, top: -18, fontFamily: inter, fontWeight: 900, fontSize: 30, color: C.orange}}>▶</div>
+        <div style={{position: 'absolute', left: 44, right: 8, top: PAD + cur * (total - PAD * 2) - 3, height: 6, background: C.accent, borderRadius: 3, boxShadow: `0 0 0 4px ${accentA(0.2)}`}}>
+          <div style={{position: 'absolute', left: -34, top: -18, fontFamily: inter, fontWeight: 900, fontSize: 30, color: C.accent}}>▶</div>
         </div>
       )}
     </div>

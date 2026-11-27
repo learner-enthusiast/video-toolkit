@@ -1,7 +1,7 @@
 // Spec: components/specs/ErrorTriage.md
 import React from 'react';
 import {useCurrentFrame, random, interpolate, Easing} from 'remotion';
-import {C, R, BORDER, SHADOW, inter, mono, serif} from '../theme';
+import {C, R, BORDER, SHADOW, inter, mono, accentA, dimA, headline} from '../theme';
 import {sp, pop, ease, enter, popIn, tween, shake} from '../anim';
 import {XMark, TickMark, WarnMark} from '../glyphs';
 import {ProviderNode, Packet, LogoRef} from '../ProviderNode/ProviderNode';
@@ -14,13 +14,13 @@ export const ErrorTriage: React.FC<{at: number; items: TriageItem[]; lanes: {lab
   const SX = 330, SY = 60;
   return (
     <div style={{position: 'absolute', inset: 0}}>
-      <div style={{position: 'absolute', left: SX, top: SY, width: 312, height: 150, boxSizing: 'border-box', background: C.white, border: BORDER, borderRadius: R, boxShadow: SHADOW, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', ...popIn(f, at)}}>
-        <div style={{fontFamily: inter, fontWeight: 800, fontSize: 24, letterSpacing: '0.12em', color: C.dim}}>{kicker}</div>
-        <div style={{fontFamily: serif, fontStyle: 'italic', fontSize: 58, color: C.orange, lineHeight: 1}}>{title}</div>
+      <div style={{position: 'absolute', left: SX, top: SY, width: 312, height: 150, boxSizing: 'border-box', background: C.surface, border: BORDER, borderRadius: R, boxShadow: SHADOW, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', ...popIn(f, at)}}>
+        <div style={{fontFamily: inter, fontWeight: 800, fontSize: 24, letterSpacing: '0.12em', color: C.textDim}}>{kicker}</div>
+        <div style={{...headline, fontSize: 58, color: C.accent, lineHeight: 1}}>{title}</div>
       </div>
       {lanes.map((l, i) => (
-        <div key={i} style={{position: 'absolute', left: LX[i], top: LY, width: LW, height: LH, boxSizing: 'border-box', borderRadius: R, border: `3px ${l.tone === 'orange' ? 'solid' : 'dashed'} ${l.tone === 'orange' ? C.orange : C.dim}`, background: l.tone === 'orange' ? 'rgba(228,87,46,.07)' : 'rgba(138,133,124,.08)', ...enter(f, l.at, 1e9, 20)}}>
-          <div style={{position: 'absolute', left: 0, right: 0, bottom: 22, textAlign: 'center', fontFamily: inter, fontWeight: 900, fontSize: 36, color: l.tone === 'orange' ? C.orange : C.dim}}>{l.label}</div>
+        <div key={i} style={{position: 'absolute', left: LX[i], top: LY, width: LW, height: LH, boxSizing: 'border-box', borderRadius: R, border: `3px ${l.tone === 'orange' ? 'solid' : 'dashed'} ${l.tone === 'orange' ? C.accent : C.textDim}`, background: l.tone === 'orange' ? accentA(0.07) : dimA(0.08), ...enter(f, l.at, 1e9, 20)}}>
+          <div style={{position: 'absolute', left: 0, right: 0, bottom: 22, textAlign: 'center', fontFamily: inter, fontWeight: 900, fontSize: 36, color: l.tone === 'orange' ? C.accent : C.textDim}}>{l.label}</div>
           {l.note && <div style={{position: 'absolute', left: 0, right: 0, bottom: 76, display: 'flex', justifyContent: 'center'}}>{l.note}</div>}
         </div>
       ))}
@@ -33,7 +33,7 @@ export const ErrorTriage: React.FC<{at: number; items: TriageItem[]; lanes: {lab
         const orange = it.lane === 0;
         return (
           <div key={i} style={{position: 'absolute', left: x, top: y, transform: `translateX(-50%) scale(${pop(f, it.at)})`}}>
-            <div style={{fontFamily: mono, fontWeight: 700, fontSize: 40, padding: '8px 22px', borderRadius: 999, border: BORDER, background: orange ? C.orange : C.white, color: orange ? C.white : C.dim, whiteSpace: 'nowrap'}}>{it.code}</div>
+            <div style={{fontFamily: mono, fontWeight: 700, fontSize: 40, padding: '8px 22px', borderRadius: 999, border: BORDER, background: orange ? C.accent : C.surface, color: orange ? C.onAccent : C.textDim, whiteSpace: 'nowrap'}}>{it.code}</div>
           </div>
         );
       })}

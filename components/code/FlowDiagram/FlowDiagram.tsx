@@ -1,7 +1,7 @@
 // Spec: components/specs/FlowDiagram.md · first built for system-design-of-ai/11-max-tokens-and-truncation. Every text, number and timing is a prop.
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
-import {C, R, BORDER, SHADOW, inter, mono, serif} from '../theme';
+import {C, R, BORDER, SHADOW, inter, mono} from '../theme';
 import {sp, ease, easeOut, enter, popIn} from '../anim';
 import {WarnMark} from '../glyphs';
 import {Tag} from '../Tag/Tag';
@@ -13,9 +13,9 @@ export const FlowLanes: React.FC<{aAt: number; failAt: number; bAt: number; retr
   const f = useCurrentFrame();
   if (f < at - 1 || f > out + 1) return null;
   const cell = (label: string, state: 'ok' | 'bad' | 'grey' | 'idle', key: string, style?: React.CSSProperties) => (
-    <div key={key} style={{width: 150, height: 96, borderRadius: R, boxSizing: 'border-box', border: state === 'ok' ? `3px solid ${C.orange}` : state === 'bad' ? `3px dashed ${C.dim}` : BORDER, background: state === 'grey' || state === 'bad' ? C.mute : C.white, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, fontFamily: inter, fontWeight: 800, fontSize: 26, color: state === 'grey' || state === 'bad' ? C.dim : C.ink, ...style}}>
+    <div key={key} style={{width: 150, height: 96, borderRadius: R, boxSizing: 'border-box', border: state === 'ok' ? `3px solid ${C.accent}` : state === 'bad' ? `3px dashed ${C.textDim}` : BORDER, background: state === 'grey' || state === 'bad' ? C.mute : C.surface, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, fontFamily: inter, fontWeight: 800, fontSize: 26, color: state === 'grey' || state === 'bad' ? C.textDim : C.text, ...style}}>
       {label}
-      {state === 'ok' && <svg width={30} height={30} viewBox="0 0 48 48" fill="none" stroke={C.orange} strokeWidth={6} strokeLinecap="round" strokeLinejoin="round"><path d="M10 25l9 9 19-20" /></svg>}
+      {state === 'ok' && <svg width={30} height={30} viewBox="0 0 48 48" fill="none" stroke={C.accent} strokeWidth={6} strokeLinecap="round" strokeLinejoin="round"><path d="M10 25l9 9 19-20" /></svg>}
       {state === 'bad' && <WarnMark size={30} />}
     </div>
   );
@@ -28,17 +28,17 @@ export const FlowLanes: React.FC<{aAt: number; failAt: number; bAt: number; retr
       {/* lane A */}
       {f >= aAt - 1 && (
         <div style={{position: 'absolute', left: 0, top: 0, width: 900, ...enter(f, aAt)}}>
-          <div style={{fontFamily: inter, fontWeight: 900, fontSize: 32, color: C.ink, marginBottom: 12}}>{labels.a}</div>
-          <div style={{border: BORDER, borderRadius: R, background: C.white, padding: 16, display: 'flex', gap: 14, boxShadow: SHADOW, opacity: redo ? 0.75 : 1}}>
+          <div style={{fontFamily: inter, fontWeight: 900, fontSize: 32, color: C.text, marginBottom: 12}}>{labels.a}</div>
+          <div style={{border: BORDER, borderRadius: R, background: C.surface, padding: 16, display: 'flex', gap: 14, boxShadow: SHADOW, opacity: redo ? 0.75 : 1}}>
             {Array.from({length: n}, (_, i) => i + 1).map((d) => cell(`${cl} ${d}`, !aFail ? 'ok' : d >= failIdx ? 'bad' : 'grey', `a${d}`))}
           </div>
-          {redo && <div style={{marginTop: 12, display: 'flex', alignItems: 'center', gap: 10, ...popIn(f, failAt + 14)}}><WarnMark size={36} /><span style={{fontFamily: inter, fontWeight: 800, fontSize: 30, color: C.dim}}>{labels.redo}</span></div>}
+          {redo && <div style={{marginTop: 12, display: 'flex', alignItems: 'center', gap: 10, ...popIn(f, failAt + 14)}}><WarnMark size={36} /><span style={{fontFamily: inter, fontWeight: 800, fontSize: 30, color: C.textDim}}>{labels.redo}</span></div>}
         </div>
       )}
       {/* lane B */}
       {f >= bAt - 1 && (
         <div style={{position: 'absolute', left: 0, top: 360, width: 900, ...enter(f, bAt)}}>
-          <div style={{fontFamily: inter, fontWeight: 900, fontSize: 32, color: C.ink, marginBottom: 12}}>{labels.b}</div>
+          <div style={{fontFamily: inter, fontWeight: 900, fontSize: 32, color: C.text, marginBottom: 12}}>{labels.b}</div>
           <div style={{display: 'flex', gap: 14, padding: 16}}>
             {Array.from({length: n}, (_, i) => i + 1).map((d) => (
               <div key={d} style={enter(f, bAt + d * 5)}>

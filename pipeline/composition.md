@@ -3,7 +3,7 @@
 **Goal:** a Remotion project for this video only, built from the approved EDL, with only the components it needs.
 
 **Setup**
-- Scaffold with `vt-python tools/scaffold_remotion.py projects/<name> --aspect 9:16` (reel) or `--aspect 16:9` (long-form), then `npm i` inside `work/remotion/`. Or create manually with `npx create-video@latest` if the scaffold is insufficient.
+- Scaffold with `vt-python tools/scaffold_remotion.py projects/<name> --aspect 9:16` (reel) or `--aspect 16:9` (long-form), with `--brand <n>` from `script.md` → `**Brand:**` (default 1), then `npm i` inside `work/remotion/`. Or create manually with `npx create-video@latest` if the scaffold is insufficient.
 - Add the official Remotion skills before writing code: `npx skills add remotion-dev/skills`. Follow them for APIs (`OffthreadVideo`, `Sequence`, `spring`, fonts, `staticFile`).
 - Add `@remotion/google-fonts` and `simple-icons` (plus a v13 alias if an icon is missing from the latest release).
 - Copy media into `public/` (clips, screenshots, clean voice WAV). Never reference `raw/` or `assets/` directly.
@@ -18,7 +18,7 @@
 - The voice plays as one continuous WAV laid out on the output timeline. Picture segments are cut separately, which makes J/L cuts easy.
 
 **Build**
-- Read `brand.md` into one `theme.ts` (colors, fonts, radius, shadow, border, FPS).
+- Colors, fonts, shape and FPS come from `components/code/theme.ts` (project scenes import it). The brand is `REMOTION_BRAND=<n>` in `work/remotion/.env`: change it only there, never in `theme.ts`. The Remotion CLI and Studio read that file; `renderStill`/`renderMedia` scripts must pass `envVariables: {REMOTION_BRAND}`. Check one still against `brands/brand-<n>.md`.
 - Read the `script.md` cues. Choose components from `components/index.md` first (single rows: `grep -i '^| \[<Name>\]' components/index-full.md`; never read `index-full.md` whole), never bulk-read `components/`. For each component the cues need: if `index.md` marks it ✓, import `shared/<Name>/<Name>` (`src/shared` → `components/code/`) and set props, extending the library component with a new prop (old props keep working) when a variation fits; otherwise write its spec (`components/specs/<Name>.md`) first, then the code in the project. The library is the default, not a limit (`CLAUDE.md`, Creative direction).
 - Wire the shared libraries when creating the Remotion project: symlink `public/icons` → `icons/` and `src/shared` → `components/code/` (relative links), add `Config.overrideWebpackConfig((c) => ({...c, resolve: {...c.resolve, symlinks: false}}))` to `remotion.config.ts` and `"preserveSymlinks": true` to `tsconfig.json`, so shared code resolves `remotion` from the project's `node_modules`. Use the Remotion version in `components/code/REMOTION_VERSION`.
 - **Storyboard first.** At Compose start, spawn the `creative-director` subagent (`.claude/agents/creative-director.md`, Opus) with the project path; the session itself stays on the production tier. Read what it wrote, and send the 3 approval stills back to it for review before showing me. It writes `work/storyboard.md`: one line per beat with its layout state (HEAD / FULL / SPLIT, from the script's `[mm:ss–mm:ss | STATE]` tags, moved if another state explains better) and the visual. It includes the **Creative take** list (Creative direction process, below).

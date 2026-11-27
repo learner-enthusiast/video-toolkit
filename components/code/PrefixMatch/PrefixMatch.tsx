@@ -1,7 +1,7 @@
 // Spec: components/specs/PrefixMatch.md · first built for system-design-of-ai/09-prompt-caching. Every text, number and timing is a prop.
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
-import {C, inter, mono, orangeA} from '../theme';
+import {C, inter, mono, accentA} from '../theme';
 import {popIn, enter} from '../anim';
 import {WarnMark} from '../glyphs';
 import {Tag} from '../Tag/Tag';
@@ -20,9 +20,9 @@ export const PrefixMatch: React.FC<{rows: [string[], string[]]; labels?: [string
     const isM = i === m && done;
     const ok = done && (m < 0 || i < m);
     return (
-      <div key={i} style={{position: 'relative', fontFamily: mono, fontWeight: 700, fontSize: size, padding: '6px 10px', borderRadius: 8, whiteSpace: 'nowrap', border: isM ? `3px solid ${C.dim}` : ok ? `3px solid ${C.orange}` : `2px solid ${C.grid}`, background: isM ? C.mute : ok ? orangeA(0.1) : C.white, color: after ? C.dim : C.ink, opacity: after ? 0.45 : 1, transform: i === 0 ? `scale(${1 + 0.15 * pulse})` : undefined}}>
+      <div key={i} style={{position: 'relative', fontFamily: mono, fontWeight: 700, fontSize: size, padding: '6px 10px', borderRadius: 8, whiteSpace: 'nowrap', border: isM ? `3px solid ${C.textDim}` : ok ? `3px solid ${C.accent}` : `2px solid ${C.grid}`, background: isM ? C.mute : ok ? accentA(0.1) : C.surface, color: after ? C.textDim : C.text, opacity: after ? 0.45 : 1, transform: i === 0 ? `scale(${1 + 0.15 * pulse})` : undefined}}>
         {tok}
-        {r === 1 && ok && <div style={{position: 'absolute', left: '50%', bottom: -34, transform: 'translateX(-50%)', color: C.orange, fontFamily: inter, fontWeight: 900, fontSize: 24}}>✓</div>}
+        {r === 1 && ok && <div style={{position: 'absolute', left: '50%', bottom: -34, transform: 'translateX(-50%)', color: C.accent, fontFamily: inter, fontWeight: 900, fontSize: 24}}>✓</div>}
         {r === 1 && isM && <div style={{position: 'absolute', left: '50%', bottom: -42, transform: 'translateX(-50%)'}}><WarnMark size={34} /></div>}
       </div>
     );
@@ -31,7 +31,7 @@ export const PrefixMatch: React.FC<{rows: [string[], string[]]; labels?: [string
     <div style={{display: 'flex', flexDirection: 'column', gap: 22}}>
       {rows.map((row, r) => (
         <div key={r} style={{display: 'flex', flexDirection: 'column', gap: 8, ...enter(f, at - 12 + r * 5)}}>
-          <span style={{fontFamily: inter, fontWeight: 800, fontSize: 22, color: C.dim, letterSpacing: '0.08em', textTransform: 'uppercase'}}>{labels[r]}</span>
+          <span style={{fontFamily: inter, fontWeight: 800, fontSize: 22, color: C.textDim, letterSpacing: '0.08em', textTransform: 'uppercase'}}>{labels[r]}</span>
           <div style={{display: 'flex', gap: 6, flexWrap: 'nowrap'}}>{row.map((t, i) => cell(t, i, r))}</div>
         </div>
       ))}

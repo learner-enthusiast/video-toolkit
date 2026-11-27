@@ -2,6 +2,8 @@
 
 **Message:** <one sentence the viewer could repeat>
 
+**Brand:** 1 <1 | 2 | 3, `brand.md`>
+
 **Audience:** <who> · **Outcome:** viewer can <do X> · **Target:** <n> min (word cap: `CLAUDE.md` → House numbers) · **Aspect:** 16:9 if > 3:00 (long-form); 9:16 only if ≤ 2:59 (reel)
 
 ## Glossary (exact spellings for captions)

@@ -3,9 +3,10 @@
 > **Final video ≤ <2:59>. Speed-up cap <1.4x>.** <one line: script word count / expected pace, if useful>
 
 **Project:** `projects/<name>/` (or `projects/<playlist>/<NN>-<topic>/`; create it with `/new-video` if missing).
+**Brand:** <1 | 2 | 3> (brand.md)
 **Raw:** <where the talking head is; never modify `raw/`>.
 **Music:** <id | music/tracks/<file> | none | audition [id1,id2,id3]> (delete the line for ★house rotation)
-**Notes:** <series + episode, exceptions for this video, special assets/logos to reuse or download, caption spellings, number formatting, orange-highlight words, the 3 approval stills, components to build or extend, series-file updates>.
+**Notes:** <series + episode, exceptions for this video, special assets/logos to reuse or download, caption spellings, number formatting, accent-highlight words, the 3 approval stills, components to build or extend, series-file updates>.
 **GPU:** `gpu-run` (PRIME offload) for Whisper, renders and encodes; see `CLAUDE.md` → GPU.
 
 Everything else (quality bar, layout states, length rule, never cutting lines, checkpoints, deliverables, logging) is fixed in `/reel` or `/coding-video`.

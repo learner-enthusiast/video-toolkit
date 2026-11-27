@@ -13,7 +13,7 @@ export const Checklist: React.FC<{items: ChecklistItem[]; size?: number; gap?: n
       {items.map((it, i) => (
         <div key={i} style={{display: 'flex', alignItems: 'center', gap: 16, ...enter(f, it.at, 1e9, 0), transform: `translateX(${(1 - sp(f, it.at)) * -24}px)`}}>
           <Tick at={it.at + 2} size={size * 1.05} />
-          <span style={{fontFamily: inter, fontWeight: 800, fontSize: size, color: C.ink, whiteSpace: 'nowrap'}}>{it.text}</span>
+          <span style={{fontFamily: inter, fontWeight: 800, fontSize: size, color: C.text, whiteSpace: 'nowrap'}}>{it.text}</span>
         </div>
       ))}
     </div>
