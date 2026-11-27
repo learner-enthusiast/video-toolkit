@@ -55,5 +55,7 @@
 
 Template: `templates/remotion/Thumbnail.tsx`, which `tools/scaffold_remotion.py` copies to each new project's `src/lib/`, next to `cues.ts`. It exports `Thumbnail`, `Badge`, `Headline`, `Cutout`, `Background` and the `focal` style, and imports only from `../shared/theme` and shared components.
 
+- `scene` draws behind me; the optional `front` slot draws over me, for elements the boom cable would otherwise cross. Neither goes over my face.
+- `focal` is spread after the element's own card style, so its ring wins.
 - `cutout` is `{src, w, h, hairTop, faceX}`, measured on the PNG; `place` (`headY`, `scale`, `bleed`) overrides where it lands. `bleed: 'right'` keeps a boom arm running off the canvas edge.
 - Not in the library yet: per the library rule (`components/code/README.md`), it moves into its own `Thumbnail` folder in `components/code/` only after it has rendered correctly in a finished video.
