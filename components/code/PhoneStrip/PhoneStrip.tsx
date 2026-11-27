@@ -25,7 +25,7 @@ export const PhoneStrip: React.FC<{w?: number; compact?: boolean; nodes?: PSNode
   const cx = [w * 0.13, w * 0.5, w * 0.87];
   const cy = s / 2;
   const o = ease(f, out - 8, out, 1, 0);
-  const ink = dark ? C.white : C.ink;
+  const ink = dark ? C.onPunch : C.text;
   const callState = (c: PSCall) => {
     const cp = ease(f, c.at, c.at + 12);
     const dp = c.deadAt !== undefined ? ease(f, c.deadAt, c.deadAt + 8) : 0;
@@ -81,7 +81,7 @@ export const PhoneStrip: React.FC<{w?: number; compact?: boolean; nodes?: PSNode
         const st = callState(c);
         const mx = (x1 + x2) / 2;
         const hs = compact ? 40 : 54;
-        const col = mix(C.accent, '#C9C4BA', st.dp);
+        const col = mix(C.accent, C.fade, st.dp);
         return (
           <React.Fragment key={i}>
             <div style={{position: 'absolute', left: mx - hs / 2, top: cy - hs / 2 - 2, transform: `translate(${st.hp * 8}px, ${-st.hp * 26 + Math.max(0, st.hp - 0.6) * 40}px) rotate(${-38 * st.hp}deg) scale(${pop(f, c.at + 6)})`}}>
@@ -115,7 +115,7 @@ export const PhoneStrip: React.FC<{w?: number; compact?: boolean; nodes?: PSNode
         const so = ease(f, (slot.out ?? 1e9) - 8, slot.out ?? 1e9, 1, 0);
         return (
           <div style={{position: 'absolute', left: cx[1], top: s + (compact ? 44 : 54), transform: 'translateX(-50%)', opacity: so}}>
-            <div style={popIn(f, slot.at)}><div style={{transform: `scale(${filled ? 0.9 + 0.1 * fv : 1})`, padding: compact ? '6px 16px' : '8px 20px', borderRadius: 999, border: `3px ${filled ? 'solid' : 'dashed'} ${C.accent}`, background: filled ? C.accent : 'transparent', color: filled ? C.white : C.accent, fontFamily: mono, fontWeight: 700, fontSize: compact ? 22 : 28, whiteSpace: 'nowrap'}}>
+            <div style={popIn(f, slot.at)}><div style={{transform: `scale(${filled ? 0.9 + 0.1 * fv : 1})`, padding: compact ? '6px 16px' : '8px 20px', borderRadius: 999, border: `3px ${filled ? 'solid' : 'dashed'} ${C.accent}`, background: filled ? C.accent : 'transparent', color: filled ? C.onAccent : C.accent, fontFamily: mono, fontWeight: 700, fontSize: compact ? 22 : 28, whiteSpace: 'nowrap'}}>
               {filled ? slot.fillLabel ?? slot.label : slot.label}
             </div></div>
           </div>

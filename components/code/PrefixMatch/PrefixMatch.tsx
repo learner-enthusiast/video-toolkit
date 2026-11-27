@@ -20,7 +20,7 @@ export const PrefixMatch: React.FC<{rows: [string[], string[]]; labels?: [string
     const isM = i === m && done;
     const ok = done && (m < 0 || i < m);
     return (
-      <div key={i} style={{position: 'relative', fontFamily: mono, fontWeight: 700, fontSize: size, padding: '6px 10px', borderRadius: 8, whiteSpace: 'nowrap', border: isM ? `3px solid ${C.textDim}` : ok ? `3px solid ${C.accent}` : `2px solid ${C.grid}`, background: isM ? C.mute : ok ? accentA(0.1) : C.white, color: after ? C.textDim : C.ink, opacity: after ? 0.45 : 1, transform: i === 0 ? `scale(${1 + 0.15 * pulse})` : undefined}}>
+      <div key={i} style={{position: 'relative', fontFamily: mono, fontWeight: 700, fontSize: size, padding: '6px 10px', borderRadius: 8, whiteSpace: 'nowrap', border: isM ? `3px solid ${C.textDim}` : ok ? `3px solid ${C.accent}` : `2px solid ${C.grid}`, background: isM ? C.mute : ok ? accentA(0.1) : C.surface, color: after ? C.textDim : C.text, opacity: after ? 0.45 : 1, transform: i === 0 ? `scale(${1 + 0.15 * pulse})` : undefined}}>
         {tok}
         {r === 1 && ok && <div style={{position: 'absolute', left: '50%', bottom: -34, transform: 'translateX(-50%)', color: C.accent, fontFamily: inter, fontWeight: 900, fontSize: 24}}>✓</div>}
         {r === 1 && isM && <div style={{position: 'absolute', left: '50%', bottom: -42, transform: 'translateX(-50%)'}}><WarnMark size={34} /></div>}

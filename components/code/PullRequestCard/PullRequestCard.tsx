@@ -19,9 +19,9 @@ export const PullRequestCard: React.FC<{title: string; files: string; add: numbe
   const f = useCurrentFrame();
   const dv = dimT !== undefined ? ease(f, dimT, dimT + 8) : tone === 'dim' ? 1 : 0;
   const risky = tone === 'risky';
-  const ink = dv > 0.5 ? C.textDim : C.ink;
+  const ink = dv > 0.5 ? C.textDim : C.text;
   return (
-    <div style={{width: w, boxSizing: 'border-box', background: dv > 0.5 ? C.mute : C.white, border: risky ? `5px solid ${C.accent}` : `2px solid ${dv > 0.5 ? C.textDim : C.border}`, borderRadius: R, boxShadow: dv > 0.5 ? 'none' : SHADOW, padding: `${size * 0.5}px ${size * 0.66}px`}}>
+    <div style={{width: w, boxSizing: 'border-box', background: dv > 0.5 ? C.mute : C.surface, border: risky ? `5px solid ${C.accent2}` : `2px solid ${dv > 0.5 ? C.textDim : C.border}`, borderRadius: R, boxShadow: dv > 0.5 ? 'none' : SHADOW, padding: `${size * 0.5}px ${size * 0.66}px`}}>
       <div style={{display: 'flex', alignItems: 'center', gap: 14}}>
         <PRGlyph size={size * 1.1} color={risky ? C.accent : ink} />
         <span style={{flex: 1, fontFamily: inter, fontWeight: 800, fontSize: size, color: ink, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{title}</span>
@@ -36,9 +36,9 @@ export const PullRequestCard: React.FC<{title: string; files: string; add: numbe
           {diff.map((d, i) => {
             const v = ease(f, diffAt + i * 6, diffAt + i * 6 + 8);
             return (
-              <div key={i} style={{display: 'flex', alignItems: 'center', opacity: v, transform: `translateX(${(1 - v) * -16}px)`, background: d.op === '+' ? accentA(0.14) : d.op === '-' ? C.fill : C.white, padding: '6px 0'}}>
+              <div key={i} style={{display: 'flex', alignItems: 'center', opacity: v, transform: `translateX(${(1 - v) * -16}px)`, background: d.op === '+' ? accentA(0.14) : d.op === '-' ? C.fill : C.surface, padding: '6px 0'}}>
                 <span style={{width: 46, textAlign: 'center', fontFamily: mono, fontWeight: 700, fontSize: 30, color: d.op === '+' ? C.accent : C.textDim}}>{d.op === ' ' ? '' : d.op === '-' ? '−' : '+'}</span>
-                <span style={{fontFamily: mono, fontWeight: 500, fontSize: 29, color: d.op === '-' ? C.textDim : C.ink, whiteSpace: 'pre'}}>{d.text}</span>
+                <span style={{fontFamily: mono, fontWeight: 500, fontSize: 29, color: d.op === '-' ? C.textDim : C.text, whiteSpace: 'pre'}}>{d.text}</span>
               </div>
             );
           })}
@@ -55,9 +55,9 @@ export const PullRequestCard: React.FC<{title: string; files: string; add: numbe
 };
 
 export const MiniPR: React.FC<{label: string; tone?: 'ink' | 'orange' | 'dim'; size?: number}> = ({label, tone = 'ink', size = 28}) => {
-  const fg = tone === 'orange' ? C.white : tone === 'dim' ? C.textDim : C.ink;
+  const fg = tone === 'orange' ? C.onAccent : tone === 'dim' ? C.textDim : C.text;
   return (
-    <div style={{display: 'inline-flex', alignItems: 'center', gap: 10, padding: `${size * 0.3}px ${size * 0.55}px`, borderRadius: 999, background: tone === 'orange' ? C.accent : C.white, border: `3px solid ${tone === 'dim' ? C.textDim : C.border}`, boxShadow: SHADOW, whiteSpace: 'nowrap'}}>
+    <div style={{display: 'inline-flex', alignItems: 'center', gap: 10, padding: `${size * 0.3}px ${size * 0.55}px`, borderRadius: 999, background: tone === 'orange' ? C.accent : C.surface, border: `3px solid ${tone === 'dim' ? C.textDim : C.border}`, boxShadow: SHADOW, whiteSpace: 'nowrap'}}>
       <PRGlyph size={size * 1.1} color={fg} />
       <span style={{fontFamily: mono, fontWeight: 700, fontSize: size, color: fg}}>{label}</span>
     </div>

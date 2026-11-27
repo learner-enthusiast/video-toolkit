@@ -1,7 +1,7 @@
 // Spec: components/specs/PromptStack.md (request-stack variant) · first built for system-design-of-ai/09-prompt-caching. Every text, number and timing is a prop.
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
-import {C, R, BORDER, SHADOW, inter, mono} from '../theme';
+import {C, R, BORDER, SHADOW, inter, mono, accentA} from '../theme';
 import {sp, ease, popIn, enter} from '../anim';
 import {WarnMark, IconLock} from '../glyphs';
 import {Tag} from '../Tag/Tag';
@@ -59,7 +59,7 @@ export const PromptStack: React.FC<StackProps> = (p) => {
   const head = (label: string, count?: React.ReactNode, countAt?: number) => (
     <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 14px', background: C.paper, borderBottom: `2px solid ${C.grid}`}}>
       <span style={{fontFamily: inter, fontWeight: 800, fontSize: d ? 26 : 22, letterSpacing: '0.06em', textTransform: 'uppercase', color: C.text}}>{label}</span>
-      {count && (countAt === undefined || f >= countAt) && <span style={{fontFamily: mono, fontWeight: 700, fontSize: d ? 26 : 22, color: C.white, background: statOn > 0.5 || pulse > 0.2 ? C.accent : C.ink, borderRadius: 8, padding: '2px 10px', ...(countAt !== undefined ? popIn(f, countAt) : {})}}>{count}</span>}
+      {count && (countAt === undefined || f >= countAt) && <span style={{fontFamily: mono, fontWeight: 700, fontSize: d ? 26 : 22, color: statOn > 0.5 || pulse > 0.2 ? C.onAccent : C.onInk, background: statOn > 0.5 || pulse > 0.2 ? C.accent : C.inkFill, borderRadius: 8, padding: '2px 10px', ...(countAt !== undefined ? popIn(f, countAt) : {})}}>{count}</span>}
     </div>
   );
   const lines = (ls: StackLine[] | undefined, n: number) => (
@@ -74,7 +74,7 @@ export const PromptStack: React.FC<StackProps> = (p) => {
       {/* clause strip: the plant */}
       <div style={{...blk('clause'), background: glow > 0.02 ? C.accent : C.mute, border: brk > 0.02 && t < 0.5 ? `3px solid ${C.textDim}` : `2px solid ${C.grid}`, display: 'flex', alignItems: 'center', gap: 10, padding: '0 14px'}}>
         {brk > 0.02 && t < 0.5 && <WarnMark size={34} />}
-        <span style={{fontFamily: mono, fontWeight: 700, fontSize: 22, color: glow > 0.5 ? C.white : C.textDim, whiteSpace: 'nowrap'}}>{p.clause ?? 'retrieved chunks'}</span>
+        <span style={{fontFamily: mono, fontWeight: 700, fontSize: 22, color: glow > 0.5 ? C.onAccent : C.textDim, whiteSpace: 'nowrap'}}>{p.clause ?? 'retrieved chunks'}</span>
         {p.changesAt !== undefined && f >= p.changesAt && <span style={{marginLeft: 'auto', ...popIn(f, p.changesAt)}}><Tag label={p.changesLabel ?? 'changes'} tone="dim" size={20} /></span>}
       </div>
       <div style={{...blk('sys'), border: statBorder(statOn), background: C.surface}}>
@@ -89,8 +89,8 @@ export const PromptStack: React.FC<StackProps> = (p) => {
         <span style={{fontFamily: mono, fontWeight: 700, fontSize: 22, color: C.textDim}}>{p.detailsLabel ?? 'user details'}</span>
         {p.changesAt !== undefined && f >= p.changesAt && <span style={{marginLeft: 'auto', ...popIn(f, p.changesAt + 3)}}><Tag label={p.changesLabel ?? 'changes'} tone="dim" size={20} /></span>}
       </div>
-      <div style={{...blk('q'), background: C.ink, display: 'flex', alignItems: 'center', padding: '0 16px', gap: 10}}>
-        <span style={{fontFamily: inter, fontWeight: 800, fontSize: 26, color: C.white, whiteSpace: 'nowrap'}}>Q: {p.q ?? 'the question'}</span>
+      <div style={{...blk('q'), background: C.inkFill, display: 'flex', alignItems: 'center', padding: '0 16px', gap: 10}}>
+        <span style={{fontFamily: inter, fontWeight: 800, fontSize: 26, color: C.onInk, whiteSpace: 'nowrap'}}>Q: {p.q ?? 'the question'}</span>
         {p.changesAt !== undefined && f >= p.changesAt && <span style={{marginLeft: 'auto', ...popIn(f, p.changesAt + 6)}}><Tag label={p.changesLabel ?? 'changes'} tone="dim" size={20} /></span>}
       </div>
       {/* the 5,000-token bracket + lock on the static blocks */}
@@ -99,14 +99,14 @@ export const PromptStack: React.FC<StackProps> = (p) => {
         return (
           <div style={{position: 'absolute', left: p.w - 6, top: y0, height: y1 - y0, width: 70, display: 'flex', alignItems: 'center', opacity: Math.max(lock, pulse)}}>
             <div style={{position: 'absolute', left: 4, top: 4, bottom: 4, width: 16, borderTop: `4px solid ${C.accent}`, borderBottom: `4px solid ${C.accent}`, borderRight: `4px solid ${C.accent}`, borderRadius: '0 8px 8px 0'}} />
-            {lock > 0.01 && <div style={{position: 'absolute', left: 30, transform: `scale(${0.6 + 0.4 * lock})`, background: C.accent, borderRadius: 12, padding: 6, border: BORDER}}><IconLock size={44} color={C.white} /></div>}
+            {lock > 0.01 && <div style={{position: 'absolute', left: 30, transform: `scale(${0.6 + 0.4 * lock})`, background: C.accent, borderRadius: 12, padding: 6, border: BORDER}}><IconLock size={44} color={C.onAccent} /></div>}
           </div>
         );
       })()}
       {p.lockLabel && lock > 0.01 && <div style={{position: 'absolute', left: PAD, right: PAD, top: -58, display: 'flex', justifyContent: 'flex-end', ...popIn(f, (p.lockAt ?? 0) + 6)}}>{p.lockLabel}</div>}
       {/* reading cursor */}
       {cur >= 0 && (
-        <div style={{position: 'absolute', left: 44, right: 8, top: PAD + cur * (total - PAD * 2) - 3, height: 6, background: C.accent, borderRadius: 3, boxShadow: `0 0 0 4px rgba(228,87,46,.2)`}}>
+        <div style={{position: 'absolute', left: 44, right: 8, top: PAD + cur * (total - PAD * 2) - 3, height: 6, background: C.accent, borderRadius: 3, boxShadow: `0 0 0 4px ${accentA(0.2)}`}}>
           <div style={{position: 'absolute', left: -34, top: -18, fontFamily: inter, fontWeight: 900, fontSize: 30, color: C.accent}}>▶</div>
         </div>
       )}
