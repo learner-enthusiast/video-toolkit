@@ -10,6 +10,7 @@ import textwrap
 TOOLKIT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 REMOTION_VERSION_FILE = os.path.join(TOOLKIT, "components", "code", "REMOTION_VERSION")
 DEFAULT_VERSION = "4.0.541"
+BRANDS = (1, 2, 3)
 
 
 def remotion_version() -> str:
@@ -37,7 +38,9 @@ def safe_symlink(target: str, link: str) -> None:
     os.symlink(target, link)
 
 
-def scaffold(project: str, aspect: str, force: bool = False) -> str:
+def scaffold(project: str, aspect: str, force: bool = False, brand: int = 1) -> str:
+    if brand not in BRANDS:
+        raise SystemExit(f"unknown brand {brand!r}: use 1, 2 or 3")
     remotion = os.path.join(project, "work", "remotion")
     if os.path.isdir(remotion) and os.listdir(remotion) and not force:
         raise SystemExit(f"refusing to overwrite non-empty {remotion}")
@@ -55,13 +58,15 @@ def scaffold(project: str, aspect: str, force: bool = False) -> str:
         "dependencies": {
             "remotion": rv,
             "@remotion/cli": rv,
-            "@remotion/google-fonts": "^4.0.0",
+            "@remotion/google-fonts": rv,
             "react": "^18.3.1",
             "react-dom": "^18.3.1",
             "simple-icons": "^14.0.0",
         },
     }
     write(os.path.join(remotion, "package.json"), json.dumps(pkg, indent=2) + "\n")
+    # the video's brand (brand.md): change it only here
+    write(os.path.join(remotion, ".env"), f"REMOTION_BRAND={brand}\n")
     write(
         os.path.join(remotion, "remotion.config.ts"),
         textwrap.dedent(
@@ -166,8 +171,9 @@ def main():
     ap.add_argument("project")
     ap.add_argument("--aspect", choices=["9:16", "16:9"], default="9:16")
     ap.add_argument("--force", action="store_true")
+    ap.add_argument("--brand", type=int, choices=BRANDS, default=1)
     args = ap.parse_args()
-    print(scaffold(args.project, args.aspect, args.force))
+    print(scaffold(args.project, args.aspect, args.force, args.brand))
 
 
 if __name__ == "__main__":

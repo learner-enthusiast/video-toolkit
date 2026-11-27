@@ -22,7 +22,7 @@
 - Prefer element screenshots (`locator.screenshot()`) for one thing (a paragraph, a code block, a chart, a pricing row, a post) over a whole page with the point lost in it. Add ~24 px padding with `clip` or a wrapper so nothing touches the edge.
 - Use `fullPage: true` only for a scroll-through beat (a long changelog, a doc page), then pan it with `ScreenshotKenBurns` keys.
 - Make text bigger when the page is dense: `page.evaluate(() => document.body.style.zoom = '1.25')` or a `font-size` bump, so it reads on a phone. Never above what still looks like the real page.
-- Theme: `colorScheme: 'light'` by default (sits well on the off-white brand); `'dark'` when the beat is in the dark punch style.
+- Theme: `colorScheme: 'light'` by default (sits well on a light brand background); `'dark'` on a dark brand or when the beat is in the brand's punch style.
 
 **Clean the page before the shot**
 - Wait for `networkidle`, then for fonts (`document.fonts.ready`) and lazy images (scroll the target into view first).

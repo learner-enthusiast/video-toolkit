@@ -25,6 +25,6 @@ alt-text.txt      one line per slide: "01: <what the slide shows and says>"
 - Chrome: header and footer identical on every slide; counter right (`3/7`) and arrow present on all but the last; the bottom-right box otherwise empty.
 - Brand: colours, fonts, radius, border and shadow from `brand.md`; no red/green, no emojis; logos official and uncropped.
 - Words: every term matches the script's glossary spelling; every fact is in `script.md`. Diff the slide text in `slides.json` against the script.
-- Contrast: text on the orange block and on the dark slide reads at 25% size (downscale to 270x338 and look).
+- Contrast: text on the accent block and on the punch-style slide reads at 25% size (downscale to 270x338 and look).
 - Caption: hook line ≤ 125 chars, 5–8 hashtags, total ≤ 2,200 chars. Alt text: one line per slide, same count as the PNGs.
 - Fix and re-render failing slides, then re-check them. Never report a pass that wasn't looked at.
