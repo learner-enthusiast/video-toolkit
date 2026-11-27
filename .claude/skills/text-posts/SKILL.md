@@ -6,7 +6,7 @@ argument-hint: <project>
 
 # Text posts (LinkedIn photo + post, X post)
 
-Extra posts, on top of the video: I still post the video on LinkedIn and X with its captions from `<name>_social.json`, unchanged. This skill adds standalone posts on the same topic, written in full and ready to paste as they are, plus the photo that stops the LinkedIn scroll. Runs as the last step of Stage 4 · Deliver of every video, after the video deliverables are reported (they never wait for it) (`pipeline/stages.md`), or on its own for an older project. Read `CLAUDE.md`, `brand.md`, `pipeline/text-posts.md` and `components/specs/LinkedInPhoto.md` first; `brand.md` wins. Pick any visual for the photo from `components/index.md` first.
+Extra posts, on top of the video: I still post the video on LinkedIn and X with its captions from `<name>_social.json`, unchanged. This skill adds standalone posts on the same topic, written in full and ready to paste as they are, plus the photo that stops the LinkedIn scroll. Runs as the last step of Stage 4 · Deliver of every video, after the video deliverables are reported (they never wait for it) (`pipeline/stages.md`), or on its own for an older project. Read `CLAUDE.md`, `brand.md` + the video's `brands/brand-N.md`, `pipeline/text-posts.md` and `components/specs/LinkedInPhoto.md` first; `brand.md` wins. Pick any visual for the photo from `components/index.md` first.
 
 **Input:** `projects/<project>/script.md` and the logos it names (from `icons/`). If `<project>` is missing or has no `script.md`, stop and tell me.
 - Never invent a fact, number or claim the script doesn't say. Shorten and reorder; don't add.

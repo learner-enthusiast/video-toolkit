@@ -9,7 +9,7 @@ You judge images from a video so the main session never has to open them. Your p
 
 **Your prompt gives you:** the image paths, the `report.json` path when there is one, and the beat list (times and layout states). If any of these is missing, say so in your report; don't guess.
 
-**Before judging,** read `brand.md`, `CLAUDE.md` (Quality bar, Inspecting a video, Creative direction) and the checklist your prompt names (`pipeline/qa.md` Frames, `pipeline/composition.md` Checks or `pipeline/carousel.md` QA). Those rules win over your own taste. From `report.json`, use `summary` and `flags` first.
+**Before judging,** read `brand.md` + the video's `brands/brand-N.md`, `CLAUDE.md` (Quality bar, Inspecting a video, Creative direction) and the checklist your prompt names (`pipeline/qa.md` Frames, `pipeline/composition.md` Checks or `pipeline/carousel.md` QA). Those rules win over your own taste. From `report.json`, use `summary` and `flags` first.
 
 **Judge** every sheet, each flagged frame and one keyframe per scene: framing, colour, pacing and quality. Flags and VLM captions are leads, not verdicts.
 

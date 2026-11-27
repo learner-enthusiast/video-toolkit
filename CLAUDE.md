@@ -17,7 +17,7 @@ The only copy of these values; other files point here.
 - Remotion reads them through `public/icons` (a symlink to `icons/`): `staticFile('icons/logos/<file>')`.
 
 ## Components
-- Read `brand.md`, then `components/index.md` (✓ = saved code), single rows with `grep -i '^| \[<Name>\]' components/index-full.md` (never Read it whole; never bulk-read `components/`), and only the specs (`components/specs/<Name>.md`) the scene table needs.
+- Read `brand.md` + only the active `brands/brand-N.md`, then `components/index.md` (✓ = saved code), single rows with `grep -i '^| \[<Name>\]' components/index-full.md` (never Read it whole; never bulk-read `components/`), and only the specs (`components/specs/<Name>.md`) the scene table needs.
 - ✓ components: import `shared/<Name>/<Name>` and set props; fit a variation with a new prop (old props keep working). New code only when nothing fits, spec first, inside `work/`. The library is the default, not a limit.
 - After the final render, save every new or extended component that worked, in the same commit (`components/code/README.md`, Library rules).
 
@@ -86,7 +86,7 @@ The only copy of these values; other files point here.
 - Deliver at House numbers loudness with A/V sync verified at the start, middle and end.
 
 ## Deliverables
-- **Reels (see House numbers) are 9:16 only:** the main video (1080x1920), exactly one trailer (a short cut defined in the prompt IS the trailer; otherwise the default from `pipeline/trailer.md`; never both), an SRT for each, a cover/thumbnail (1080x1920) in `out/thumbnail/` plus the ChatGPT kit (`pipeline/thumbnail.md`), `<name>_social.json` (`pipeline/social-copy.md`), the carousel twin and the text posts (`pipeline/text-posts.md`). No 16:9 renders, stills or QA for a reel. Don't wait to be asked. Don't wait to be asked.
+- **Reels (see House numbers) are 9:16 only:** the main video (1080x1920), exactly one trailer (a short cut defined in the prompt IS the trailer; otherwise the default from `pipeline/trailer.md`; never both), an SRT for each, a cover/thumbnail (1080x1920) in `out/thumbnail/` plus the ChatGPT kit (`pipeline/thumbnail.md`), `<name>_social.json` (`pipeline/social-copy.md`), the carousel twin and the text posts (`pipeline/text-posts.md`). No 16:9 renders, stills or QA for a reel. Don't wait to be asked.
 - Long-form (> 3:00): the 16:9 + 9:16 set in `/coding-video`.
 - Hindi twins (`/hindi-twin`) ship only video, trailer and SRTs. Other reels also get a carousel twin (`pipeline/carousel.md`); other videos get text posts, extras (`pipeline/text-posts.md`).
 - X Premium: **yes**.
